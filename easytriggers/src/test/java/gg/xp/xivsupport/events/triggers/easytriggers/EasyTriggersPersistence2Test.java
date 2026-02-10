@@ -1,7 +1,5 @@
 package gg.xp.xivsupport.events.triggers.easytriggers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.TestEventCollector;
 import gg.xp.util.ReflectHelpers;
@@ -10,6 +8,8 @@ import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.FailedDeserializationTrigger;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.TriggerFolder;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
@@ -21,6 +21,9 @@ import org.intellij.lang.annotations.Language;
 import org.picocontainer.MutablePicoContainer;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import java.awt.*;
 import java.time.Duration;
@@ -29,11 +32,11 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class EasyTriggersPersistenceTest2 {
+public class EasyTriggersPersistence2Test {
 
 	// Test that we can import existing triggers
 	@Test
-	void legacyPersistenceTestOld() throws JsonProcessingException {
+	void legacyPersistenceTestOld() throws JacksonException {
 		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
 		pers.save("easy-triggers.my-triggers", triggerDataOldLegacy);
 
@@ -128,7 +131,7 @@ public class EasyTriggersPersistenceTest2 {
 	}
 
 	@Test
-	void legacyPersistenceTest() throws JsonProcessingException {
+	void legacyPersistenceTest() throws JacksonException {
 		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
 		pers.save("easy-triggers.my-triggers", triggerDataLegacy);
 
@@ -221,7 +224,7 @@ public class EasyTriggersPersistenceTest2 {
 	}
 
 	@Test
-	void newPersistenceTest() throws JsonProcessingException {
+	void newPersistenceTest() throws JacksonException {
 		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
 		pers.save("easy-triggers.my-triggers-2", triggerDataNew);
 
@@ -310,6 +313,100 @@ public class EasyTriggersPersistenceTest2 {
 
 		ObjectMapper mapper = new ObjectMapper();
 		MatcherAssert.assertThat(mapper.readTree(ez.exportToString(ez.getChildTriggers())), Matchers.equalTo(mapper.readTree(triggerDataNew)));
+	}
+
+	@Test
+	void newPersistenceTestWithFail() {
+		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
+		pers.save("easy-triggers.my-triggers-2", triggerDataNewWithNonexistentCondition);
+
+		MutablePicoContainer pico = ExampleSetup.setup(pers);
+
+		EasyTriggers ez = pico.getComponent(EasyTriggers.class);
+		MatcherAssert.assertThat(ez.getChildTriggers(), Matchers.hasSize(2));
+		MatcherAssert.assertThat(ez.getChildTriggers().get(0), Matchers.instanceOf(EasyTrigger.class));
+		MatcherAssert.assertThat(ez.getChildTriggers().get(0).getName(), Matchers.equalTo("Rez Start"));
+		MatcherAssert.assertThat(ez.getChildTriggers().get(1), Matchers.instanceOf(FailedDeserializationTrigger.class));
+		MatcherAssert.assertThat(ez.getChildTriggers().get(1).getName(), Matchers.equalTo("FAILED: Trigger which fails"));
+		String exported = ez.exportToString(ez.getChildTriggers());
+		ObjectMapper mapper = new ObjectMapper();
+		MatcherAssert.assertThat(mapper.readTree(exported), Matchers.equalTo(mapper.readTree(triggerDataNewWithNonexistentCondition)));
+	}
+
+	@Test
+	void newPersistenceTestWithFailInFolder() {
+		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
+		pers.save("easy-triggers.my-triggers-2", nestedFail);
+
+		MutablePicoContainer pico = ExampleSetup.setup(pers);
+
+		EasyTriggers ez = pico.getComponent(EasyTriggers.class);
+		MatcherAssert.assertThat(ez.getChildTriggers(), Matchers.hasSize(1));
+		MatcherAssert.assertThat(ez.getChildTriggers().get(0), Matchers.instanceOf(TriggerFolder.class));
+		TriggerFolder folder = (TriggerFolder) ez.getChildTriggers().get(0);
+
+		MatcherAssert.assertThat(folder.getChildTriggers().get(0), Matchers.instanceOf(EasyTrigger.class));
+		MatcherAssert.assertThat(folder.getChildTriggers().get(1), Matchers.instanceOf(EasyTrigger.class));
+		MatcherAssert.assertThat(folder.getChildTriggers().get(2), Matchers.instanceOf(EasyTrigger.class));
+		MatcherAssert.assertThat(folder.getChildTriggers().get(3), Matchers.instanceOf(FailedDeserializationTrigger.class));
+
+		FailedDeserializationTrigger failed = (FailedDeserializationTrigger) folder.getChildTriggers().get(3);
+
+		String exported = ez.exportToString(ez.getChildTriggers());
+
+		ObjectMapper mapper = new ObjectMapper();
+		MatcherAssert.assertThat(mapper.readTree(exported), Matchers.equalTo(mapper.readTree(nestedFail)));
+	}
+
+	@Test
+	void shortFailTest() {
+		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
+		MutablePicoContainer pico = ExampleSetup.setup(pers);
+		var mapper = new ObjectMapper();
+		String content = """
+				{"type":"trigger","conditions":5}""";
+		JsonNode node = mapper.readTree(content);
+		var failed = new FailedDeserializationTrigger(node, null);
+		var et = pico.getComponent(EasyTriggers.class);
+		JsonNode after = mapper.readTree(et.exportToString(List.of(failed)));
+		MatcherAssert.assertThat(after.at("/0").toString(), Matchers.equalTo(content));
+	}
+
+	@Test
+	void nestedShortFailTest() {
+		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
+		MutablePicoContainer pico = ExampleSetup.setup(pers);
+		var mapper = new ObjectMapper();
+		String triggerJson = """
+				{"type":"trigger","conditions":5}""";
+		JsonNode node = mapper.readTree(triggerJson);
+		var failed = new FailedDeserializationTrigger(node, null);
+		var et = pico.getComponent(EasyTriggers.class);
+		var folder = new TriggerFolder();
+		folder.addChildTrigger(failed);
+		String after = et.exportToString(List.of(folder));
+		var afterTree = mapper.readTree(after);
+		MatcherAssert.assertThat(afterTree.at("/0/childTriggers/0").toString(), Matchers.equalTo(triggerJson));
+	}
+
+	@Test
+	void testImportWithoutType() {
+		// If no type, should become triggers
+		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
+		pers.save("easy-triggers.my-triggers-2", triggerDataLegacy);
+
+		MutablePicoContainer pico = ExampleSetup.setup(pers);
+
+		EasyTriggers ez = pico.getComponent(EasyTriggers.class);
+		MatcherAssert.assertThat(ez.getChildTriggers(), Matchers.hasSize(2));
+		MatcherAssert.assertThat(ez.getChildTriggers().get(0), Matchers.instanceOf(EasyTrigger.class));
+		MatcherAssert.assertThat(ez.getChildTriggers().get(0).getName(), Matchers.equalTo("Rez Start"));
+		MatcherAssert.assertThat(ez.getChildTriggers().get(1), Matchers.instanceOf(EasyTrigger.class));
+		MatcherAssert.assertThat(ez.getChildTriggers().get(1).getName(), Matchers.equalTo("Give me a name"));
+		String exported = ez.exportToString(ez.getChildTriggers());
+		ObjectMapper mapper = new ObjectMapper();
+		MatcherAssert.assertThat(mapper.readTree(exported), Matchers.equalTo(mapper.readTree(triggerDataNew)));
+
 	}
 
 	@Language("JSON")
@@ -487,4 +584,234 @@ public class EasyTriggersPersistenceTest2 {
 			  }
 			]""";
 
+	private static final String triggerDataNewWithNonexistentCondition = """
+			[
+			  {
+			    "type": "trigger",
+			    "enabled": true,
+			    "name": "Rez Start",
+			    "concurrency": "BLOCK_NEW",
+			    "eventType": "gg.xp.xivsupport.events.actlines.events.AbilityCastStart",
+			    "conditions": [
+			      {
+			        "@class": "gg.xp.xivsupport.events.triggers.easytriggers.conditions.AbilityIdFilter",
+			        "operator": "EQ",
+			        "expected": 173
+			      },
+			      {
+			        "@class": "gg.xp.xivsupport.events.triggers.easytriggers.conditions.SourcePartyMemberFilter",
+			        "invert": false
+			      }
+			    ],
+			    "actions": [
+			      {
+			        "@class": "gg.xp.xivsupport.events.triggers.easytriggers.actions.DurationBasedCalloutAction",
+			        "tts": "{event.source} is raising {event.target}",
+			        "text": "{event.source} is raising {event.target} ({event.estimatedRemainingDuration})",
+			        "colorRaw": -993263514,
+			        "plusDuration": true,
+			        "hangTime": 1234,
+			        "useIcon": true,
+			        "uuid": "883ecb35-8324-411b-9d0f-cd131de42a57"
+			      }
+			    ]
+			  },
+			  {
+			    "type": "trigger",
+			    "enabled": false,
+			    "name": "Trigger which fails",
+			    "concurrency": "BLOCK_NEW",
+			    "eventType": "gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent",
+			    "conditions": [
+			      {
+			        "@class": "gg.xp.xivsupport.events.triggers.easytriggers.conditions.AbilityIdFilter",
+			        "operator": "EQ",
+			        "expected": 173
+			      },
+			      {
+			        "@class": "gg.xp.xivsupport.events.triggers.easytriggers.conditions.NonExistent",
+			        "invert": false
+			      }
+			    ],
+			    "actions": [
+			      {
+			        "@class": "gg.xp.xivsupport.events.triggers.easytriggers.actions.CalloutAction",
+			        "tts": "{event.source} just raised {event.target}",
+			        "text": "{event.source} just raised {event.target}",
+			        "colorRaw": -6684928,
+			        "hangTime": 3333,
+			        "useIcon": true,
+			        "uuid": "4fcdcfb5-4f74-4a49-b425-2faf7460caae"
+			      }
+			    ]
+			  }
+			]""";
+
+	private static final String nestedFail = """
+			[
+			  {
+			    "type": "folder",
+			    "childTriggers": [
+			      {
+			        "type": "trigger",
+			        "actions": [
+			          {
+			            "@class": "gg.xp.xivsupport.events.triggers.easytriggers.actions.WaitCastDurationAction",
+			            "remainingDurationMs": 1000
+			          },
+			          {
+			            "@class": "gg.xp.xivsupport.events.triggers.easytriggers.actions.DurationBasedCalloutAction",
+			            "colorRaw": null,
+			            "hangTime": 5000,
+			            "plusDuration": true,
+			            "text": "{event.ability} ({event.estimatedRemainingDuration})",
+			            "tts": "{event.ability}",
+			            "useIcon": true,
+			            "uuid": "2c178e1b-af01-48f7-a37e-303557015108"
+			          }
+			        ],
+			        "concurrency": "BLOCK_NEW",
+			        "conditions": [
+			          {
+			            "@class": "gg.xp.xivsupport.events.triggers.easytriggers.conditions.AbilityIdFilter",
+			            "expected": 0,
+			            "operator": "EQ"
+			          }
+			        ],
+			        "enabled": true,
+			        "eventType": "gg.xp.xivsupport.events.actlines.events.AbilityCastStart",
+			        "name": "Give me a name"
+			      },
+			      {
+			        "type": "trigger",
+			        "actions": [
+			          {
+			            "@class": "gg.xp.xivsupport.events.triggers.easytriggers.actions.CalloutAction",
+			            "colorRaw": null,
+			            "hangTime": 5000,
+			            "text": "Log Line {event.rawFields[0]}",
+			            "tts": "Log Line {event.rawFields[0]}",
+			            "useIcon": true,
+			            "uuid": "70c7de58-b124-41c1-a782-b00e73fd7596"
+			          }
+			        ],
+			        "concurrency": "BLOCK_NEW",
+			        "conditions": [
+			          {
+			            "@class": "gg.xp.xivsupport.events.triggers.easytriggers.conditions.LogLineRegexFilter",
+			            "lineType": "NETWORK",
+			            "matcherVar": "",
+			            "regex": "^Regex Here$"
+			          }
+			        ],
+			        "enabled": true,
+			        "eventType": "gg.xp.xivsupport.events.ACTLogLineEvent",
+			        "name": "Give me a name"
+			      },
+			      {
+			        "type": "trigger",
+			        "actions": [
+			          {
+			            "@class": "gg.xp.xivsupport.events.triggers.easytriggers.actions.CalloutAction",
+			            "colorRaw": null,
+			            "hangTime": 5000,
+			            "text": "Log Line {event.rawFields[0]}",
+			            "tts": "Log Line {event.rawFields[0]}",
+			            "useIcon": true,
+			            "uuid": "70c7de58-b124-41c1-a782-b00e73fd7596"
+			          }
+			        ],
+			        "concurrency": "BLOCK_NEW",
+			        "conditions": [
+			          {
+			            "@class": "gg.xp.xivsupport.events.triggers.easytriggers.conditions.LogLineRegexFilter",
+			            "lineType": "NETWORK",
+			            "matcherVar": "",
+			            "regex": "^Regex Here$"
+			          }
+			        ],
+			        "enabled": true,
+			        "eventType": "gg.xp.xivsupport.events.ACTLogLineEvent",
+			        "name": "Give me a name"
+			      },
+			      {
+			        "type": "trigger",
+			        "actions": [
+			          {
+			            "@class": "gg.xp.xivsupport.events.triggers.easytriggers.actions.CalloutAction2",
+			            "colorRaw": null,
+			            "hangTime": 5000,
+			            "text": "Log Line {event.rawFields[0]}",
+			            "tts": "Log Line {event.rawFields[0]}",
+			            "useIcon": true,
+			            "uuid": "70c7de58-b124-41c1-a782-b00e73fd7596"
+			          }
+			        ],
+			        "concurrency": "BLOCK_NEW",
+			        "conditions": [
+			          {
+			            "@class": "gg.xp.xivsupport.events.triggers.easytriggers.conditions.LogLineRegexFilter",
+			            "lineType": "NETWORK",
+			            "matcherVar": "",
+			            "regex": "^Regex Here$"
+			          }
+			        ],
+			        "enabled": true,
+			        "eventType": "gg.xp.xivsupport.events.ACTLogLineEvent",
+			        "name": "Fail example"
+			      }
+			    ],
+			    "conditions": [
+			      {
+			        "@class": "gg.xp.xivsupport.events.triggers.easytriggers.conditions.ZoneIdFilter",
+			        "expected": 0,
+			        "operator": "EQ"
+			      },
+			      {
+			        "@class": "gg.xp.xivsupport.events.triggers.easytriggers.conditions.ZoneIdFilter",
+			        "expected": 0,
+			        "operator": "EQ"
+			      },
+			      {
+			        "@class": "gg.xp.xivsupport.events.triggers.easytriggers.conditions.ZoneIdFilter",
+			        "expected": 0,
+			        "operator": "EQ"
+			      },
+			      {
+			        "@class": "gg.xp.xivsupport.events.triggers.easytriggers.conditions.OrFilter",
+			        "conditions": [
+			          {
+			            "@class": "gg.xp.xivsupport.events.triggers.easytriggers.conditions.ZoneIdFilter",
+			            "expected": 0,
+			            "operator": "EQ"
+			          },
+			          {
+			            "@class": "gg.xp.xivsupport.events.triggers.easytriggers.conditions.ZoneIdFilter",
+			            "expected": 0,
+			            "operator": "EQ"
+			          }
+			        ],
+			        "eventType": "java.lang.Object"
+			      },
+			      {
+			        "@class": "gg.xp.xivsupport.events.triggers.easytriggers.conditions.GroovyFolderFilter",
+			        "groovyScript": "",
+			        "strict": true
+			      },
+			      {
+			        "@class": "gg.xp.xivsupport.events.triggers.easytriggers.conditions.GroovyFolderFilter",
+			        "groovyScript": "",
+			        "strict": true
+			      },
+			      {
+			        "@class": "gg.xp.xivsupport.events.triggers.easytriggers.conditions.GroovyFolderFilter",
+			        "groovyScript": "-a",
+			        "strict": true
+			      }
+			    ],
+			    "enabled": true,
+			    "name": "Test folder"
+			  }
+			]
+			""";
 }

@@ -1,10 +1,10 @@
 package gg.xp.xivsupport.persistence.settings;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import gg.xp.xivsupport.persistence.InMemoryMapPersistenceProvider;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import org.hamcrest.Matcher;
@@ -51,7 +51,7 @@ public class CustomJsonListSettingTest {
 				});
 				return nodes.stream().map(Object::toString).toList();
 			}
-			catch (JsonProcessingException e) {
+			catch (JacksonException e) {
 				throw new RuntimeException(e);
 			}
 		}
@@ -61,7 +61,7 @@ public class CustomJsonListSettingTest {
 				return mapper.readValue((pers.get(failuresKey, String.class, "[]")), new TypeReference<>() {
 				});
 			}
-			catch (JsonProcessingException e) {
+			catch (JacksonException e) {
 				throw new RuntimeException(e);
 			}
 		}
@@ -105,7 +105,7 @@ public class CustomJsonListSettingTest {
 	void testDeserializationWithFailure() {
 		String mySetting = """
 				[ { "ints": [3, 4, 5], "label": "Foo" } ,
-				{ "ints": [3, 4, 5], "larbel": "Foo" } ]
+				{ "ints": [3, 4, 5], "label": [5, 7] } ]
 				""";
 		TestData data = fromSaved(mySetting, null);
 		CustomJsonListSetting<MyTestDataClass> setting = data.setting;
@@ -117,7 +117,7 @@ public class CustomJsonListSettingTest {
 			List<String> failures = setting.getFailedItems();
 			MatcherAssert.assertThat(failures, Matchers.hasSize(1));
 			MatcherAssert.assertThat(failures.get(0), Matchers.equalTo("""
-					{"ints":[3,4,5],"larbel":"Foo"}"""));
+					{"ints":[3,4,5],"label":[5,7]}"""));
 			MatcherAssert.assertThat(data.getSaved(), Matchers.hasSize(1));
 			MatcherAssert.assertThat(data.getFailures(), Matchers.hasSize(1));
 		}
@@ -133,7 +133,7 @@ public class CustomJsonListSettingTest {
 			List<String> failures = setting.getFailedItems();
 			MatcherAssert.assertThat(failures, Matchers.hasSize(1));
 			MatcherAssert.assertThat(failures.get(0), Matchers.equalTo("""
-					{"ints":[3,4,5],"larbel":"Foo"}"""));
+					{"ints":[3,4,5],"label":[5,7]}"""));
 			MatcherAssert.assertThat(data.getSaved(), Matchers.hasSize(1));
 			MatcherAssert.assertThat(data.getFailures(), Matchers.hasSize(1));
 		}

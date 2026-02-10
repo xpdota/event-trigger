@@ -1,17 +1,19 @@
 package gg.xp.xivsupport.persistence;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.databind.json.JsonMapper;
 
 public abstract class BaseStringPersistenceProvider implements PersistenceProvider {
 
 	private static final Logger log = LoggerFactory.getLogger(BaseStringPersistenceProvider.class);
-	private static final ObjectMapper mapper = new ObjectMapper();
+	// For now, let this use jackson2 backwards compatible defaults.
+	private static final ObjectMapper mapper = JsonMapper.builder().configureForJackson2().build();
 
 	@Override
 	public void save(@NotNull String key, @NotNull Object value) {
@@ -20,7 +22,7 @@ public abstract class BaseStringPersistenceProvider implements PersistenceProvid
 			try {
 				convertedValue = mapper.writeValueAsString(value);
 			}
-			catch (JsonProcessingException e) {
+			catch (JacksonException e) {
 				log.error("Error serializing value", e);
 				throw new RuntimeException(e);
 			}
@@ -45,7 +47,7 @@ public abstract class BaseStringPersistenceProvider implements PersistenceProvid
 				try {
 					return mapper.readValue(raw, type);
 				}
-				catch (JsonProcessingException e) {
+				catch (JacksonException e) {
 					log.error("Error deserializing value", e);
 					return dflt;
 				}

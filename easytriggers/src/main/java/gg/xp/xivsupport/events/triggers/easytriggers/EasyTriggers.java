@@ -1,12 +1,5 @@
 package gg.xp.xivsupport.events.triggers.easytriggers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.BeanProperty;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.InjectableValues;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
@@ -114,6 +107,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTriggerMigrationHelper;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EventDescription;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EventDescriptionImpl;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.FailedDeserializationTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.HasChildTriggers;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableActions;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableConditions;
@@ -132,6 +126,18 @@ import org.jetbrains.annotations.Nullable;
 import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.BeanProperty;
+import tools.jackson.databind.DefaultTyping;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.InjectableValues;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.module.SimpleModule;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.ser.ValueSerializerModifier;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -147,7 +153,8 @@ public final class EasyTriggers implements HasChildTriggers {
 
 	private static final String settingKey = "easy-triggers.my-triggers-2";
 	private static final String failedTriggersSettingKey = "easy-triggers.failed-triggers-2";
-	private final ObjectMapper mapper = new ObjectMapper();
+	private final ObjectMapper mapper;
+	private final ObjectMapper strictMapper;
 
 	private final PicoContainer pico;
 	private final XivState state;
@@ -160,12 +167,21 @@ public final class EasyTriggers implements HasChildTriggers {
 		this.pico = pico;
 		this.state = state;
 		this.master = master;
-		mapper.setInjectableValues(new InjectableValues() {
+		var failSurrogate = new SimpleModule();
+		failSurrogate.setDeserializerModifier(new FailCaptureDeserializerModifier<>(BaseTrigger.class, FailedDeserializationTrigger.class, FailedDeserializationTrigger::new));
+		InjectableValues inject = new InjectableValues() {
 			@Override
-			public Object findInjectableValue(Object o, DeserializationContext deserializationContext, BeanProperty beanProperty, Object o1) {
-				return inject(beanProperty.getType().getRawClass());
+			public InjectableValues snapshot() {
+				return this;
 			}
-		});
+
+			@Override
+			public Object findInjectableValue(DeserializationContext ctxt, Object valueId, BeanProperty forProperty, Object beanInstance, Boolean optional, Boolean useInput) throws JacksonException {
+				return inject(forProperty.getType().getRawClass());
+			}
+		};
+		this.mapper = JsonMapper.builder().injectableValues(inject).addModule(failSurrogate).build();
+		this.strictMapper = JsonMapper.builder().injectableValues(inject).build();
 
 		BooleanSetting legacyMigrationDone = new BooleanSetting(pers, "easy-triggers.legacy-migration-done", false);
 
@@ -235,16 +251,14 @@ public final class EasyTriggers implements HasChildTriggers {
 		return pico.getComponent(clazz);
 	}
 
-	@SuppressWarnings({"SerializableNonStaticInnerClassWithoutSerialVersionUID", "ClassExtendsConcreteCollection", "SerializableInnerClassWithNonSerializableOuterClass"})
 	public String exportToString(List<? extends BaseTrigger<?>> toExport) {
 		try {
 			// We have to do this weird jank because Jackson won't include the type information
 			// if we give it a raw list. It thinks that it's a List<Object> due to type erasure, so
 			// it doesn't bother including polymorphic typing information.
-			return mapper.writeValueAsString(new ArrayList<BaseTrigger<?>>(toExport) {
-			});
+			return mapper.writeValueAsString(toExport.stream().map(mapper::valueToTree).toList());
 		}
-		catch (JsonProcessingException e) {
+		catch (JacksonException e) {
 			throw new RuntimeException("Error exporting trigger", e);
 		}
 	}
@@ -253,7 +267,7 @@ public final class EasyTriggers implements HasChildTriggers {
 		try {
 			return mapper.writeValueAsString(condition);
 		}
-		catch (JsonProcessingException e) {
+		catch (JacksonException e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -262,7 +276,7 @@ public final class EasyTriggers implements HasChildTriggers {
 		try {
 			return mapper.writeValueAsString(action);
 		}
-		catch (JsonProcessingException e) {
+		catch (JacksonException e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -271,7 +285,7 @@ public final class EasyTriggers implements HasChildTriggers {
 		try {
 			return mapper.readValue(input, Condition.class);
 		}
-		catch (JsonProcessingException e) {
+		catch (JacksonException e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -280,14 +294,14 @@ public final class EasyTriggers implements HasChildTriggers {
 		try {
 			return mapper.readValue(input, Action.class);
 		}
-		catch (JsonProcessingException e) {
+		catch (JacksonException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
 	public List<EasyTrigger<?>> importFromString(String string) {
 		try {
-			List<JsonNode> nodes = mapper.readValue(string, new TypeReference<>() {
+			List<JsonNode> nodes = strictMapper.readValue(string, new TypeReference<>() {
 			});
 			List<EasyTrigger<?>> out = new ArrayList<>(nodes.size());
 			for (JsonNode node : nodes) {
@@ -297,14 +311,14 @@ public final class EasyTriggers implements HasChildTriggers {
 			}
 			return out;
 		}
-		catch (JsonProcessingException e) {
+		catch (JacksonException e) {
 			throw new ValidationError("Error importing trigger: " + e.getMessage(), e);
 		}
 	}
 
 	public List<BaseTrigger<?>> importFromString2(String string) {
 		try {
-			List<JsonNode> nodes = mapper.readValue(string, new TypeReference<>() {
+			List<JsonNode> nodes = strictMapper.readValue(string, new TypeReference<>() {
 			});
 			List<BaseTrigger<?>> out = new ArrayList<>(nodes.size());
 			for (JsonNode node : nodes) {
@@ -316,7 +330,7 @@ public final class EasyTriggers implements HasChildTriggers {
 			}
 			return out;
 		}
-		catch (JsonProcessingException e) {
+		catch (JacksonException e) {
 			throw new ValidationError("Error importing trigger: " + e.getMessage(), e);
 		}
 	}
@@ -645,7 +659,8 @@ public final class EasyTriggers implements HasChildTriggers {
 					// Filter based on the target type
 					if (trigger instanceof EasyTrigger) {
 						return cdesc.target() == ConditionTarget.TRIGGER_ONLY || cdesc.target() == ConditionTarget.BOTH;
-					} else if (trigger instanceof TriggerFolder) {
+					}
+					else if (trigger instanceof TriggerFolder) {
 						return cdesc.target() == ConditionTarget.FOLDER_ONLY || cdesc.target() == ConditionTarget.BOTH;
 					}
 					return true; // Default to showing all conditions for unknown trigger types

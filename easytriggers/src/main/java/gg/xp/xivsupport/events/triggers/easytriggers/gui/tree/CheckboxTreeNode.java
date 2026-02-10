@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.gui.tree;
 
 import gg.xp.xivsupport.events.triggers.easytriggers.model.BaseTrigger;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.FailedDeserializationTrigger;
 import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
 import gg.xp.xivsupport.gui.util.ColorUtils;
 import org.slf4j.Logger;
@@ -33,6 +34,9 @@ public class CheckboxTreeNode extends JPanel {
 		DefaultTreeCellRenderer defaultRenderer = new DefaultTreeCellRenderer();
 		this.defaultRenderer = defaultRenderer;
 		Component label = defaultRenderer.getTreeCellRendererComponent(tree, stringLabel, selected, expanded, leaf, row, false);
+		if (item instanceof FailedDeserializationTrigger) {
+			label.setForeground(Color.RED);
+		}
 		setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
 		add(checkBox);
 		add(label);
