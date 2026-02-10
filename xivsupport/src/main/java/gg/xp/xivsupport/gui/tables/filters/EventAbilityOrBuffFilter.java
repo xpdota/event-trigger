@@ -14,7 +14,7 @@ public class EventAbilityOrBuffFilter extends TextBasedFilter<Object> {
 	private static final Logger log = LoggerFactory.getLogger(EventAbilityOrBuffFilter.class);
 
 	public EventAbilityOrBuffFilter(Runnable filterUpdatedCallback) {
-		super(filterUpdatedCallback, "Ability/Buff", EventAbilityOrBuffFilter::getNameForItem);
+		super(filterUpdatedCallback, "Ability/Status", EventAbilityOrBuffFilter::getNameForItem);
 	}
 
 	@Override

@@ -3,8 +3,8 @@ package gg.xp.xivsupport.events.triggers.easytriggers.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.OptBoolean;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
@@ -14,24 +14,23 @@ import org.jetbrains.annotations.Nullable;
 		use = JsonTypeInfo.Id.NAME,
 		include = JsonTypeInfo.As.PROPERTY,
 		property = "type",
-		defaultImpl = EasyTrigger.class
+		defaultImpl = EasyTrigger.class,
+		visible = true,
+		requireTypeIdForSubtypes = OptBoolean.FALSE
 )
-@JsonSubTypes({
-		@JsonSubTypes.Type(value = EasyTrigger.class, name = "trigger"),
-		@JsonSubTypes.Type(value = TriggerFolder.class, name = "folder"),
-})
-public abstract sealed class BaseTrigger<X> implements HasMutableConditions<X> permits TriggerFolder, EasyTrigger {
+public abstract sealed class BaseTrigger<X> implements HasMutableConditions<X> permits TriggerFolder, EasyTrigger, FailedDeserializationTrigger {
 
-	@JsonProperty(defaultValue = "true")
 	private boolean enabled = true;
 	private String name = "Give me a name";
 
 	public abstract void recalc();
 
+	@JsonProperty
 	public boolean isEnabled() {
 		return enabled;
 	}
 
+	@JsonProperty(defaultValue = "true")
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
@@ -40,6 +39,11 @@ public abstract sealed class BaseTrigger<X> implements HasMutableConditions<X> p
 
 	public String getName() {
 		return name;
+	}
+
+	@JsonIgnore
+	public String getTreeLabel() {
+		return getName();
 	}
 
 	public void setName(String name) {
@@ -64,7 +68,7 @@ public abstract sealed class BaseTrigger<X> implements HasMutableConditions<X> p
 	}
 
 	@JsonIgnore
-	public void setParent(HasChildTriggers parent) {
+	public void setParent(@Nullable HasChildTriggers parent) {
 		this.parent = parent;
 	}
 

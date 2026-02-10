@@ -19,6 +19,7 @@
         <module>personal-cast-bar-overlay</module>
         <module>skill-hit-overlay</module>
         <module>custom-party-overlay</module>
+        <module>auto-exit</module>
     </modules>
 
 </project>

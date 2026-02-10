@@ -11,7 +11,8 @@ import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import gg.xp.xivsupport.gui.tables.filters.GroovyFilter;
-import gg.xp.xivsupport.gui.tables.filters.IdOrNameFilter;
+import gg.xp.xivsupport.gui.tables.filters.IdFilter;
+import gg.xp.xivsupport.gui.tables.filters.TextBasedFilter;
 import gg.xp.xivsupport.gui.tables.groovy.GroovyColumns;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
@@ -43,19 +44,19 @@ public final class ActionTableFactory {
 	}
 
 	public TableWithFilterAndDetails<ActionInfo, Object> table() {
-		return TableWithFilterAndDetails.builder("Actions/Abilities", () -> {
+		return TableWithFilterAndDetails.<ActionInfo, Object>builder("Actions/Abilities", () -> {
 					Map<Integer, ActionInfo> csvValues = ActionLibrary.getAll();
 					List<ActionInfo> values = new ArrayList<>(csvValues.values());
 					values.sort(Comparator.comparing(ActionInfo::actionid));
 					return values;
 				}, unused -> Collections.emptyList())
-				.addMainColumn(new CustomColumn<>("ID", v -> String.format("0x%X (%s)", v.actionid(), v.actionid()), col -> {
+				.addMainColumn(new CustomColumn<ActionInfo>("ID", v -> String.format("0x%X (%s)", v.actionid(), v.actionid()), col -> {
 					col.setMinWidth(100);
 					col.setMaxWidth(100);
-				}))
+				}).withFilter(t -> new IdFilter<>(t, "ID", ActionInfo::actionid)))
 				.addMainColumn(new CustomColumn<>("Name", ActionInfo::name, col -> {
 					col.setPreferredWidth(200);
-				}))
+				}).withFilter(t -> new TextBasedFilter<>(t, "Name", ActionInfo::name)))
 				.addMainColumn(new CustomColumn<>("Icon", ai -> {
 					ActionIcon icon = ai.getIcon();
 					if (icon == null || icon.isDefaultIcon()) {
@@ -78,14 +79,20 @@ public final class ActionTableFactory {
 				}))
 				.addMainColumn(new CustomColumn<>("Description", ActionInfo::description, col -> {
 					col.setPreferredWidth(500);
-				}))
+				}).withFilter(t -> new TextBasedFilter<>(t, "Description", ActionInfo::description)))
 				.addMainColumn(new CustomColumn<>("Player Ability", ai -> ai.isPlayerAbility() ? "✓" : ""))
 				.addMainColumn(new CustomColumn<>("Cast", ai -> {
+					// In the game files, cast times are represented as 100ms units, so we never need more than
+					// one decimal place.
 					double ct = ai.getCastTime();
 					if (ct == 0) {
 						return "";
 					}
-					return ct;
+					double extra = ai.getExtraCastTime();
+					if (extra > 0)  {
+						return "%.1f + %.1f".formatted(ct, extra);
+					}
+					return "%.1f".formatted(ct);
 				}))
 				.addMainColumn(new CustomColumn<>("Recast", ai -> {
 					int maxCharges = ai.maxCharges();
@@ -108,7 +115,6 @@ public final class ActionTableFactory {
 						}
 					});
 				}))
-				.addFilter(t -> new IdOrNameFilter<>("Name/ID", ActionInfo::actionid, ActionInfo::name, t))
 				.addWidget(InGameAbilityPickerButton::new)
 				.addWidget(tbl -> JumpToIdWidget.create(tbl, ActionInfo::actionid))
 				.addFilter(GroovyFilter.forClass(ActionInfo.class, container.getComponent(GroovyManager.class), "it"))
@@ -139,7 +145,7 @@ public final class ActionTableFactory {
 	}
 
 	public TableWithFilterAndDetails<ActionInfo, PropertyValue> tableWithDetails() {
-		return TableWithFilterAndDetails.builder("Actions/Abilities",
+		return TableWithFilterAndDetails.<ActionInfo, PropertyValue>builder("Actions/Abilities",
 						() -> {
 							Map<Integer, ActionInfo> csvValues = ActionLibrary.getAll();
 							List<ActionInfo> values = new ArrayList<>(csvValues.values());
@@ -147,13 +153,13 @@ public final class ActionTableFactory {
 							return values;
 						}, GroovyColumns::getValues
 				)
-				.addMainColumn(new CustomColumn<>("ID", v -> String.format("0x%X (%s)", v.actionid(), v.actionid()), col -> {
+				.addMainColumn(new CustomColumn<ActionInfo>("ID", v -> String.format("0x%X (%s)", v.actionid(), v.actionid()), col -> {
 					col.setMinWidth(100);
 					col.setMaxWidth(100);
-				}))
+				}).withFilter(t -> new IdFilter<>(t, "ID", ActionInfo::actionid)))
 				.addMainColumn(new CustomColumn<>("Name", ActionInfo::name, col -> {
 					col.setPreferredWidth(200);
-				}))
+				}).withFilter(t -> new TextBasedFilter<>(t, "Name", ActionInfo::name)))
 				.addMainColumn(new CustomColumn<>("Icon", ai -> {
 					ActionIcon icon = ai.getIcon();
 					if (icon == null || icon.isDefaultIcon()) {
@@ -176,14 +182,20 @@ public final class ActionTableFactory {
 				}))
 				.addMainColumn(new CustomColumn<>("Description", ActionInfo::description, col -> {
 					col.setPreferredWidth(500);
-				}))
+				}).withFilter(t -> new TextBasedFilter<>(t, "Description", ActionInfo::description)))
 				.addMainColumn(new CustomColumn<>("Player Ability", ai -> ai.isPlayerAbility() ? "✓" : ""))
 				.addMainColumn(new CustomColumn<>("Cast", ai -> {
+					// In the game files, cast times are represented as 100ms units, so we never need more than
+					// one decimal place.
 					double ct = ai.getCastTime();
 					if (ct == 0) {
 						return "";
 					}
-					return ct;
+					double extra = ai.getExtraCastTime();
+					if (extra > 0)  {
+						return "%.1f + %.1f".formatted(ct, extra);
+					}
+					return "%.1f".formatted(ct);
 				}))
 				.addMainColumn(new CustomColumn<>("Recast", ai -> {
 					int maxCharges = ai.maxCharges();
@@ -206,7 +218,6 @@ public final class ActionTableFactory {
 						}
 					});
 				}))
-				.addFilter(t -> new IdOrNameFilter<>("Name/ID", ActionInfo::actionid, ActionInfo::name, t))
 				.addWidget(InGameAbilityPickerButton::new)
 				.addWidget(tbl -> JumpToIdWidget.create(tbl, ActionInfo::actionid))
 				.addFilter(GroovyFilter.forClass(ActionInfo.class, container.getComponent(GroovyManager.class), "it"))

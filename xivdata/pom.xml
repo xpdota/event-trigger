@@ -26,7 +26,7 @@
         </dependency>
 <!--        TODO move data generators out-->
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
+            <groupId>tools.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
         <!-- https://mvnrepository.com/artifact/com.opencsv/opencsv -->

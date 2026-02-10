@@ -7,7 +7,7 @@ import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import gg.xp.xivsupport.gui.tables.filters.BooleanEventFilter;
-import gg.xp.xivsupport.gui.tables.filters.IdOrNameFilter;
+import gg.xp.xivsupport.gui.tables.filters.IdFilter;
 import gg.xp.xivsupport.gui.tables.filters.TextBasedFilter;
 import gg.xp.xivsupport.gui.tables.renderers.StatusEffectListRenderer;
 import gg.xp.xivsupport.gui.util.GuiUtil;
@@ -31,22 +31,22 @@ public final class StatusTableFactory {
 	}
 
 	public TableWithFilterAndDetails<StatusEffectInfo, Object> table() {
-		return TableWithFilterAndDetails.builder("Status Effects", () -> {
+		return TableWithFilterAndDetails.<StatusEffectInfo, Object>builder("Status Effects", () -> {
 					Map<Integer, StatusEffectInfo> csvValues = StatusEffectLibrary.getAll();
 					List<StatusEffectInfo> values = new ArrayList<>(csvValues.values());
 					values.sort(Comparator.comparing(StatusEffectInfo::statusEffectId));
 					return values;
 				}, unused -> Collections.emptyList())
-				.addMainColumn(new CustomColumn<>("ID", v -> String.format("0x%X (%s)", v.statusEffectId(), v.statusEffectId()), col -> {
+				.addMainColumn(new CustomColumn<StatusEffectInfo>("ID", v -> String.format("0x%X (%s)", v.statusEffectId(), v.statusEffectId()), col -> {
 					col.setMinWidth(100);
 					col.setMaxWidth(100);
-				}))
-				.addMainColumn(new CustomColumn<>("Name", StatusEffectInfo::name, col -> {
+				}).withFilter(t -> new IdFilter<>(t, "ID", StatusEffectInfo::statusEffectId)))
+				.addMainColumn(new CustomColumn<StatusEffectInfo>("Name", StatusEffectInfo::name, col -> {
 					col.setPreferredWidth(200);
-				}))
-				.addMainColumn(new CustomColumn<>("Description", StatusEffectInfo::description, col -> {
+				}).withFilter(t -> new TextBasedFilter<>(t, "Name", StatusEffectInfo::name)))
+				.addMainColumn(new CustomColumn<StatusEffectInfo>("Description", StatusEffectInfo::description, col -> {
 					col.setPreferredWidth(500);
-				}))
+				}).withFilter(t -> new TextBasedFilter<>(t, "Description", StatusEffectInfo::description)))
 				.addMainColumn(new CustomColumn<>("Stacks", StatusEffectInfo::maxStacks, col -> {
 					col.setMinWidth(50);
 					col.setMaxWidth(50);
@@ -55,8 +55,6 @@ public final class StatusTableFactory {
 					col.setCellRenderer(new StatusEffectListRenderer());
 					col.setPreferredWidth(500);
 				}))
-				.addFilter(t -> new IdOrNameFilter<>("Name/ID", StatusEffectInfo::statusEffectId, StatusEffectInfo::name, t))
-				.addFilter(t -> new TextBasedFilter<>(t, "Description", StatusEffectInfo::description))
 				.addFilter(t -> new BooleanEventFilter<>(t, "Show Useless", (checked, item) -> checked || !item.isUseless(), false))
 				.addWidget(tbl -> JumpToIdWidget.create(tbl, StatusEffectInfo::statusEffectId))
 				.setFixedData(true)

@@ -1,7 +1,7 @@
 package gg.xp.xivsupport.events.ws;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import gg.xp.reevent.context.StateStore;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
@@ -203,7 +203,7 @@ public class ActWsLogSource implements EventSource {
 		try {
 			client.send(mapper.writeValueAsString(Map.of("call", "getVersion", "rseq", "getVersion")));
 		}
-		catch (JsonProcessingException e) {
+		catch (JacksonException e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -214,7 +214,7 @@ public class ActWsLogSource implements EventSource {
 		try {
 			client.send(mapper.writeValueAsString(Map.of("call", "getLanguage", "rseq", "getLanguage")));
 		}
-		catch (JsonProcessingException e) {
+		catch (JacksonException e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -273,7 +273,7 @@ public class ActWsLogSource implements EventSource {
 		try {
 			asString = mapper.writeValueAsString(object);
 		}
-		catch (JsonProcessingException e) {
+		catch (JacksonException e) {
 			throw new RuntimeException(e);
 		}
 		sendString(asString);
@@ -423,7 +423,7 @@ public class ActWsLogSource implements EventSource {
 							Map.entry("props", cbtProps)
 					));
 		}
-		catch (JsonProcessingException e) {
+		catch (JacksonException e) {
 			throw new RuntimeException("Could not build JSON request", e);
 		}
 	}

@@ -6,7 +6,8 @@ import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
-import gg.xp.xivsupport.gui.tables.filters.IdOrNameFilter;
+import gg.xp.xivsupport.gui.tables.filters.IdFilter;
+import gg.xp.xivsupport.gui.tables.filters.TextBasedFilter;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,21 +28,20 @@ public final class ZonesTableFactory {
 	}
 
 	public TableWithFilterAndDetails<ZoneInfo, Object> table() {
-		return TableWithFilterAndDetails.builder("Zones", () -> {
+		return TableWithFilterAndDetails.<ZoneInfo, Object>builder("Zones", () -> {
 					Map<Integer, ZoneInfo> csvValues = ZoneLibrary.getFileValues();
 					return csvValues.values().stream().sorted(Comparator.comparing(ZoneInfo::id)).toList();
 				}, unused -> Collections.emptyList())
-				.addMainColumn(new CustomColumn<>("ID", v -> String.format("0x%X (%s)", v.id(), v.id()), col -> {
+				.addMainColumn(new CustomColumn<ZoneInfo>("ID", v -> String.format("0x%X (%s)", v.id(), v.id()), col -> {
 					col.setMinWidth(100);
 					col.setMaxWidth(100);
-				}))
-				.addMainColumn(new CustomColumn<>("Place Name", ZoneInfo::placeName, col -> {
+				}).withFilter(t -> new IdFilter<>(t, "ID", zi -> (long) zi.id())))
+				.addMainColumn(new CustomColumn<ZoneInfo>("Place Name", ZoneInfo::placeName, col -> {
 //					col.setPreferredWidth(200);
-				}))
-				.addMainColumn(new CustomColumn<>("Duty Name", ZoneInfo::dutyName, col -> {
+				}).withFilter(t -> new TextBasedFilter<>(t, "Place Name", ZoneInfo::placeName)))
+				.addMainColumn(new CustomColumn<ZoneInfo>("Duty Name", ZoneInfo::dutyName, col -> {
 //					col.setPreferredWidth(200);
-				}))
-				.addFilter(t -> new IdOrNameFilter<>("Name/ID", zi -> (long) zi.id(), zi -> String.format("%s %s", zi.dutyName(), zi.placeName()), t))
+				}).withFilter(t -> new TextBasedFilter<>(t, "Duty Name", ZoneInfo::dutyName)))
 				.addWidget(tbl -> JumpToIdWidget.create(tbl, zi -> (long) zi.id()))
 				.setFixedData(true)
 				.withRightClickRepo(rightClickOptionRepo.withMore(

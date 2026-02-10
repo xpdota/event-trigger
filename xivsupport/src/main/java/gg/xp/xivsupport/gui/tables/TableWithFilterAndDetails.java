@@ -12,7 +12,16 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.TableColumnModelEvent;
+import javax.swing.event.TableColumnModelListener;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -93,9 +102,25 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 					case ALWAYS -> true;
 				};
 			}
+
+			// TODO: when scrolled to the bottom, with auto scroll enabled, this repaints
+			// three times when new data is added.
+			// First is a partial repaint from the fireTableRowsInserted() call
+			// Second is a full repaint from the table itself, because it has to stretch itself out of its normal bounds
+			// Third is a full repaint from the AutoBottomScrollHelper
+			// We need #3 - otherwise, it wouldn't repaint after we scroll it down
+			// #2 is a bit more tricky - even if auto scroll is disabled, we still need some kind of repaint,
+			// especially if the row count decreases and we do a full repaint
+//			@Override
+//			public void repaint(long tm, int x, int y, int width, int height) {
+//				super.repaint(tm, x, y, width, height);
+//			}
+
 		};
 		mainModel.configureColumns(table);
+		table.setTableHeader(new JTableHeader(table.getColumnModel()));
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		table.setOpaque(true);
 		ListSelectionModel selectionModel = table.getSelectionModel();
 		selectionModel.addListSelectionListener(e -> {
 			int[] selected = selectionModel.getSelectedIndices();
@@ -111,6 +136,8 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 //			detailsModel.fireTableDataChanged();
 		});
 
+		FilterRowPanel filterRowPanel = new FilterRowPanel();
+
 		// Top panel
 		JPanel topBasicPanel = new JPanel() {
 			@Override
@@ -119,6 +146,7 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 				SwingUtilities.invokeLater(this::revalidate);
 			}
 		};
+		topBasicPanel.setOpaque(false);
 		List<Component> extraPanels = new ArrayList<>();
 		topBasicPanel.setLayout(new WrapLayout(WrapLayout.LEFT, 7, 7));
 
@@ -148,33 +176,45 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 			stayAtBottom = null;
 			isAutoRefreshEnabled = true;
 		}
-		filters = filterCreators.stream().map(filterCreator -> filterCreator.apply(this::updateFiltering))
+		scroller.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		List<VisualFilter<? super X>> allFilters = new ArrayList<>();
+		filterCreators.stream().map(filterCreator -> filterCreator.apply(this::updateFiltering))
 				.filter(Objects::nonNull)
-				.collect(Collectors.toList());
-		filters.forEach(filter -> {
-			if (filter instanceof SplitVisualFilter<?> splitFilter) {
-				JPanel component = splitFilter.getComponent();
-				component.setBorder(new EmptyBorder(0, 7, 7, 7));
-				extraPanels.add(component);
-				component.setVisible(false);
-				JButton button = new JButton("Show/Hide " + splitFilter.getName());
-				topBasicPanel.add(button);
-				button.addActionListener(l -> component.setVisible(!component.isVisible()));
-			}
-			else {
-				topBasicPanel.add(filter.getComponent());
-			}
+				.forEach(filter -> {
+					allFilters.add(filter);
+					if (filter instanceof SplitVisualFilter<?> splitFilter) {
+						JPanel component = splitFilter.getComponent();
+						component.setBorder(new EmptyBorder(0, 7, 7, 7));
+						component.setOpaque(false);
+						extraPanels.add(component);
+						component.setVisible(false);
+						JButton button = new JButton("Show/Hide " + splitFilter.getName());
+						topBasicPanel.add(button);
+						button.addActionListener(l -> component.setVisible(!component.isVisible()));
+					}
+					else {
+						Component component = filter.getComponent();
+						if (component instanceof JComponent jc) {
+							jc.setOpaque(false);
+						}
+						topBasicPanel.add(component);
+					}
 
-		});
+				});
+		// Handle column-specific filters
+		TableColumnModel tcm = table.getColumnModel();
+		for (int i = 0; i < mainColumns.size(); i++) {
+			CustomColumn<? super X> col = mainColumns.get(i);
+			VisualFilter<? super X> filter = col.getFilter(this::updateFiltering);
+			if (filter != null) {
+				allFilters.add(filter);
+				// Add the filter component to the table header
+				filterRowPanel.add(new HeaderFilterWrapper(tcm.getColumn(i), filter.getHeaderComponent()));
+			}
+		}
+		filters = allFilters;
 		widgets.stream().map(w -> w.apply(this)).forEach(topBasicPanel::add);
 
-//		JPanel topPanel = new JPanel();
-//		topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.PAGE_AXIS));
-//
-//		topPanel.add(topBasicPanel);
-//		extraPanels.forEach(topPanel::add);
-//
-//		add(topPanel, BorderLayout.PAGE_START);
 		add(topBasicPanel, c);
 		c.gridy++;
 		extraPanels.forEach(panel -> {
@@ -185,18 +225,46 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 
 		JTable detailsTable = detailsModel.makeTable();
 		JScrollPane detailsScroller = new JScrollPane(detailsTable);
+		configureScrollHeaderCorner(detailsScroller, detailsTable);
 		detailsScroller.setPreferredSize(detailsScroller.getMaximumSize());
 
 		rightClickOptions.configureTable(table, mainModel);
 
+		configureScrollHeaderCorner(scroller, table);
+		Component tableComp = scroller;
+		if (filterRowPanel.getComponentCount() > 0) {
+			JPanel combined = new JPanel(new BorderLayout());
+			combined.setOpaque(false);
+
+			JViewport filterViewport = new JViewport();
+			filterViewport.setOpaque(false);
+			filterViewport.setView(filterRowPanel);
+
+			scroller.getColumnHeader().addChangeListener(e -> {
+				filterViewport.setViewPosition(scroller.getColumnHeader().getViewPosition());
+			});
+
+			// This is the corner in the filter
+			JPanel filterCorner = new HeaderCorner(null) {
+				@Override
+				public Dimension getPreferredSize() {
+					return new Dimension(scroller.getVerticalScrollBar().getPreferredSize().width, HEADER_FILTER_HEIGHT);
+				}
+			};
+			filterCorner.setOpaque(false);
+			combined.add(filterViewport, BorderLayout.NORTH);
+			combined.add(scroller, BorderLayout.CENTER);
+			tableComp = combined;
+		}
+
 		// If no details, don't bother with a splitpane
 		// TODO: also cut out some of the selection logic
 		if (detailsColumns.isEmpty()) {
-			add(scroller, c);
+			add(tableComp, c);
 		}
 		else {
 			// Split pane
-			splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, scroller, detailsScroller);
+			splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, tableComp, detailsScroller);
 			add(splitPane, c);
 			SwingUtilities.invokeLater(() -> {
 				splitPane.setDividerLocation(0.7);
@@ -276,6 +344,8 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 				refreshNeeded = RefreshType.FULL;
 				return;
 			}
+			// Since this is append or prune only, and event objects are not re-used, we can safely assume that if the
+			// first elements are the same, that there was no prune.
 			X firstBefore = dataBefore.get(0);
 			X firstAfter = dataAfter.get(0);
 			if (firstBefore == firstAfter) {
@@ -464,5 +534,222 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 
 	public void setEditMode(EditMode editMode) {
 		this.editMode = editMode;
+	}
+
+	/**
+	 * Configures the scroll pane for the table, including setting up the custom header corner,
+	 * making components transparent, and applying the custom border.
+	 *
+	 * @param scroller the scroll pane to configure
+	 * @param table    the table within the scroll pane
+	 */
+	private void configureScrollHeaderCorner(JScrollPane scroller, JTable table) {
+		JTableHeader tableHeader = table.getTableHeader();
+		if (tableHeader != null) {
+			setColumnHeader(scroller, tableHeader);
+		}
+		scroller.setCorner(JScrollPane.UPPER_RIGHT_CORNER, new HeaderCorner(tableHeader));
+		scroller.setOpaque(false);
+		// Note: we do NOT set the main viewport to non-opaque, because we want the table area
+		// to have its normal background.
+		table.setFillsViewportHeight(true);
+		JViewport columnHeader = scroller.getColumnHeader();
+		if (columnHeader != null) {
+			columnHeader.setOpaque(false);
+		}
+	}
+
+	private static void setColumnHeader(JScrollPane scroller, Component view) {
+		log.trace("Setting column header view for scroller {}: {}", scroller, view);
+		if (scroller instanceof AutoBottomScrollHelper helper) {
+			helper.setColumnHeaderViewLocked(view);
+		}
+		else {
+			scroller.setColumnHeaderView(view);
+		}
+	}
+
+	/**
+	 * Height in pixels for the filter component area in the table header.
+	 */
+	private static final int HEADER_FILTER_HEIGHT = 32;
+
+	private class FilterRowPanel extends JPanel {
+
+		FilterRowPanel() {
+			JTableHeader header = getHeader();
+			setLayout(new HeaderFilterLayout(header));
+			setOpaque(false);
+			header.getColumnModel().addColumnModelListener(new TableColumnModelListener() {
+				@Override
+				public void columnAdded(TableColumnModelEvent e) {
+					sync();
+				}
+
+				@Override
+				public void columnRemoved(TableColumnModelEvent e) {
+					sync();
+				}
+
+				@Override
+				public void columnMoved(TableColumnModelEvent e) {
+					// This event fires when the column is moved in the literal sense - including during the drag.
+					// However, we don't redo the layout until the drag stops.
+					// The problem with trying to actually defer it is because at the point where e.getFromIndex() != e.getToIndex(),
+					// the drag is still in progress, so the column is in a weird X position, not the final X pos.
+					sync();
+					// It seems to do a small layout jump sometimes, so do this just in case
+					SwingUtilities.invokeLater(this::sync);
+				}
+
+				@Override
+				public void columnMarginChanged(ChangeEvent e) {
+					sync();
+				}
+
+				@Override
+				public void columnSelectionChanged(ListSelectionEvent e) {
+				}
+
+				private void sync() {
+					revalidate();
+					repaint();
+				}
+			});
+			// Repaint when dragging
+			header.addMouseMotionListener(new MouseAdapter() {
+				@Override
+				public void mouseReleased(MouseEvent e) {
+					revalidate();
+					repaint();
+				}
+			});
+		}
+
+		@Override
+		public Dimension getPreferredSize() {
+			if (getComponentCount() > 0) {
+				return new Dimension(getHeader().getPreferredSize().width, HEADER_FILTER_HEIGHT);
+			}
+			return new Dimension(getHeader().getPreferredSize().width, 0);
+		}
+
+		private JTableHeader getHeader() {
+			return TableWithFilterAndDetails.this.table.getTableHeader();
+		}
+	}
+
+	/**
+	 * Layout manager for the JTableHeader that positions filter components above
+	 * the standard header labels.
+	 */
+	private static class HeaderFilterLayout implements LayoutManager {
+		private final JTableHeader header;
+
+		public HeaderFilterLayout(JTableHeader header) {
+			this.header = header;
+		}
+
+		@Override
+		public void addLayoutComponent(String name, Component comp) {
+		}
+
+		@Override
+		public void removeLayoutComponent(Component comp) {
+		}
+
+		@Override
+		public Dimension preferredLayoutSize(Container parent) {
+			return parent.getPreferredSize();
+		}
+
+		@Override
+		public Dimension minimumLayoutSize(Container parent) {
+			return parent.getMinimumSize();
+		}
+
+		@Override
+		public void layoutContainer(Container parent) {
+			if (header.getDraggedColumn() != null) {
+				// Wait for drag to end
+				return;
+			}
+			TableColumnModel tcm = header.getColumnModel();
+			for (Component comp : parent.getComponents()) {
+				if (comp instanceof TableWithFilterAndDetails.HeaderFilterWrapper wrapper) {
+					TableColumn column = wrapper.getColumn();
+					int viewIndex = -1;
+					for (int i = 0; i < tcm.getColumnCount(); i++) {
+						if (tcm.getColumn(i) == column) {
+							viewIndex = i;
+							break;
+						}
+					}
+					if (viewIndex != -1) {
+						Rectangle rect = header.getHeaderRect(viewIndex);
+						int x = rect.x;
+						// Account for the distance the column is being dragged
+						if (column == header.getDraggedColumn()) {
+							x += header.getDraggedDistance();
+						}
+						comp.setBounds(x, 0, rect.width, HEADER_FILTER_HEIGHT);
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * A wrapper component that associates a filter component with a TableColumn.
+	 * This is used by HeaderFilterLayout to correctly position filters.
+	 */
+	private class HeaderFilterWrapper extends JPanel {
+		private final TableColumn column;
+
+		public HeaderFilterWrapper(TableColumn column, Component filter) {
+			super(new BorderLayout());
+			this.column = column;
+			add(filter, BorderLayout.CENTER);
+			// Provide small amount of inset
+			setBorder(new EmptyBorder(3, 2, 5, 2));
+			setOpaque(false);
+		}
+
+		public TableColumn getColumn() {
+			return column;
+		}
+	}
+
+	/**
+	 * A corner component for the JScrollPane that matches the header's look.
+	 */
+	private class HeaderCorner extends JPanel {
+		private final JTableHeader header;
+
+		HeaderCorner(JTableHeader header) {
+			this.header = header;
+		}
+
+		@Override
+		public Color getBackground() {
+			return (header == null) ? TableWithFilterAndDetails.this.getBackground() : header.getBackground();
+		}
+
+		@Override
+		protected void paintComponent(Graphics g) {
+			if (header == null) {
+				return;
+			}
+			g.setColor(header.getBackground());
+			g.fillRect(0, 0, getWidth(), getHeight());
+			Color separatorColor = UIManager.getColor("TableHeader.separatorColor");
+			if (separatorColor == null) {
+				separatorColor = UIManager.getColor("TableHeader.bottomSeparatorColor");
+			}
+			if (separatorColor != null) {
+				g.setColor(separatorColor);
+				g.drawLine(0, getHeight() - 1, getWidth(), getHeight() - 1);
+			}
+		}
 	}
 }

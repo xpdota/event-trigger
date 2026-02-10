@@ -1,6 +1,6 @@
 package gg.xp.xivsupport.events.ws;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.SystemEvent;
 import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;

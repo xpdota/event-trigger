@@ -2,6 +2,7 @@ package gg.xp.xivsupport.events.triggers.easytriggers.gui.tree;
 
 import gg.xp.xivsupport.events.triggers.easytriggers.EasyTriggers;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.FailedDeserializationTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.HasChildTriggers;
 
 import javax.swing.event.EventListenerList;
@@ -41,7 +42,7 @@ public class TriggerTreeModel implements TreeModel {
 
 	@Override
 	public boolean isLeaf(Object node) {
-		return node instanceof EasyTrigger;
+		return node instanceof EasyTrigger || node instanceof FailedDeserializationTrigger;
 	}
 
 	@Override

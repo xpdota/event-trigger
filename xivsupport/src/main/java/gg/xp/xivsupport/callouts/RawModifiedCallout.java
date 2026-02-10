@@ -22,8 +22,8 @@ public class RawModifiedCallout<X> extends BaseEvent implements HasCalloutTracki
 	@Serial
 	private static final long serialVersionUID = 5660021283907309369L;
 	private final String description;
-	private final String tts;
-	private final String text;
+	private final @Nullable String tts;
+	private final @Nullable String text;
 	private final @Nullable String sound;
 	private final @Nullable X event;
 	private final Map<String, Object> arguments;
@@ -37,7 +37,7 @@ public class RawModifiedCallout<X> extends BaseEvent implements HasCalloutTracki
 	private int errorCount;
 	private volatile boolean forceExpired;
 
-	public RawModifiedCallout(String description, String tts, String text, @Nullable String sound, @Nullable X event, Map<String, Object> arguments, Function<? super X, ? extends @Nullable Component> guiProvider, Predicate<RawModifiedCallout<X>> expiry, @Nullable Color colorOverride, @Nullable ModifiedCalloutHandle handle) {
+	public RawModifiedCallout(String description, @Nullable String tts, @Nullable String text, @Nullable String sound, @Nullable X event, Map<String, Object> arguments, Function<? super X, ? extends @Nullable Component> guiProvider, Predicate<RawModifiedCallout<X>> expiry, @Nullable Color colorOverride, @Nullable ModifiedCalloutHandle handle) {
 		this.description = description;
 		this.tts = tts;
 		this.text = text;
@@ -50,11 +50,11 @@ public class RawModifiedCallout<X> extends BaseEvent implements HasCalloutTracki
 		this.handle = handle;
 	}
 
-	public String getTts() {
+	public @Nullable String getTts() {
 		return tts;
 	}
 
-	public String getText() {
+	public @Nullable String getText() {
 		return text;
 	}
 

@@ -6,7 +6,8 @@ import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
-import gg.xp.xivsupport.gui.tables.filters.IdOrNameFilter;
+import gg.xp.xivsupport.gui.tables.filters.IdFilter;
+import gg.xp.xivsupport.gui.tables.filters.TextBasedFilter;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,20 +28,19 @@ public final class NpcYellTableFactory {
 	}
 
 	public TableWithFilterAndDetails<NpcYellInfo, Object> table() {
-		return TableWithFilterAndDetails.builder("NpcYell Entries", () -> {
+		return TableWithFilterAndDetails.<NpcYellInfo, Object>builder("NpcYell Entries", () -> {
 					Map<Integer, NpcYellInfo> csvValues = NpcYellLibrary.INSTANCE.getAll();
 					List<NpcYellInfo> values = new ArrayList<>(csvValues.values());
 					values.sort(Comparator.comparing(NpcYellInfo::id));
 					return values;
 				}, unused -> Collections.emptyList())
-				.addMainColumn(new CustomColumn<>("ID", v -> String.format("0x%X (%s)", v.id(), v.id()), col -> {
+				.addMainColumn(new CustomColumn<NpcYellInfo>("ID", v -> String.format("0x%X (%s)", v.id(), v.id()), col -> {
 					col.setMinWidth(100);
 					col.setMaxWidth(100);
-				}))
-				.addMainColumn(new CustomColumn<>("Text", NpcYellInfo::text, col -> {
+				}).withFilter(t -> new IdFilter<>(t, "ID", nyi -> (long) nyi.id())))
+				.addMainColumn(new CustomColumn<NpcYellInfo>("Text", NpcYellInfo::text, col -> {
 					col.setPreferredWidth(200);
-				}))
-				.addFilter(t -> new IdOrNameFilter<>("Text/ID", item -> (long) item.id(), NpcYellInfo::text, t))
+				}).withFilter(t -> new TextBasedFilter<>(t, "Text", NpcYellInfo::text)))
 				.addWidget(tbl -> JumpToIdWidget.create(tbl, nyi -> (long) nyi.id()))
 				// TODO: ability to create easy trigger from library
 				.withRightClickRepo(rightClicks.withMore(

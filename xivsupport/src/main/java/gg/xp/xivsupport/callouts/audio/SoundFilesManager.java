@@ -1,6 +1,6 @@
 package gg.xp.xivsupport.callouts.audio;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import tools.jackson.core.type.TypeReference;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.CustomJsonListSetting;

@@ -2,6 +2,7 @@ package gg.xp.xivsupport.events.triggers.easytriggers.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.EventContext;
 import org.slf4j.Logger;
@@ -11,15 +12,20 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeName("folder")
 public final class TriggerFolder extends BaseTrigger<Object> implements HasChildTriggers {
 
 	private static final Logger log = LoggerFactory.getLogger(TriggerFolder.class);
 
 	private List<Condition<Object>> conditions = Collections.emptyList();
 	private List<BaseTrigger<?>> triggers = Collections.emptyList();
+
+	@JsonIgnore
+	private String extraLabel;
 
 	@Override
 	@JsonIgnore
@@ -78,6 +84,13 @@ public final class TriggerFolder extends BaseTrigger<Object> implements HasChild
 			}
 		});
 		triggers.forEach(trigger -> trigger.setParent(this));
+		List<String> extraLabels = conditions.stream().map(c -> c.getTreeLabel(this)).filter(Objects::nonNull).toList();
+		if (extraLabels.isEmpty()) {
+			extraLabel = null;
+		}
+		else {
+			extraLabel = String.join(", ", extraLabels);
+		}
 	}
 
 	@Override
@@ -132,5 +145,19 @@ public final class TriggerFolder extends BaseTrigger<Object> implements HasChild
 	@Override
 	public String toString() {
 		return "TriggerFolder(%s)".formatted(getName());
+	}
+
+	@JsonIgnore
+	@Override
+	public String getTreeLabel() {
+		String defaultLabel = super.getTreeLabel();
+		String extra = extraLabel;
+		if (extra == null)
+		{
+			return defaultLabel;
+		}
+		else {
+			return "%s (%s)".formatted(defaultLabel, extra);
+		}
 	}
 }

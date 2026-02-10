@@ -77,14 +77,14 @@
             <artifactId>Java-WebSocket</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
+            <groupId>tools.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/tools.jackson.module/jackson-module-blackbird -->
         <dependency>
-            <groupId>org.jdbi.jackson-contrib</groupId> <!-- Temporary group ID, this will change! -->
+            <groupId>tools.jackson.module</groupId>
             <artifactId>jackson-module-blackbird</artifactId>
-            <version>0.0.1</version>
-        </dependency>        <!-- https://mvnrepository.com/artifact/org.picocontainer/picocontainer -->
+        </dependency>
         <dependency>
             <groupId>org.picocontainer</groupId>
             <artifactId>picocontainer</artifactId>
@@ -151,11 +151,6 @@
         <dependency>
             <groupId>gg.xp</groupId>
             <artifactId>persistence</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jdk8</artifactId>
-            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fifesoft</groupId>

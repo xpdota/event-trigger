@@ -76,13 +76,16 @@ public class EventsTabFactory {
 						rawStorage::getEvents,
 						GroovyColumns::getValues)
 				.addMainColumn(tdc.getColumnDef())
-				.addMainColumn(new CustomColumn<>("Type", e -> e.getClass().getSimpleName()))
-				.addMainColumn(new CustomColumn<>("Source", e -> e instanceof HasSourceEntity ? ((HasSourceEntity) e).getSource() : null, c -> c.setCellRenderer(nameJobRenderer)))
-				.addMainColumn(new CustomColumn<>("Target", e -> e instanceof HasTargetEntity ? ((HasTargetEntity) e).getTarget() : null, c -> c.setCellRenderer(nameJobRenderer)))
-				.addMainColumn(new CustomColumn<>("Buff/Ability", Function.identity(), c -> {
+				.addMainColumn(new CustomColumn<Event>("Type", e -> e.getClass().getSimpleName())
+						.withFilter(EventClassFilterFilter::new))
+				.addMainColumn(new CustomColumn<Event>("Source", e -> e instanceof HasSourceEntity ? ((HasSourceEntity) e).getSource() : null, c -> c.setCellRenderer(nameJobRenderer))
+						.withFilter(EventEntityFilter::eventSourceFilter))
+				.addMainColumn(new CustomColumn<Event>("Target", e -> e instanceof HasTargetEntity ? ((HasTargetEntity) e).getTarget() : null, c -> c.setCellRenderer(nameJobRenderer))
+						.withFilter(EventEntityFilter::eventTargetFilter))
+				.addMainColumn(new CustomColumn<Event>("Ability/Status", e -> e, c -> {
 					c.setCellRenderer(asRenderer);
-				}))
-				.addMainColumn(new CustomColumn<>("Effects", e -> {
+				}).withFilter(EventAbilityOrBuffFilter::new))
+				.addMainColumn(new CustomColumn<Event>("Effects", e -> {
 					if (e instanceof HasEffects || e instanceof HasTargetIndex) {
 						return e;
 					}
@@ -91,11 +94,7 @@ public class EventsTabFactory {
 				.apply(GroovyColumns::addDetailColumns)
 				.withRightClickRepo(rightClicks)
 				.addFilter(SystemEventFilter::new)
-				.addFilter(EventClassFilterFilter::new)
 				.addFilter(AbilityResolutionFilter::new)
-				.addFilter(EventEntityFilter::eventSourceFilter)
-				.addFilter(EventEntityFilter::eventTargetFilter)
-				.addFilter(EventAbilityOrBuffFilter::new)
 //				.addFilter(FreeformEventFilter::new)
 				.addFilter(r -> {
 					PullNumberFilter pullNumberFilter = new PullNumberFilter(pulls, r);
