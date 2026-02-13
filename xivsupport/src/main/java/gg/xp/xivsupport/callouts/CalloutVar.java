@@ -25,21 +25,15 @@ public class CalloutVar {
 		this.handle = handle;
 	}
 
-	Object getValue() {
-		CalloutVarHandle handle = this.handle;
-		if (handle == null) {
-			return defaultValue;
-		}
-		else {
-			return handle.getValue();
-		}
-	}
-
 	public String getName() {
 		return name;
 	}
 
 	public String getDefaultValue() {
 		return defaultValue;
+	}
+
+	public @Nullable String getExtendedDescription() {
+		return extendedDescription;
 	}
 }

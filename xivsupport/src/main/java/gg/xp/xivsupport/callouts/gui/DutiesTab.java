@@ -11,8 +11,6 @@ import gg.xp.xivsupport.callouts.audio.SoundFilesManager;
 import gg.xp.xivsupport.callouts.audio.gui.SoundFileTab;
 import gg.xp.xivsupport.callouts.conversions.DutySpecificArenaSectorConverter;
 import gg.xp.xivsupport.callouts.conversions.GlobalArenaSectorConverter;
-import gg.xp.xivsupport.events.debug.DebugCommand;
-import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.extra.DutyPluginTab;
 import gg.xp.xivsupport.gui.extra.PluginTab;
@@ -193,41 +191,36 @@ public class DutiesTab implements PluginTab {
 
 		container.getComponents(DutyPluginTab.class).forEach(tab -> {
 			KnownDuty duty = tab.getDuty();
-			DutyTabContents tabContents = contents.computeIfAbsent(duty.getExpac(), d -> new LinkedHashMap<>())
-					.computeIfAbsent(duty.getType(), d -> new LinkedHashMap<>())
-					.computeIfAbsent(duty, DutyTabContents::new);
+			DutyTabContents tabContents;
+			if (duty == KnownDuty.None) {
+				tabContents = nonSpecific;
+			}
+			else {
+				tabContents = contents.computeIfAbsent(duty.getExpac(), d -> new LinkedHashMap<>())
+						.computeIfAbsent(duty.getType(), d -> new LinkedHashMap<>())
+						.computeIfAbsent(duty, DutyTabContents::new);
+			}
 			tabContents.extraTabs.add(tab);
 			reg.registerItem(tab, "Duty Plugin: " + duty.getName() + " -> " + tab.getTabName(), List.of(tab.getTabName()), () -> this.activateItem(tab), DutiesTab.class, duty);
 
 		});
 
 
-		nonSpecific.extraTabs.add(new DutyPluginTab() {
-			@Override
-			public String getTabName() {
-				return "Test Callouts";
-			}
-
-			@Override
-			public Component getTabContents() {
-				TitleBorderFullsizePanel outer = new TitleBorderFullsizePanel("Test Callouts");
-				outer.setLayout(new BorderLayout());
-				JButton testButton = new JButton("Test");
-				testButton.addActionListener(l -> {
-					// TODO: not a good way of doing this
-					master.pushEvent(new DebugCommand("testcall"));
-				});
-				JPanel panel = new JPanel();
-				panel.add(testButton);
-				outer.add(panel, BorderLayout.NORTH);
-				return outer;
-			}
-
-			@Override
-			public KnownDuty getDuty() {
-				return null;
-			}
-		});
+//		nonSpecific.extraTabs.add(new DutyPluginTab() {
+//			@Override
+//			public String getTabName() {
+//				return "Test Callouts";
+//			}
+//
+//			@Override
+//			public Component getTabContents() {
+//			}
+//
+//			@Override
+//			public KnownDuty getDuty() {
+//				return null;
+//			}
+//		});
 
 		tabPane.add("General", makeDutyComponent(nonSpecific));
 
@@ -319,6 +312,11 @@ public class DutiesTab implements PluginTab {
 			panel.add(settingsPanel, BorderLayout.NORTH);
 
 			tabPane.add("Callouts", panel);
+		}
+		if (CalloutVarHelper.hasVars(dutyContent.calls)) {
+			CalloutVarHelper cvh = new CalloutVarHelper(dutyContent.calls);
+			JScrollPane scroller = new JScrollPane(cvh, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+			tabPane.add("Variables", scroller);
 		}
 
 		{

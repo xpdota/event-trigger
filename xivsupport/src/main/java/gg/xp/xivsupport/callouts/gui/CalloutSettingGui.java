@@ -217,14 +217,6 @@ public class CalloutSettingGui {
 	}
 
 	public void setVisible(boolean visible) {
-//		private final JCheckBox callCheckbox;
-//		private final JPanel ttsPanel;
-//		private final JPanel textPanel;
-//		private final JCheckBox ttsCheckbox;
-//		private final JTextField ttsTextBox;
-//		private final JCheckBox textCheckbox;
-//		private final JCheckBox sameCheckBox;
-//		private final JTextField textTextBox;
 		callCheckbox.setVisible(visible);
 		ttsPanel.setVisible(visible);
 		textPanel.setVisible(visible);

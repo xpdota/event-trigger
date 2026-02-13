@@ -90,10 +90,10 @@ public class ModifiedCalloutRepository {
 
 			CalloutGroup cg;
 			if (o instanceof OverridesCalloutGroupEnabledSetting override) {
-				cg = new CalloutGroup(clazz, description, topLevelPropStub, override.getCalloutGroupEnabledSetting(), callouts);
+				cg = new CalloutGroup(clazz, description, override.getCalloutGroupEnabledSetting(), callouts, vars);
 			}
 			else {
-				cg = new CalloutGroup(clazz, description, topLevelPropStub, persistence, callouts);
+				cg = new CalloutGroup(clazz, description, topLevelPropStub, persistence, callouts, vars);
 			}
 			allCallouts.add(cg);
 		});

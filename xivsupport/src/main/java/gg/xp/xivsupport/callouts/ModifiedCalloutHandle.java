@@ -6,6 +6,7 @@ import gg.xp.xivsupport.persistence.settings.ColorSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
 import gg.xp.xivsupport.persistence.settings.ParentedBooleanSetting;
 import gg.xp.xivsupport.persistence.settings.StringSetting;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
@@ -26,6 +27,7 @@ public final class ModifiedCalloutHandle {
 	private final ColorSetting textColorOverride;
 	private final @Nullable Field field;
 	private boolean isEnabledByParent = true;
+	private @Nullable CalloutGroup group;
 
 	// Only used for testing
 	ModifiedCalloutHandle(PersistenceProvider persistenceProvider, String propStub, ModifiableCallout<?> original, @Nullable BooleanSetting allTts, @Nullable BooleanSetting allText) {
@@ -190,4 +192,11 @@ public final class ModifiedCalloutHandle {
 		enableText.delete();
 	}
 
+	public void setGroup(@NotNull CalloutGroup calloutGroup) {
+		this.group = calloutGroup;
+	}
+
+	public @Nullable CalloutGroup getGroup() {
+		return group;
+	}
 }

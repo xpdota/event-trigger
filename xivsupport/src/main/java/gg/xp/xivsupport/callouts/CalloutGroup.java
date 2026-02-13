@@ -36,7 +36,10 @@ public class CalloutGroup {
 	 * Should be called after enabling/disabling this group.
 	 */
 	public void updateChildren() {
-		callouts.forEach(call -> call.setEnabledByParent(enabled.get()));
+		callouts.forEach(call -> {
+			call.setEnabledByParent(enabled.get());
+			call.setGroup(this);
+		});
 	}
 
 	/**
@@ -88,5 +91,14 @@ public class CalloutGroup {
 	 */
 	public void resetAllBooleans() {
 		callouts.forEach(ModifiedCalloutHandle::resetAllBooleans);
+	}
+
+	/**
+	 * Get all shared variable handles
+	 *
+	 * @return The list of shared vars
+	 */
+	public List<CalloutVarHandle> getVars() {
+		return Collections.unmodifiableList(vars);
 	}
 }
