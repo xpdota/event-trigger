@@ -1,9 +1,10 @@
-641d582694b036c75696c02e734fd210  triggevent.exe
-4b7d372ab9acc7a677e55551d99e777f  triggevent-import.exe
-7aaa85b5aad7c33d53895324eca8ce59  triggevent-upd.exe
+0dd4be6d1c40d4d34c0f7ef6669b7d29  triggevent.exe
+d776c6236e771d50950a5e4c42b0ab00  triggevent-import.exe
+8621bac82339c69c5b7ffc18f2284a7a  triggevent-upd.exe
 8c79eba0445fdc5f7afa1df3a8b40fa7  Triggevent_Stub.dll
 e6ce75e58a72477a8e0cf2a40d5f387c  deps/actimport-1.0-SNAPSHOT.jar
 38673abe87d12508cd05498eff0b9731  deps/annotations-24.1.0.jar
+8d928c2a0d746a8ab900c77a355b18c5  deps/auto-exit-1.0-SNAPSHOT.jar
 7aa86dc0c185691ebfedf507cd02f0bf  deps/caffeine-2.9.2.jar
 6d4e6fd385da16b9418a5ff9170aa3bd  deps/caffeine-api-2.9.2-29.v717aac953ff3.jar
 87a7866a4ccf23de7249fa9136d93095  deps/cd-tracker-1.0-SNAPSHOT.jar
@@ -40,7 +41,7 @@ bd2e5bc6b4b020c2d9a6e17a8e9bcef1  deps/jna-5.13.0.jar
 7cc7af47ad1f151faa57ef0624b2f271  deps/jna-platform-5.13.0.jar
 60332a32cf7212a56506d6988de02ae2  deps/job-overlays-1.0-SNAPSHOT.jar
 dd83accb899363c32b07d7a1b2e4ce40  deps/jsr305-3.0.2.jar
-abe3904ff641bc7cded5542c14852658  deps/launcher-1.0-SNAPSHOT.jar
+d3de2af3b6ef63b3034e3bba95778ae1  deps/launcher-1.0-SNAPSHOT.jar
 5c539a7e283ffa79d2d3bea9ab7161b1  deps/logback-classic-1.4.13.jar
 d32091946c15d4a05cdbf4e8bc5eae48  deps/logback-core-1.4.13.jar
 8cee3b4e9ebeba7bd2834831a969d97c  deps/opencsv-5.9.jar
@@ -59,7 +60,7 @@ a4c67e79b55e951a3acb868b08e470ba  deps/skill-hit-overlay-1.0-SNAPSHOT.jar
 c999ea9f552abcd4065a47c7fea74300  deps/telesto-easy-triggers-1.0-SNAPSHOT.jar
 2715ab3e538a1faf2a17539f3786992b  deps/telesto-gui-1.0-SNAPSHOT.jar
 99ff7fc65b0d71b62346b0b3b81ffdb0  deps/telesto-right-clicks-1.0-SNAPSHOT.jar
-8e4ec3ec7ffb8542f1337a9e04df30aa  deps/timelines-1.0-SNAPSHOT.jar
+a7842863999950641ca11304b0d96a1c  deps/timelines-1.0-SNAPSHOT.jar
 49bc13bdf0df07d97b9f0047aa2be613  deps/titan-jails-1.0-SNAPSHOT.jar
 5558b912d896ee5715a2f53df894bac7  deps/triggers-dt-1.0-SNAPSHOT.jar
 0a0317930a9ab645eb35a192c4c35b8f  deps/triggers-ew-1.0-SNAPSHOT.jar
