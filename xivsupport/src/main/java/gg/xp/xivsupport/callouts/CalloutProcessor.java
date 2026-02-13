@@ -5,6 +5,7 @@ import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.callouts.conversions.GlobalCallReplacer;
 import gg.xp.xivsupport.groovy.GroovyManager;
+import gg.xp.xivsupport.groovy.SubBinding;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import gg.xp.xivsupport.speech.ModifiableCalloutTraceInfo;
 import gg.xp.xivsupport.speech.ProcessedCalloutEvent;
@@ -85,6 +86,7 @@ public class CalloutProcessor {
 		String tts;
 		Supplier<String> text;
 		X event = raw.getEvent();
+		// If it doesn't contain anything that would need to be replaced, skip the script step entirely
 		boolean fastPath = (rawTts == null || !rawTts.contains("{")) && (rawText == null || !rawText.contains("{"));
 		if (fastPath) {
 			// Fast path for when there are no {}
@@ -98,11 +100,30 @@ public class CalloutProcessor {
 				arguments.put("event", event);
 			}
 			Binding binding = groovyMgr.makeBinding();
+			Binding ttsBinding = binding;
+			Binding textBinding = binding;
 			arguments.forEach(binding::setVariable);
-//		Binding binding = new Binding(arguments);
+			ModifiedCalloutHandle handle = raw.getHandle();
+			if (handle != null) {
+				CalloutGroup group = handle.getGroup();
+				if (group != null) {
+					for (CalloutVarHandle var : group.getVars()) {
+						CalloutVar original = var.getOriginal();
+						if (ttsBinding == binding) {
+							ttsBinding = new SubBinding(binding);
+						}
+						if (textBinding == binding) {
+							textBinding = new SubBinding(binding);
+						}
+						ttsBinding.setVariable(original.getName(), var.getValueTts());
+						textBinding.setVariable(original.getName(), var.getValueText());
+					}
+				}
+			}
 
-			tts = applyReplacements(raw, rawTts, binding, true);
-			text = () -> applyReplacements(raw, rawText, binding, false);
+			tts = applyReplacements(raw, rawTts, ttsBinding, true);
+			final Binding finalTextBinding = textBinding;
+			text = () -> applyReplacements(raw, rawText, finalTextBinding, false);
 		}
 
 		ProcessedCalloutEvent out = new ProcessedCalloutEvent(
