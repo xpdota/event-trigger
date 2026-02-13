@@ -16,28 +16,30 @@ public class CalloutGroup {
 	private final String name;
 	private final BooleanSetting enabled;
 	private final List<ModifiedCalloutHandle> callouts;
+	private final List<CalloutVarHandle> vars;
 
-	public CalloutGroup(Class<?> clazz, String name, String topLevelPropStub, PersistenceProvider persistence, List<ModifiedCalloutHandle> callouts) {
-		this.clazz = clazz;
-		this.name = name;
-		this.enabled = new BooleanSetting(persistence, topLevelPropStub + ".enabled", true);
-		this.callouts = new ArrayList<>(callouts);
-		updateChildren();
+	public CalloutGroup(Class<?> clazz, String name, String topLevelPropStub, PersistenceProvider persistence, List<ModifiedCalloutHandle> callouts, List<CalloutVarHandle> vars) {
+		this(clazz, name, new BooleanSetting(persistence, topLevelPropStub + ".enabled", true), callouts, vars);
 	}
 
-	public CalloutGroup(Class<?> clazz, String name, String topLevelPropStub, BooleanSetting enabled, List<ModifiedCalloutHandle> callouts) {
+	public CalloutGroup(Class<?> clazz, String name, BooleanSetting enabled, List<ModifiedCalloutHandle> callouts, List<CalloutVarHandle> vars) {
 		this.clazz = clazz;
 		this.name = name;
 		this.enabled = enabled;
 		this.callouts = new ArrayList<>(callouts);
+		this.vars = new ArrayList<>(vars);
 		updateChildren();
 	}
+
 
 	/**
 	 * Should be called after enabling/disabling this group.
 	 */
 	public void updateChildren() {
-		callouts.forEach(call -> call.setEnabledByParent(enabled.get()));
+		callouts.forEach(call -> {
+			call.setEnabledByParent(enabled.get());
+			call.setGroup(this);
+		});
 	}
 
 	/**
@@ -89,5 +91,14 @@ public class CalloutGroup {
 	 */
 	public void resetAllBooleans() {
 		callouts.forEach(ModifiedCalloutHandle::resetAllBooleans);
+	}
+
+	/**
+	 * Get all shared variable handles
+	 *
+	 * @return The list of shared vars
+	 */
+	public List<CalloutVarHandle> getVars() {
+		return Collections.unmodifiableList(vars);
 	}
 }

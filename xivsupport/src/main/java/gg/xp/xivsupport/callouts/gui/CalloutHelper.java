@@ -1,6 +1,8 @@
 package gg.xp.xivsupport.callouts.gui;
 
 import gg.xp.xivsupport.callouts.CalloutGroup;
+import gg.xp.xivsupport.callouts.CalloutVar;
+import gg.xp.xivsupport.callouts.CalloutVarHandle;
 import gg.xp.xivsupport.callouts.ModifiedCalloutHandle;
 import gg.xp.xivsupport.callouts.audio.SoundFilesManager;
 import gg.xp.xivsupport.callouts.audio.gui.SoundFileTab;
@@ -36,6 +38,7 @@ public class CalloutHelper extends JPanel implements Scrollable {
 		c.ipadx = 5;
 		c.gridy = 0;
 		c.gridwidth = GridBagConstraints.REMAINDER;
+
 		JPanel settingsPanel = new JPanel();
 		JButton expandAll = new JButton("Expand All");
 		expandAll.addActionListener(l -> setAllShowHide(true));
@@ -57,11 +60,9 @@ public class CalloutHelper extends JPanel implements Scrollable {
 		resetAll.addActionListener(l -> askThenReset());
 		settingsPanel.add(resetAll);
 
-
 		add(settingsPanel, c);
 		c.gridy++;
 		c.fill = GridBagConstraints.BOTH;
-
 
 		groups.forEach((group) -> {
 			List<ModifiedCalloutHandle> callouts = group.getCallouts();

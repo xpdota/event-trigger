@@ -4,6 +4,7 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.data.duties.KnownDuty;
 import gg.xp.xivsupport.callouts.CalloutRepo;
+import gg.xp.xivsupport.callouts.CalloutVar;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.debug.DebugCommand;
 
@@ -12,8 +13,12 @@ public class DummyTestFight {
 
 	private volatile boolean dummyHold;
 
-	private final ModifiableCallout<DebugCommand> dummy = new ModifiableCallout<>("Dummy Callout to Test UI", "Test");
+	private final ModifiableCallout<DebugCommand> dummy = new ModifiableCallout<DebugCommand>("Dummy Callout to Test UI", "Test").extendedDescription("""
+			Use the 'Test Callouts' tab (above) to trigger these callouts.""");
 	private final ModifiableCallout<DebugCommand> dummy2 = new ModifiableCallout<>("Dummy Callout to Test Holds", "Test", "Test", x -> !dummyHold);
+	private final ModifiableCallout<DebugCommand> dummy3 = new ModifiableCallout<>("Dummy Callout to Test Variables", "{testVar} {testVar2}", "Test");
+	private final CalloutVar testVar = new CalloutVar("testVar", "Test Variable");
+	private final CalloutVar testVar2 = new CalloutVar("testVar2", "Test Variable 2").extendedDescription("This is a test variable with a description");
 
 	// Dummy call that uses the event
 	@HandleEvents
@@ -45,4 +50,10 @@ public class DummyTestFight {
 		}
 	}
 
+	@HandleEvents
+	public void dummyCall3(EventContext context, DebugCommand event) {
+		if (event.getCommand().equals("testcall3")) {
+			context.accept(dummy3.getModified());
+		}
+	}
 }
