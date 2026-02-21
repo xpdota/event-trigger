@@ -3,16 +3,25 @@ package gg.xp.xivsupport.sys;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class EnhancedReadWriteReentrantLock {
+public final class EnhancedReadWriteReentrantLock {
 
-	private final ReadWriteLock lock = new ReentrantReadWriteLock();
+	private final LockAdapter readAdp;
+	private final LockAdapter writeAdp;
+
+	public EnhancedReadWriteReentrantLock() {
+		ReadWriteLock lock = new ReentrantReadWriteLock();
+		readAdp = new LockAdapter(lock.readLock());
+		writeAdp = new LockAdapter(lock.writeLock());
+	}
 
 	public LockAdapter read() {
-		return new LockAdapter(lock.readLock());
+		readAdp.lock();
+		return readAdp;
 	}
 
 	public LockAdapter write() {
-		return new LockAdapter(lock.writeLock());
+		writeAdp.lock();
+		return writeAdp;
 	}
 
 }
