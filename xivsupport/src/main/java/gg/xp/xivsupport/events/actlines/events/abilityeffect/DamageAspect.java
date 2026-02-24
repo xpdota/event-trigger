@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.events.actlines.events.abilityeffect;
 
+// TODO: should move this to xivdata, but that would be a breaking change.
 public enum DamageAspect {
 	Unknown,
 	Fire,

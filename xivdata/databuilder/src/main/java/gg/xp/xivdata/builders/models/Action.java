@@ -31,4 +31,10 @@ public interface Action extends XivApiObject {
 	int getXAxisModifier();
 	Omen getOmen();
 
+	@XivApiRaw
+	int getAttackType();
+	int getAspect();
+	@XivApiRaw
+	int getActionCategory();
+
 }

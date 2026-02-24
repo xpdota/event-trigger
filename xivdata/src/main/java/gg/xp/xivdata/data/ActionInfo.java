@@ -22,7 +22,10 @@ public record ActionInfo(
 		int coneAngle,
 		boolean isConeAngleKnown,
 		String description,
-		int castTimeExtra100ms
+		int castTimeExtra100ms,
+		int attackTypeRaw,
+		int aspectRaw,
+		int actionCategoryRaw
 		) implements Serializable {
 	public @Nullable ActionIcon getIcon() {
 		return ActionLibrary.iconForInfo(this);
@@ -60,5 +63,9 @@ public record ActionInfo(
 
 	public double getExtraCastTime() {
 		return castTimeExtra100ms / 10.0;
+	}
+
+	public ActionCategory getActionCategory() {
+		return ActionCategory.fromRaw(actionCategoryRaw);
 	}
 }

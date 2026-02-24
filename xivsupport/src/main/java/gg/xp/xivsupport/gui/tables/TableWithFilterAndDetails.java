@@ -597,33 +597,40 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 					// However, we don't redo the layout until the drag stops.
 					// The problem with trying to actually defer it is because at the point where e.getFromIndex() != e.getToIndex(),
 					// the drag is still in progress, so the column is in a weird X position, not the final X pos.
-					sync();
+//					sync();
 					// It seems to do a small layout jump sometimes, so do this just in case
-					SwingUtilities.invokeLater(this::sync);
+//					SwingUtilities.invokeLater(() -> sync());
+					delayedSync();
 				}
 
 				@Override
 				public void columnMarginChanged(ChangeEvent e) {
-					sync();
+					delayedSync();
 				}
 
 				@Override
 				public void columnSelectionChanged(ListSelectionEvent e) {
 				}
 
-				private void sync() {
-					revalidate();
-					repaint();
-				}
 			});
 			// Repaint when dragging
 			header.addMouseMotionListener(new MouseAdapter() {
 				@Override
 				public void mouseReleased(MouseEvent e) {
-					revalidate();
-					repaint();
+//					sync();
+					delayedSync();
 				}
 			});
+		}
+
+		private void delayedSync() {
+			SwingUtilities.invokeLater(this::sync);
+		}
+
+		private void sync() {
+			doLayout();
+			revalidate();
+			repaint();
 		}
 
 		@Override
@@ -670,6 +677,10 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 
 		@Override
 		public void layoutContainer(Container parent) {
+			if (header.getResizingColumn() != null) {
+				// wait for drag to end
+//				return;
+			}
 			if (header.getDraggedColumn() != null) {
 				// Wait for drag to end
 				return;
