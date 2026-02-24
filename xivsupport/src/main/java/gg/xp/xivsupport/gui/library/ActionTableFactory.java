@@ -13,6 +13,7 @@ import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import gg.xp.xivsupport.gui.tables.filters.GroovyFilter;
 import gg.xp.xivsupport.gui.tables.filters.IdFilter;
 import gg.xp.xivsupport.gui.tables.filters.TextBasedFilter;
+import gg.xp.xivsupport.gui.tables.filters.TriStateBooleanFilter;
 import gg.xp.xivsupport.gui.tables.groovy.GroovyColumns;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
@@ -20,6 +21,8 @@ import gg.xp.xivsupport.gui.util.GuiUtil;
 import groovy.lang.PropertyValue;
 import org.jetbrains.annotations.Nullable;
 import org.picocontainer.PicoContainer;
+import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageType;
+import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageAspect;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -43,87 +46,134 @@ public final class ActionTableFactory {
 		this.container = container;
 	}
 
-	public TableWithFilterAndDetails<ActionInfo, Object> table() {
-		return TableWithFilterAndDetails.<ActionInfo, Object>builder("Actions/Abilities", () -> {
-					Map<Integer, ActionInfo> csvValues = ActionLibrary.getAll();
-					List<ActionInfo> values = new ArrayList<>(csvValues.values());
-					values.sort(Comparator.comparing(ActionInfo::actionid));
-					return values;
-				}, unused -> Collections.emptyList())
-				.addMainColumn(new CustomColumn<ActionInfo>("ID", v -> String.format("0x%X (%s)", v.actionid(), v.actionid()), col -> {
-					col.setMinWidth(100);
-					col.setMaxWidth(100);
-				}).withFilter(t -> new IdFilter<>(t, "ID", ActionInfo::actionid)))
-				.addMainColumn(new CustomColumn<>("Name", ActionInfo::name, col -> {
-					col.setPreferredWidth(200);
-				}).withFilter(t -> new TextBasedFilter<>(t, "Name", ActionInfo::name)))
-				.addMainColumn(new CustomColumn<>("Icon", ai -> {
-					ActionIcon icon = ai.getIcon();
-					if (icon == null || icon.isDefaultIcon()) {
-						return "";
+	private static final CustomColumn<ActionInfo> idCol = new CustomColumn<ActionInfo>("ID", v -> String.format("0x%X (%s)", v.actionid(), v.actionid()), col -> {
+		col.setMinWidth(100);
+		col.setMaxWidth(100);
+	}).withFilter(t -> new IdFilter<>(t, "ID", ActionInfo::actionid));
+
+	private static final CustomColumn<ActionInfo> nameCol = new CustomColumn<>("Name", ActionInfo::name, col -> {
+		col.setPreferredWidth(200);
+	}).withFilter(t -> new TextBasedFilter<>(t, "Name", ActionInfo::name));
+
+	private static final CustomColumn<ActionInfo> iconCol = new CustomColumn<>("Icon", ai -> {
+		ActionIcon icon = ai.getIcon();
+		if (icon == null || icon.isDefaultIcon()) {
+			return "";
+		}
+		return icon;
+	}, col -> {
+		col.setCellRenderer(new DefaultTableCellRenderer() {
+			@Override
+			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+				Component fallback = super.getTableCellRendererComponent(table, "", isSelected, hasFocus, row, column);
+				if (value instanceof HasIconURL hiu) {
+					return IconTextRenderer.getComponent(hiu, fallback, false);
+				}
+				return fallback;
+			}
+		});
+		col.setMinWidth(30);
+		col.setMaxWidth(40);
+	});
+
+	private static final CustomColumn<ActionInfo> descriptionCol = new CustomColumn<>("Description", ActionInfo::description, col -> {
+		col.setPreferredWidth(500);
+	}).withFilter(t -> new TextBasedFilter<>(t, "Description", ActionInfo::description));
+
+	private static final CustomColumn<ActionInfo> playerAbilityCol = new CustomColumn<ActionInfo>("Player Ability", ai -> ai.isPlayerAbility() ? "✓" : "")
+			.withFilter(t -> new TriStateBooleanFilter<>(t, "Player Ability", ActionInfo::isPlayerAbility));
+
+	private static final CustomColumn<ActionInfo> castCol = new CustomColumn<>("Cast", ai -> {
+		// In the game files, cast times are represented as 100ms units, so we never need more than
+		// one decimal place.
+		double ct = ai.getCastTime();
+		if (ct == 0) {
+			return "";
+		}
+		double extra = ai.getExtraCastTime();
+		if (extra > 0) {
+			return "%.1f + %.1f".formatted(ct, extra);
+		}
+		return "%.1f".formatted(ct);
+	});
+
+	private static final CustomColumn<ActionInfo> recastCol = new CustomColumn<>("Recast", ai -> {
+		int maxCharges = ai.maxCharges();
+		double cd = ai.getCd();
+		if (maxCharges > 1) {
+			return String.format("%s (%d charges)", cd, maxCharges);
+		}
+		return cd > 0 ? cd : "";
+	});
+
+	private static final CustomColumn<ActionInfo> categoryCol = new CustomColumn<ActionInfo>("Category", ai -> ai.getActionCategory().getFriendlyName(), col -> {
+		col.setPreferredWidth(100);
+	}).withFilter(t -> new TextBasedFilter<>(t, "Category", ai -> ai.getActionCategory().getFriendlyName()));
+
+	private static final CustomColumn<ActionInfo> damageTypeAndAspectCol = new CustomColumn<ActionInfo>("Dmg Type/Aspect", ai -> ai, c -> {
+		c.setCellRenderer(new DefaultTableCellRenderer() {
+			@Override
+			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+				if (value instanceof ActionInfo ai) {
+					int dtRaw = ai.attackTypeRaw();
+					int daRaw = ai.aspectRaw();
+					if (daRaw == 0 && dtRaw == 0) {
+						return super.getTableCellRendererComponent(table, "", isSelected, hasFocus, row, column);
 					}
-					return icon;
-				}, col -> {
-					col.setCellRenderer(new DefaultTableCellRenderer() {
-						@Override
-						public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-							Component fallback = super.getTableCellRendererComponent(table, "", isSelected, hasFocus, row, column);
-							if (value instanceof HasIconURL hiu) {
-								return IconTextRenderer.getComponent(hiu, fallback, false);
-							}
-							return fallback;
-						}
-					});
-					col.setMinWidth(30);
-					col.setMaxWidth(40);
-				}))
-				.addMainColumn(new CustomColumn<>("Description", ActionInfo::description, col -> {
-					col.setPreferredWidth(500);
-				}).withFilter(t -> new TextBasedFilter<>(t, "Description", ActionInfo::description)))
-				.addMainColumn(new CustomColumn<>("Player Ability", ai -> ai.isPlayerAbility() ? "✓" : ""))
-				.addMainColumn(new CustomColumn<>("Cast", ai -> {
-					// In the game files, cast times are represented as 100ms units, so we never need more than
-					// one decimal place.
-					double ct = ai.getCastTime();
-					if (ct == 0) {
-						return "";
+					DamageType dt = DamageType.forByte(dtRaw);
+					DamageAspect da = DamageAspect.forByte(daRaw);
+					if (dt == DamageType.WeaponOverride && da == DamageAspect.Unaspected) {
+						// Special case for weaponskills
+						return super.getTableCellRendererComponent(table, "Weapon-Based", isSelected, hasFocus, row, column);
 					}
-					double extra = ai.getExtraCastTime();
-					if (extra > 0)  {
-						return "%.1f + %.1f".formatted(ct, extra);
+					if (dt == DamageType.Unknown && da == DamageAspect.Unknown) {
+						return super.getTableCellRendererComponent(table, "", isSelected, hasFocus, row, column);
 					}
-					return "%.1f".formatted(ct);
-				}))
-				.addMainColumn(new CustomColumn<>("Recast", ai -> {
-					int maxCharges = ai.maxCharges();
-					double cd = ai.getCd();
-					if (maxCharges > 1) {
-						return String.format("%s (%d charges)", cd, maxCharges);
+					String text = String.format("%s %s (%s:%s)", da, dt, daRaw, dtRaw);
+					Component comp = super.getTableCellRendererComponent(table, text, isSelected, hasFocus, row, column);
+					if (dt == DamageType.Unknown) {
+						return comp;
 					}
-					return cd > 0 ? cd : "";
-				}))
-				.addMainColumn(new CustomColumn<>("Range/Shape", Function.identity(), c -> {
-					c.setCellRenderer(new DefaultTableCellRenderer() {
-						@Override
-						public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-							if (value instanceof ActionInfo ai) {
-								Component comp = super.getTableCellRendererComponent(table, OmenShape.describe(ai), isSelected, hasFocus, row, column);
-								RenderUtils.setTooltip(comp, "Raw: ct:%s, er:%sy, x:%sy".formatted(ai.castType(), ai.effectRange(), ai.xAxisModifier()));
-								return comp;
-							}
-							return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-						}
-					});
-				}))
+					HasIconURL icon = switch (dt) {
+						case Piercing, Slashing, Blunt, Shot -> GeneralIcons.DAMAGE_PHYS;
+						case Magic -> GeneralIcons.DAMAGE_MAGIC;
+						default -> GeneralIcons.DAMAGE_OTHER;
+					};
+					return IconTextRenderer.getComponent(icon, comp, false);
+				}
+				return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+			}
+		});
+	});
+
+	private static final CustomColumn<ActionInfo> rangeShapeCol = new CustomColumn<ActionInfo>("Range/Shape", v -> v, c -> {
+		c.setCellRenderer(new DefaultTableCellRenderer() {
+			@Override
+			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+				if (value instanceof ActionInfo ai) {
+					Component comp = super.getTableCellRendererComponent(table, OmenShape.describe(ai), isSelected, hasFocus, row, column);
+					RenderUtils.setTooltip(comp, "Raw: ct:%s, er:%sy, x:%sy".formatted(ai.castType(), ai.effectRange(), ai.xAxisModifier()));
+					return comp;
+				}
+				return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+			}
+		});
+	});
+
+	private void applyCommon(TableWithFilterAndDetails.TableWithFilterAndDetailsBuilder<ActionInfo, ?> builder) {
+		builder.addMainColumn(idCol)
+				.addMainColumn(nameCol)
+				.addMainColumn(iconCol)
+				.addMainColumn(descriptionCol)
+				.addMainColumn(playerAbilityCol)
+				.addMainColumn(castCol)
+				.addMainColumn(recastCol)
+				.addMainColumn(categoryCol)
+				.addMainColumn(damageTypeAndAspectCol)
+				.addMainColumn(rangeShapeCol)
 				.addWidget(InGameAbilityPickerButton::new)
 				.addWidget(tbl -> JumpToIdWidget.create(tbl, ActionInfo::actionid))
 				.addFilter(GroovyFilter.forClass(ActionInfo.class, container.getComponent(GroovyManager.class), "it"))
-				.withRightClickRepo(RightClickOptionRepo.of(
-				))
-//				.addRightClickOption(CustomRightClickOption.forRow("Copy XIVAPI Icon As Inline", ActionInfo.class, ai -> {
-//					String md = String.format("{{< inline >}} ![%s](%s) {{< /inline >}}%s", ai.name(), ai.getXivapiUrl(), ai.name());
-//					GuiUtil.copyToClipboard(md);
-//				}))
 				.withRightClickRepo(rightClickOptionRepo.withMore(
 						CustomRightClickOption.forRow("Open on XivAPI", ActionInfo.class, ai -> {
 							GuiUtil.openUrl(XivApiUtils.singleItemUrl("Action", ai.actionid()));
@@ -140,111 +190,26 @@ public final class ActionTableFactory {
 									GuiUtil.copyTextToClipboard(md);
 								})
 				))
-				.setFixedData(true)
-				.build();
+				.setFixedData(true);
+	}
+
+	private static List<ActionInfo> getAllActions() {
+		Map<Integer, ActionInfo> csvValues = ActionLibrary.getAll();
+		List<ActionInfo> values = new ArrayList<>(csvValues.values());
+		values.sort(Comparator.comparing(ActionInfo::actionid));
+		return values;
+	}
+
+	public TableWithFilterAndDetails<ActionInfo, Object> table() {
+		TableWithFilterAndDetails.TableWithFilterAndDetailsBuilder<ActionInfo, Object> builder = TableWithFilterAndDetails.<ActionInfo, Object>builder("Actions/Abilities", ActionTableFactory::getAllActions, unused -> Collections.emptyList());
+		applyCommon(builder);
+		return builder.build();
 	}
 
 	public TableWithFilterAndDetails<ActionInfo, PropertyValue> tableWithDetails() {
-		return TableWithFilterAndDetails.<ActionInfo, PropertyValue>builder("Actions/Abilities",
-						() -> {
-							Map<Integer, ActionInfo> csvValues = ActionLibrary.getAll();
-							List<ActionInfo> values = new ArrayList<>(csvValues.values());
-							values.sort(Comparator.comparing(ActionInfo::actionid));
-							return values;
-						}, GroovyColumns::getValues
-				)
-				.addMainColumn(new CustomColumn<ActionInfo>("ID", v -> String.format("0x%X (%s)", v.actionid(), v.actionid()), col -> {
-					col.setMinWidth(100);
-					col.setMaxWidth(100);
-				}).withFilter(t -> new IdFilter<>(t, "ID", ActionInfo::actionid)))
-				.addMainColumn(new CustomColumn<>("Name", ActionInfo::name, col -> {
-					col.setPreferredWidth(200);
-				}).withFilter(t -> new TextBasedFilter<>(t, "Name", ActionInfo::name)))
-				.addMainColumn(new CustomColumn<>("Icon", ai -> {
-					ActionIcon icon = ai.getIcon();
-					if (icon == null || icon.isDefaultIcon()) {
-						return "";
-					}
-					return icon;
-				}, col -> {
-					col.setCellRenderer(new DefaultTableCellRenderer() {
-						@Override
-						public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-							Component fallback = super.getTableCellRendererComponent(table, "", isSelected, hasFocus, row, column);
-							if (value instanceof HasIconURL hiu) {
-								return IconTextRenderer.getComponent(hiu, fallback, false);
-							}
-							return fallback;
-						}
-					});
-					col.setMinWidth(30);
-					col.setMaxWidth(40);
-				}))
-				.addMainColumn(new CustomColumn<>("Description", ActionInfo::description, col -> {
-					col.setPreferredWidth(500);
-				}).withFilter(t -> new TextBasedFilter<>(t, "Description", ActionInfo::description)))
-				.addMainColumn(new CustomColumn<>("Player Ability", ai -> ai.isPlayerAbility() ? "✓" : ""))
-				.addMainColumn(new CustomColumn<>("Cast", ai -> {
-					// In the game files, cast times are represented as 100ms units, so we never need more than
-					// one decimal place.
-					double ct = ai.getCastTime();
-					if (ct == 0) {
-						return "";
-					}
-					double extra = ai.getExtraCastTime();
-					if (extra > 0)  {
-						return "%.1f + %.1f".formatted(ct, extra);
-					}
-					return "%.1f".formatted(ct);
-				}))
-				.addMainColumn(new CustomColumn<>("Recast", ai -> {
-					int maxCharges = ai.maxCharges();
-					double cd = ai.getCd();
-					if (maxCharges > 1) {
-						return String.format("%s (%d charges)", cd, maxCharges);
-					}
-					return cd > 0 ? cd : "";
-				}))
-				.addMainColumn(new CustomColumn<>("Range/Shape", Function.identity(), c -> {
-					c.setCellRenderer(new DefaultTableCellRenderer() {
-						@Override
-						public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-							if (value instanceof ActionInfo ai) {
-								Component comp = super.getTableCellRendererComponent(table, OmenShape.describe(ai), isSelected, hasFocus, row, column);
-								RenderUtils.setTooltip(comp, "Raw: ct:%s, er:%sy, x:%sy".formatted(ai.castType(), ai.effectRange(), ai.xAxisModifier()));
-								return comp;
-							}
-							return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-						}
-					});
-				}))
-				.addWidget(InGameAbilityPickerButton::new)
-				.addWidget(tbl -> JumpToIdWidget.create(tbl, ActionInfo::actionid))
-				.addFilter(GroovyFilter.forClass(ActionInfo.class, container.getComponent(GroovyManager.class), "it"))
-				.withRightClickRepo(RightClickOptionRepo.of(
-				))
-//				.addRightClickOption(CustomRightClickOption.forRow("Copy XIVAPI Icon As Inline", ActionInfo.class, ai -> {
-//					String md = String.format("{{< inline >}} ![%s](%s) {{< /inline >}}%s", ai.name(), ai.getXivapiUrl(), ai.name());
-//					GuiUtil.copyToClipboard(md);
-//				}))
-				.withRightClickRepo(rightClickOptionRepo.withMore(
-						CustomRightClickOption.forRow("Open on XivAPI", ActionInfo.class, ai -> {
-							GuiUtil.openUrl(XivApiUtils.singleItemUrl("Action", ai.actionid()));
-						}),
-						CustomRightClickOption.forRow(
-								"Copy XIVAPI Icon URL",
-								ActionInfo.class,
-								ai -> GuiUtil.copyTextToClipboard(ai.getXivapiUrl().toString())),
-						CustomRightClickOption.forRow(
-								"Copy XIVAPI Icon As Markdown",
-								ActionInfo.class,
-								ai -> {
-									String md = String.format("![%s](%s)", ai.name(), ai.getXivapiUrl());
-									GuiUtil.copyTextToClipboard(md);
-								})
-				))
-				.setFixedData(true)
-				.apply(GroovyColumns::addDetailColumns)
+		TableWithFilterAndDetails.TableWithFilterAndDetailsBuilder<ActionInfo, PropertyValue> builder = TableWithFilterAndDetails.<ActionInfo, PropertyValue>builder("Actions/Abilities", ActionTableFactory::getAllActions, GroovyColumns::getValues);
+		applyCommon(builder);
+		return builder.apply(GroovyColumns::addDetailColumns)
 				.build();
 	}
 

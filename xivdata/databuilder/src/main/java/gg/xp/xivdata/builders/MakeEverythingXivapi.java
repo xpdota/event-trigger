@@ -132,7 +132,10 @@ public class MakeEverythingXivapi {
 					coneAngle,
 					isConeAngleKnown,
 					entry.getDescription(),
-					entry.getExtraCastTime100ms());
+					entry.getExtraCastTime100ms(),
+					entry.getAttackType(),
+					entry.getAspect(),
+					entry.getActionCategory());
 			long id = entry.getIcon().getId();
 			if (id > 0 && id != DUMMY_ACTION_ICON) {
 				log.info("Action id {} - icon {}", ai.actionid(), id);
