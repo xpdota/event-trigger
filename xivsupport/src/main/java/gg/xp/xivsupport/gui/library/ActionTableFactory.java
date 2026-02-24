@@ -13,7 +13,7 @@ import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import gg.xp.xivsupport.gui.tables.filters.GroovyFilter;
 import gg.xp.xivsupport.gui.tables.filters.IdFilter;
 import gg.xp.xivsupport.gui.tables.filters.TextBasedFilter;
-import gg.xp.xivsupport.gui.tables.filters.TriStateBooleanFilter;
+import gg.xp.xivsupport.gui.tables.filters.BooleanFilter;
 import gg.xp.xivsupport.gui.tables.groovy.GroovyColumns;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
@@ -34,7 +34,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 public final class ActionTableFactory {
 
@@ -80,8 +79,8 @@ public final class ActionTableFactory {
 		col.setPreferredWidth(500);
 	}).withFilter(t -> new TextBasedFilter<>(t, "Description", ActionInfo::description));
 
-	private static final CustomColumn<ActionInfo> playerAbilityCol = new CustomColumn<ActionInfo>("Player Ability", ai -> ai.isPlayerAbility() ? "✓" : "")
-			.withFilter(t -> new TriStateBooleanFilter<>(t, "Player Ability", ActionInfo::isPlayerAbility));
+	private static final CustomColumn<ActionInfo> playerAbilityCol = new CustomColumn<ActionInfo>("Player Action", ai -> ai.isPlayerAbility() ? "✓" : "")
+			.withFilter(t -> new BooleanFilter<>(t, "Player Action", ActionInfo::isPlayerAbility));
 
 	private static final CustomColumn<ActionInfo> castCol = new CustomColumn<>("Cast", ai -> {
 		// In the game files, cast times are represented as 100ms units, so we never need more than
