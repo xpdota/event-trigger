@@ -74,9 +74,9 @@ public final class LaunchImportedFflogs {
 			report = report.withFight(item.id());
 		}
 
-		List<JsonNode> jsonNode = fflogs.downloadReport(report);
+		List<JsonNode> topLevelNodes = fflogs.downloadReport(report);
 
-		List<Event> events = EventReader.readFflogsJson(jsonNode);
+		List<Event> events = EventReader.readFflogsJson(topLevelNodes);
 
 		EventDistributor dist = pico.getComponent(EventDistributor.class);
 		EventMaster master = pico.getComponent(EventMaster.class);

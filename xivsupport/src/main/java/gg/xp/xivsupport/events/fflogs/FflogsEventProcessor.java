@@ -2,7 +2,9 @@ package gg.xp.xivsupport.events.fflogs;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.data.*;
@@ -52,7 +54,9 @@ import java.util.function.Function;
 
 public class FflogsEventProcessor {
 	private static final Logger log = LoggerFactory.getLogger(FflogsEventProcessor.class);
-	private static final ObjectMapper mapper = new ObjectMapper();
+	private static final ObjectMapper mapper = JsonMapper.builder()
+			.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false)
+			.build();
 	private final AtomicInteger counter = new AtomicInteger();
 	private final Map<Long, Long> fflogsProvidedMapping = new HashMap<>();
 	private final Map<Long, Function<Long, RawXivCombatantInfo>> cbtInstanceMapping = new HashMap<>();

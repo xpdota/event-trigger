@@ -70,7 +70,7 @@ public class MapConfig {
 		JPanel displaySettings = new InnerPanel();
 		{
 			EnumSettingGui<NameDisplayMode> nameSetting = new EnumSettingGui<>(displayConf.getNameDisplayMode(), "Player Names", () -> true);
-			EnumSettingGui<OmenDisplayMode> omenSetting = new EnumSettingGui<>(displayConf.getOmenDisplayMode(), "AoEs (BETA)", () -> true);
+			EnumSettingGui<OmenDisplayMode> omenSetting = new EnumSettingGui<>(displayConf.getOmenDisplayMode(), "AoEs", () -> true);
 			BooleanSettingGui hpBars = new BooleanSettingGui(displayConf.getHpBars(), "HP Bars");
 			BooleanSettingGui castBars = new BooleanSettingGui(displayConf.getCastBars(), "Cast Bars");
 			BooleanSettingGui ids = new BooleanSettingGui(displayConf.getIds(), "IDs");
