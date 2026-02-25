@@ -11,8 +11,6 @@ import gg.xp.xivsupport.replay.ReplayController;
 import gg.xp.xivsupport.sys.KnownLogSource;
 import gg.xp.xivsupport.sys.PrimaryLogSource;
 import gg.xp.xivsupport.sys.XivMain;
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
 import org.intellij.lang.annotations.Language;
 import org.picocontainer.MutablePicoContainer;
 import org.testng.Assert;
@@ -21,7 +19,6 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -1356,7 +1353,7 @@ public class FflogsImportTest {
 			""";
 
 	@Test
-	public void testLoadsPlaysAndCaptures() throws Exception {
+	public void testLoadsPlaysAndCaptures() {
 		// Read the test data
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode root = mapper.readTree(importedData);
@@ -1378,7 +1375,7 @@ public class FflogsImportTest {
 				rawToChildren.put(raw, new ArrayList<>());
 			}
 			// If it's a child of a fflogs event, add it to the list of children for that event
-			else if (event.getParent() instanceof FflogsRawEvent parent){
+			else if (event.getParent() instanceof FflogsRawEvent parent) {
 				rawToChildren.get(parent).add(event);
 			}
 		});
