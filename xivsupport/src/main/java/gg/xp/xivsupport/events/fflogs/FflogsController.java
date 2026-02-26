@@ -88,46 +88,63 @@ public class FflogsController {
 
 	private static final String queryFull = """
 			query GetReport($report: String, $fight: Int, $start: Float) {
-				reportData {
-					report(code: $report) {
-						code
-						startTime
-						endTime
-						fights(fightIDs:[$fight]) {
-							maps {
-								id
-							}
-							gameZone {
-								id
-								name
-							}
+			    reportData {
+			        report(code: $report) {
+			            code
+			            startTime
+			            endTime
+			            fights(fightIDs:[$fight]) {
+			                maps {
+			                    id
+			                }
+			                gameZone {
+			                    id
+			                    name
+			                }
+			                friendlyPlayers
+			                friendlyPets {
+			                    gameID,
+			                    id,
+			                    instanceCount,
+			                    petOwner
+			                }
+			                friendlyNPCs {
+			                    gameID, id, instanceCount
+			                }
+			                enemyPlayers
+			                enemyPets {
+			                    gameID, id, instanceCount
+			                }
+			                enemyNPCs {
+			                    gameID, id, instanceCount
+			                }
+			            }
+			            masterData {
+			                actors {
+			                    gameID
+			                    id
+			                    name
+			                    petOwner
+			                    type
+			                    subType
+			                }
+			            }
+			            events(
+			                startTime: $start
+			                fightIDs: [$fight]
+			                endTime: 9639365786158
+			                useAbilityIDs: true
+			                includeResources: true
+			                limit: 10000
+			            ) {
+			                data
+			                nextPageTimestamp
+			            }
+			        }
+			    }
 						}
-						masterData {
-							actors {
-								gameID
-								id
-								name
-								petOwner
-								type
-								subType
-							}
-						}
-						events(
-							startTime: $start
-							fightIDs: [$fight]
-							endTime: 9639365786158
-							useAbilityIDs: true
-							includeResources: true
-							limit: 10000
-						) {
-							data
-							nextPageTimestamp
-						}
-					}
-				}
-			}
-
-							""";
+			
+			""";
 	private static final String queryFightsOnly = """
 			query GetReport($report: String) {
 				reportData {
