@@ -186,7 +186,10 @@ public class FflogsEventProcessor {
 					long rawId = actor.id();
 
 					boolean isPlayer = actor.type().equals("Player");
-					long id = isPlayer ? (rawId % 10_000 + 0x1000_000) : (rawId * 0x100 + 0x4000_0000);
+					// For players, use 0x1000_0000 as a base. Loop back to 0x1000_0000 for very large values (should never happen).
+					// For NPCs and pets, there might be more than one entity with that ID/gameID, so we make fake in-game entity IDs
+					// by starting at 0x4000_0000, and multiplying the entity ID by 0x100. This gives us up to 256 entities per fflogs ID.
+					long id = isPlayer ? (rawId % 0x1000_0000 + 0x1000_0000) : (rawId * 0x100 + 0x4000_0000);
 					fflogsProvidedMapping.put(actor.id(), id);
 					Long rawOwnerId = actor.petOwner();
 					long ownerId;

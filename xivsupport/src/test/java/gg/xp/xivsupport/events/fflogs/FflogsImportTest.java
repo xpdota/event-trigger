@@ -5,12 +5,16 @@ import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.xivsupport.events.actlines.parsers.FakeFflogsTimeSource;
+import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.eventstorage.EventReader;
 import gg.xp.xivsupport.gui.imprt.ListEventIterator;
 import gg.xp.xivsupport.replay.ReplayController;
 import gg.xp.xivsupport.sys.KnownLogSource;
 import gg.xp.xivsupport.sys.PrimaryLogSource;
 import gg.xp.xivsupport.sys.XivMain;
+import org.apache.commons.lang3.mutable.MutableObject;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 import org.picocontainer.MutablePicoContainer;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -48,9 +52,13 @@ public class FflogsImportTest {
 		// Track FflogsRawEvents and their children to ensure that every raw event gets mapped to at least one
 		// "parsed" event.
 		Map<FflogsRawEvent, List<Event>> rawToChildren = new IdentityHashMap<>();
+		MutableObject<FflogsMasterDataEvent> fmdeRef = new MutableObject<>();
 		dist.registerHandler(Event.class, (context, event) -> {
+			if (event instanceof FflogsMasterDataEvent fmde) {
+				fmdeRef.setValue(fmde);
+			}
 			// If it's a direct fflogs event, initialize it to an empty list
-			if (event instanceof FflogsRawEvent raw) {
+			else if (event instanceof FflogsRawEvent raw) {
 				rawToChildren.put(raw, new ArrayList<>());
 			}
 			// If it's a child of a fflogs event, add it to the list of children for that event
@@ -63,6 +71,16 @@ public class FflogsImportTest {
 		dist.acceptEvent(new InitEvent());
 		ReplayController replay = new ReplayController(master, new ListEventIterator<>(input), false);
 		pico.addComponent(replay);
+		// Test just the MasterData event
+		replay.advanceBy(1);
+		FflogsMasterDataEvent fmde = fmdeRef.getValue();
+		Assert.assertNotNull(fmde, "FflogsMasterDataEvent should not be null");
+		MatcherAssert.assertThat(fmde.getActors(), Matchers.hasSize(2488));
+		MatcherAssert.assertThat(fmde.getFilteredActors(), Matchers.hasSize(27));
+		MatcherAssert.assertThat(pico.getComponent(XivState.class).getCombatantsListCopy(), Matchers.hasSize(107));
+		int expectedSum = fmde.getFilteredActors().stream().mapToInt(FflogsMasterDataEvent.ActorWithCount::count).sum();
+		MatcherAssert.assertThat(expectedSum, Matchers.equalTo(107));
+
 		replay.advanceBy(Integer.MAX_VALUE);
 
 		Assert.assertFalse(rawToChildren.isEmpty(), "rawToChildren map is empty");
@@ -81,5 +99,7 @@ public class FflogsImportTest {
 			Assert.fail("Some FflogsRawEvents did not produce any child events (%d missing). Examples: [%s]"
 					.formatted(missingChildren.size(), details));
 		}
+
+
 	}
 }
