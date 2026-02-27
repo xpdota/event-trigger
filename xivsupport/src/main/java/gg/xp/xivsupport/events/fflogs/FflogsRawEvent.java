@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.events.fflogs;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import tools.jackson.databind.ObjectMapper;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.SystemEvent;

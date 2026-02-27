@@ -213,7 +213,7 @@ public final class StandardColumns {
 					else {
 						CombatantType type = c.getType();
 						text = type.name();
-						if (type == CombatantType.NPC) {
+						if (type == CombatantType.NPC || type == CombatantType.PET || type == CombatantType.FAKE) {
 							text += " (%s:%s)".formatted(c.getbNpcId(), c.getbNpcNameId());
 						}
 					}

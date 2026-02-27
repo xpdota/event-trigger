@@ -1,10 +1,6 @@
 package gg.xp.xivsupport.events.fflogs;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.DeserializationFeature;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.data.*;
@@ -42,15 +38,21 @@ import org.jetbrains.annotations.Nullable;
 import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import java.util.stream.LongStream;
 
 public class FflogsEventProcessor {
 	private static final Logger log = LoggerFactory.getLogger(FflogsEventProcessor.class);
@@ -171,16 +173,24 @@ public class FflogsEventProcessor {
 
 	@HandleEvents
 	public void processFflogsMasterData(EventContext context, FflogsMasterDataEvent masterData) {
-		// TODO: Environment is E0000000
-		List<FflogsMasterDataEvent.Actor> actors = masterData.getActors();
+		List<FflogsMasterDataEvent.ActorWithCount> actors = masterData.getFilteredActors();
 		List<RawXivCombatantInfo> combatants = actors.stream()
-				.map(actor -> {
-					long rawId = actor.gameID();
+				// Sort this so that we get non-pets first
+				.sorted(Comparator.comparing(ac -> {
+					Long owner = ac.actor().petOwner();
+					return owner == null ? 0 : owner;
+				}))
+				.flatMap(ac -> {
+					FflogsMasterDataEvent.Actor actor = ac.actor();
+					int count = ac.count();
+					long rawId = actor.id();
 
 					boolean isPlayer = actor.type().equals("Player");
-					long id = isPlayer ? (rawId % 10_000 + 0x1000_000) : (rawId * 100 + 0x4000_0000);
+					// For players, use 0x1000_0000 as a base. Loop back to 0x1000_0000 for very large values (should never happen).
+					// For NPCs and pets, there might be more than one entity with that ID/gameID, so we make fake in-game entity IDs
+					// by starting at 0x4000_0000, and multiplying the entity ID by 0x100. This gives us up to 256 entities per fflogs ID.
+					long id = isPlayer ? (rawId % 0x1000_0000 + 0x1000_0000) : (rawId * 0x100 + 0x4000_0000);
 					fflogsProvidedMapping.put(actor.id(), id);
-					// TODO: this owner ID doesn't actually work
 					Long rawOwnerId = actor.petOwner();
 					long ownerId;
 					int type;
@@ -189,16 +199,21 @@ public class FflogsEventProcessor {
 						type = isPlayer ? 1 : 2;
 					}
 					else {
-						// 3 = pet
-						type = 3;
-						ownerId = rawOwnerId;
+						type = 2;
+						// We need to get the real ID. This is the easiest way.
+						Function<Long, RawXivCombatantInfo> fn = cbtInstanceMapping.get(rawOwnerId);
+						if (fn == null) {
+							ownerId = 0L;
+						}
+						else {
+							ownerId = fn.apply(1L).getId();
+						}
 					}
 					long npcId = isPlayer ? 0 : rawId;
 					Function<Long, RawXivCombatantInfo> rawDataProducer = i -> new RawXivCombatantInfo(id - 1 + i, actor.name(), isPlayer ? convertJob(actor.subType()).getId() : 0, type, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, "TODO", npcId, 0, 0, ownerId);
 					cbtInstanceMapping.put(actor.id(), rawDataProducer);
-					return rawDataProducer.apply(1L);
-				})
-				.toList();
+					return LongStream.rangeClosed(1, count).mapToObj(rawDataProducer::apply);
+				}).toList();
 		state.setPlayer(new XivEntity(0x1234_5678, "Bogus Player"));
 		state.setCombatants(combatants);
 	}

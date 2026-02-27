@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.eventstorage;
 
+import gg.xp.xivsupport.events.fflogs.FflogsImportProcessor;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -169,56 +170,6 @@ public final class EventReader {
 	}
 
 	public static List<Event> readFflogsJson(List<JsonNode> rootNodes) {
-		boolean first = true;
-		ObjectMapper mapper = new ObjectMapper();
-		List<Event> out = new ArrayList<>();
-
-		for (JsonNode rootNode : rootNodes) {
-
-			JsonNode startTimeNode = rootNode.at("/reportData/report/startTime");
-			Instant start = Instant.ofEpochMilli(mapper.convertValue(startTimeNode, Long.class));
-
-
-			if (first) {
-				{
-					JsonNode masterNode = rootNode.at("/reportData/report/masterData");
-					out.add(mapper.convertValue(masterNode, FflogsMasterDataEvent.class));
-				}
-
-				{
-					JsonNode zoneIdNode = rootNode.at("/reportData/report/fights/0/gameZone/id");
-					Long zoneId = mapper.convertValue(zoneIdNode, Long.class);
-					JsonNode zoneNameNode = rootNode.at("/reportData/report/fights/0/gameZone/id");
-					String zoneName = mapper.convertValue(zoneNameNode, String.class);
-					if (zoneId != null) {
-						ZoneChangeEvent zce = new ZoneChangeEvent(new XivZone(zoneId, zoneName == null ? "" : zoneName));
-						out.add(zce);
-					}
-				}
-				{
-					JsonNode mapIdNode = rootNode.at("/reportData/report/fights/0/maps/0/id");
-					Long mapId = mapper.convertValue(mapIdNode, Long.class);
-					if (mapId != null) {
-						MapChangeEvent mce = new MapChangeEvent(MapLibrary.forId(mapId));
-						out.add(mce);
-					}
-				}
-				first = false;
-			}
-
-			{
-				JsonNode eventsNode = rootNode.at("/reportData/report/events/data");
-				List<Map<String, Object>> maps = mapper.convertValue(eventsNode, new TypeReference<>() {
-				});
-				out.addAll(maps.stream().map(map -> {
-					FflogsRawEvent raw = new FflogsRawEvent(map);
-					Long timeOffset = raw.getTypedField("timestamp", Long.class);
-					Instant actualTime = start.plusMillis(timeOffset);
-					raw.setHappenedAt(actualTime);
-					return raw;
-				}).toList());
-			}
-		}
-		return out;
+		return FflogsImportProcessor.readFflogsJson(rootNodes);
 	}
 }
