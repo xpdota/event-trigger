@@ -505,7 +505,8 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 
 	private static boolean isValidDragBtn(MouseEvent e) {
 		int btn = e.getButton();
-		return (btn == MouseEvent.BUTTON1 || btn == MouseEvent.BUTTON3 || btn == MouseEvent.BUTTON2);
+		// Since this has a context menu now, only allow mouse1 for dragging.
+		return btn == MouseEvent.BUTTON1;
 	}
 
 	@Override
