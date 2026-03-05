@@ -274,7 +274,7 @@ public class CustomTimelineEntrySerTest {
 		var mapper = new ObjectMapper();
 		// Berserk, up to 3 stacks
 		TimelineIcon before = new IconIdTimelineIcon(51234);
-		Matcher<String> urlEnd = Matchers.endsWith("asset/ui/icon/051000/051234_hr1.tex?format=png");
+		Matcher<String> urlEnd = Matchers.endsWith("asset?path=ui%2Ficon%2F051000%2F051234_hr1.tex&format=png");
 		MatcherAssert.assertThat(before.getIconUrl().toString(), urlEnd);
 		Map<String, Object> asMap = mapper.convertValue(before, new TypeReference<>() {
 		});

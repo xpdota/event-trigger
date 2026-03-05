@@ -32,16 +32,7 @@ public record ActionInfo(
 	}
 
 	public URL getXivapiUrl() {
-		long number = iconId;
-		long stub = (number / 1000) * 1000;
-		// Example: https://beta.xivapi.com/api/1/asset/ui/icon/218000/218443.tex?format=png
-		String xivapiUrl = String.format("https://beta.xivapi.com/api/1/asset/ui/icon/%s/%s.tex?format=png", stub, number);
-		try {
-			return new URL(xivapiUrl);
-		}
-		catch (MalformedURLException e) {
-			throw new RuntimeException(e);
-		}
+		return IconUtils.xivApiIconUrl((int) iconId);
 	}
 
 	@Override

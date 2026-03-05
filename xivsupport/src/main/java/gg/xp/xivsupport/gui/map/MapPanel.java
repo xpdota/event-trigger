@@ -5,6 +5,7 @@ import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.state.combatstate.CastTracker;
 import gg.xp.xivsupport.events.state.floormarkers.FloorMarker;
 import gg.xp.xivsupport.events.triggers.jobs.gui.CastBarComponent;
+import gg.xp.xivsupport.groovy.GroovyRightClickOptions;
 import gg.xp.xivsupport.gui.map.omen.ActionOmenInfo;
 import gg.xp.xivsupport.gui.map.omen.OmenDisplayMode;
 import gg.xp.xivsupport.gui.map.omen.OmenInstance;
@@ -14,6 +15,8 @@ import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.OverlapLayout;
 import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
 import gg.xp.xivsupport.gui.tables.renderers.ScaledImageComponent;
+import gg.xp.xivsupport.gui.util.EasyAction;
+import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.HitPoints;
 import gg.xp.xivsupport.models.Position;
@@ -28,6 +31,8 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.LineBorder;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -68,6 +73,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	private final BooleanSetting displayTethers;
 	private final BooleanSetting displayHitbox;
 	private final MapColorSettings colorSettings;
+	private final GroovyRightClickOptions grco;
 	private double zoomFactor = 1;
 	private volatile int curXpan;
 	private volatile int curYpan;
@@ -85,7 +91,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	private volatile Point lastMousePoint;
 
 
-	public MapPanel(MapDataController mdc, MapDisplayConfig mapDisplayConfig, MapColorSettings colorSettings) {
+	public MapPanel(MapDataController mdc, MapDisplayConfig mapDisplayConfig, MapColorSettings colorSettings, GroovyRightClickOptions grco) {
 		this.mdc = mdc;
 		omenDisp = mapDisplayConfig.getOmenDisplayMode();
 		nameDisp = mapDisplayConfig.getNameDisplayMode();
@@ -95,6 +101,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		displayTethers = mapDisplayConfig.getTethers();
 		displayHitbox = mapDisplayConfig.getDisplayHitboxes();
 		this.colorSettings = colorSettings;
+		this.grco = grco;
 		colorSettings.addListener(this::forceRefreshAllCbts);
 
 		setLayout(null);
@@ -498,7 +505,8 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 
 	private static boolean isValidDragBtn(MouseEvent e) {
 		int btn = e.getButton();
-		return (btn == MouseEvent.BUTTON1 || btn == MouseEvent.BUTTON3 || btn == MouseEvent.BUTTON2);
+		// Since this has a context menu now, only allow mouse1 for dragging.
+		return btn == MouseEvent.BUTTON1;
 	}
 
 	@Override
@@ -638,6 +646,76 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		}
 	}
 
+	private final JPopupMenu popupMenu = new JPopupMenu();
+
+	{
+		popupMenu.addPopupMenuListener(new PopupMenuListener() {
+			@Override
+			public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+				popupMenu.removeAll();
+				if (e.getSource() instanceof JPopupMenu jpm) {
+					Component invoker = jpm.getInvoker();
+					if (invoker instanceof EntityDoohickey ed) {
+						// Options for a specific entity
+						// Unfortunately, not all LAFs actually display the label. The spec does not require them to do so.
+						XivCombatant combatantState = ed.cbt;
+						JMenuItem titleItem = new JMenuItem(combatantState.getName());
+						titleItem.setEnabled(false);
+						popupMenu.add(titleItem);
+						popupMenu.add(new JMenuItem(new EasyAction("Save State as Temp Var", () -> grco.saveAsTempVar(combatantState)).asAction()));
+					}
+					else if (invoker == MapPanel.this) {
+						// Options for the map as a whole
+						String mapLabel;
+						XivMap map = MapPanel.this.map;
+						if (map == null) {
+							mapLabel = "Unknown Map";
+						}
+						else {
+							if (map.getSubPlace() != null) {
+								mapLabel = "Map '%s: %s'".formatted(map.getPlace(), map.getSubPlace());
+							}
+							else {
+								mapLabel = "Map '%s'".formatted(map.getPlace());
+							}
+						}
+						JMenuItem titleItem = new JMenuItem(mapLabel);
+						titleItem.setEnabled(false);
+						popupMenu.add(titleItem);
+						if (map != null) {
+							popupMenu.add(new EasyAction("Save Map Info as Temp Var", () -> grco.saveAsTempVar(map)).asAction());
+							popupMenu.add(new EasyAction("Copy Map Image URL", () -> {
+								URL image = map.getImage();
+								GuiUtil.copyTextToClipboard(image != null ? image.toString() : "null");
+							}).asAction());
+						}
+						else {
+							var dummy = new JMenuItem("No Actions Available");
+							dummy.setEnabled(false);
+							popupMenu.add(dummy);
+						}
+					}
+					else {
+						var dummy = new JMenuItem("No Actions Available");
+						dummy.setEnabled(false);
+						popupMenu.add(dummy);
+					}
+				}
+			}
+
+			@Override
+			public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+
+			}
+
+			@Override
+			public void popupMenuCanceled(PopupMenuEvent e) {
+
+			}
+		});
+		setComponentPopupMenu(popupMenu);
+	}
+
 	/**
 	 * Component that displays a combatant
 	 */
@@ -726,6 +804,8 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			add(idLabel);
 
 			revalidate();
+
+			setComponentPopupMenu(popupMenu);
 		}
 
 		@Override
