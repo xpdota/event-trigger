@@ -15,17 +15,24 @@ public final class IconUtils {
 	public static URL iconUrlWithXivapiFallback(int iconId) {
 		URL out = IconUtils.class.getResource(String.format("/xiv/icon/%06d_hr1.png", iconId));
 		if (out == null) {
-			long stub = (iconId / 1000) * 1000;
-			// Example: https://beta.xivapi.com/api/1/asset/ui/icon/218000/218443.tex?format=png
-			String xivapiUrl = String.format("https://beta.xivapi.com/api/1/asset/ui/icon/%06d/%06d_hr1.tex?format=png", stub, iconId);
-			try {
-				return new URL(xivapiUrl);
-			}
-			catch (MalformedURLException e) {
-				throw new RuntimeException(e);
-			}
+			return xivApiIconUrl(iconId);
 		}
 		return out;
+	}
+
+	public static URL xivApiIconUrl(int iconId) {
+		int stub = (iconId / 1000) * 1000;
+		// Example: https://v2.xivapi.com/api/asset?path=ui%2Ficon%2F062000%2F062140_hr1.tex&format=png
+		// Normally, I'd use a proper URL library, but this trusted data
+		String assetPath = "ui/icon/%06d/%06d_hr1.tex".formatted(stub, (long) iconId);
+		String escapedAssetPath = assetPath.replaceAll("/", "%2F");
+		String xivapiUrl = String.format("https://v2.xivapi.com/api/asset?path=%s&format=png", escapedAssetPath);
+		try {
+			return new URL(xivapiUrl);
+		}
+		catch (MalformedURLException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public static HasIconURL makeIcon(int iconId) {

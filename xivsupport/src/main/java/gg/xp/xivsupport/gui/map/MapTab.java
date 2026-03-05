@@ -3,11 +3,11 @@ package gg.xp.xivsupport.gui.map;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.ScanMe;
-import gg.xp.reevent.util.Utils;
 import gg.xp.xivsupport.events.actlines.events.MapChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.XivBuffsUpdatedEvent;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.groovy.GroovyManager;
+import gg.xp.xivsupport.groovy.GroovyRightClickOptions;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
@@ -22,10 +22,7 @@ import groovy.lang.PropertyValue;
 
 import javax.swing.*;
 import java.awt.*;
-import java.lang.reflect.Field;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 // TODO: introduce another layer here so that the tab can load async
@@ -42,13 +39,13 @@ public class MapTab extends JPanel {
 	private final JSplitPane split;
 	private volatile boolean selectionRefreshPending;
 
-	public MapTab(GroovyManager mgr, MapDataController mdc, MapConfig config, MapDisplayConfig mapDisplayConfig, MapColorSettings mcs, RightClickOptionRepo rc) {
+	public MapTab(GroovyManager mgr, MapDataController mdc, MapConfig config, MapDisplayConfig mapDisplayConfig, MapColorSettings mcs, RightClickOptionRepo rc, GroovyRightClickOptions grco) {
 //		super("Map");
 		super(new BorderLayout());
 		split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 		split.setOneTouchExpandable(true);
 		this.mapDataController = mdc;
-		this.mapPanel = new MapPanel(mdc, mapDisplayConfig, mcs);
+		this.mapPanel = new MapPanel(mdc, mapDisplayConfig, mcs, grco);
 //		setPreferredSize(getMaximumSize());
 //		setLayout(new BorderLayout());
 		split.setRightComponent(mapPanel);
