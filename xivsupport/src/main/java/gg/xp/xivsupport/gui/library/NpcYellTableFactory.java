@@ -44,9 +44,9 @@ public final class NpcYellTableFactory {
 				.addWidget(tbl -> JumpToIdWidget.create(tbl, nyi -> (long) nyi.id()))
 				// TODO: ability to create easy trigger from library
 				.withRightClickRepo(rightClicks.withMore(
-						CustomRightClickOption.forRow("Open on XivAPI", NpcYellInfo.class, nyi -> {
-							GuiUtil.openUrl(XivApiUtils.singleItemUrl("NpcYell", nyi.id()));
-						})
+						CustomRightClickOption.forRow("Open on XivAPI", NpcYellInfo.class,
+								XivApiUtils.singleItemUrlOpener("NpcYell", NpcYellInfo::id)
+						)
 				))
 				.setFixedData(true)
 				.build();

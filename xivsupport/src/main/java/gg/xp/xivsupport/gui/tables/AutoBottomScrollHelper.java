@@ -103,7 +103,7 @@ public class AutoBottomScrollHelper extends JScrollPane {
 		return new JScrollPane.ScrollBar(JScrollBar.VERTICAL) {
 			@Override
 			public void setValues(int newValue, int newExtent, int newMin, int newMax) {
-				log.info("Value: {} -> {} ; Max: {} -> {}", oldValue, newValue, oldMax, newMax);
+//				log.info("Value: {} -> {} ; Max: {} -> {}", oldValue, newValue, oldMax, newMax);
 				// This branch means more data has been added to the table.
 				if (newMax != oldMax || newExtent != oldExtent) {
 					if (atBottom && autoScrollEnabled) {
