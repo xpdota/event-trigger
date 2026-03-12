@@ -8,7 +8,6 @@ import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import gg.xp.xivsupport.gui.tables.filters.IdFilter;
 import gg.xp.xivsupport.gui.tables.filters.TextBasedFilter;
-import gg.xp.xivsupport.gui.util.GuiUtil;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
@@ -36,18 +35,17 @@ public final class ZonesTableFactory {
 					col.setMinWidth(100);
 					col.setMaxWidth(100);
 				}).withFilter(t -> new IdFilter<>(t, "ID", zi -> (long) zi.id())))
-				.addMainColumn(new CustomColumn<ZoneInfo>("Place Name", ZoneInfo::placeName, col -> {
+				.addMainColumn(new CustomColumn<>("Place Name", ZoneInfo::placeName, col -> {
 //					col.setPreferredWidth(200);
 				}).withFilter(t -> new TextBasedFilter<>(t, "Place Name", ZoneInfo::placeName)))
-				.addMainColumn(new CustomColumn<ZoneInfo>("Duty Name", ZoneInfo::dutyName, col -> {
+				.addMainColumn(new CustomColumn<>("Duty Name", ZoneInfo::dutyName, col -> {
 //					col.setPreferredWidth(200);
 				}).withFilter(t -> new TextBasedFilter<>(t, "Duty Name", ZoneInfo::dutyName)))
 				.addWidget(tbl -> JumpToIdWidget.create(tbl, zi -> (long) zi.id()))
 				.setFixedData(true)
 				.withRightClickRepo(rightClickOptionRepo.withMore(
-						CustomRightClickOption.forRow("Open on XivAPI", ZoneInfo.class, zi -> {
-							GuiUtil.openUrl(XivApiUtils.singleItemUrl("TerritoryType", zi.id()));
-						})
+						CustomRightClickOption.forRow("Open on XivAPI", ZoneInfo.class,
+								XivApiUtils.singleItemUrlOpener("TerritoryType", ZoneInfo::id))
 				))
 				.build();
 	}

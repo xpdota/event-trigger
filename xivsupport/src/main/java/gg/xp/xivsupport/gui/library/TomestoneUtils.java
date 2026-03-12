@@ -5,19 +5,19 @@ import gg.xp.xivsupport.gui.util.GuiUtil;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-final class XivApiUtils {
-	private XivApiUtils() {
+final class TomestoneUtils {
+	private TomestoneUtils() {
 	}
 
 	static String singleItemUrl(String sheetName, long id) {
-		return String.format("https://v2.xivapi.com/api/sheet/%s/%d", sheetName, id);
+		return String.format("https://tomestone.gg/%s/%d/", sheetName, id);
 	}
 
 	static void openSingleItemUrl(String sheetName, long id) {
 		GuiUtil.openUrl(singleItemUrl(sheetName, id));
 	}
 
-	static <X> Consumer<X> singleItemUrlOpener(String sheetName, Function<X, ? extends Number> idGetter) {
-		return x -> openSingleItemUrl(sheetName, idGetter.apply(x).longValue());
+	static <X> Consumer<X> singleItemUrlOpener(String sheetName, Function<X, Long> idGetter) {
+		return x -> openSingleItemUrl(sheetName, idGetter.apply(x));
 	}
 }

@@ -41,10 +41,10 @@ public final class StatusTableFactory {
 					col.setMinWidth(100);
 					col.setMaxWidth(100);
 				}).withFilter(t -> new IdFilter<>(t, "ID", StatusEffectInfo::statusEffectId)))
-				.addMainColumn(new CustomColumn<StatusEffectInfo>("Name", StatusEffectInfo::name, col -> {
+				.addMainColumn(new CustomColumn<>("Name", StatusEffectInfo::name, col -> {
 					col.setPreferredWidth(200);
 				}).withFilter(t -> new TextBasedFilter<>(t, "Name", StatusEffectInfo::name)))
-				.addMainColumn(new CustomColumn<StatusEffectInfo>("Description", StatusEffectInfo::description, col -> {
+				.addMainColumn(new CustomColumn<>("Description", StatusEffectInfo::description, col -> {
 					col.setPreferredWidth(500);
 				}).withFilter(t -> new TextBasedFilter<>(t, "Description", StatusEffectInfo::description)))
 				.addMainColumn(new CustomColumn<>("Stacks", StatusEffectInfo::maxStacks, col -> {
@@ -59,9 +59,10 @@ public final class StatusTableFactory {
 				.addWidget(tbl -> JumpToIdWidget.create(tbl, StatusEffectInfo::statusEffectId))
 				.setFixedData(true)
 				.withRightClickRepo(rightClickOptionRepo.withMore(
-						CustomRightClickOption.forRow("Open on XivAPI", StatusEffectInfo.class, sei -> {
-							GuiUtil.openUrl(XivApiUtils.singleItemUrl("Status", sei.statusEffectId()));
-						})
+						CustomRightClickOption.forRow("Open on XivAPI", StatusEffectInfo.class,
+								XivApiUtils.singleItemUrlOpener("Status", StatusEffectInfo::statusEffectId)),
+						CustomRightClickOption.forRow("Open on Tomestone", StatusEffectInfo.class,
+								TomestoneUtils.singleItemUrlOpener("status-effect", StatusEffectInfo::statusEffectId))
 				))
 				.build();
 	}

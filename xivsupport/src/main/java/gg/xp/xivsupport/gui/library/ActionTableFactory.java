@@ -4,16 +4,18 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
+import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageAspect;
+import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageType;
 import gg.xp.xivsupport.groovy.GroovyManager;
 import gg.xp.xivsupport.gui.map.omen.OmenShape;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
+import gg.xp.xivsupport.gui.tables.filters.BooleanFilter;
 import gg.xp.xivsupport.gui.tables.filters.GroovyFilter;
 import gg.xp.xivsupport.gui.tables.filters.IdFilter;
 import gg.xp.xivsupport.gui.tables.filters.TextBasedFilter;
-import gg.xp.xivsupport.gui.tables.filters.BooleanFilter;
 import gg.xp.xivsupport.gui.tables.groovy.GroovyColumns;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
@@ -21,8 +23,6 @@ import gg.xp.xivsupport.gui.util.GuiUtil;
 import groovy.lang.PropertyValue;
 import org.jetbrains.annotations.Nullable;
 import org.picocontainer.PicoContainer;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageType;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageAspect;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -174,9 +174,7 @@ public final class ActionTableFactory {
 				.addWidget(tbl -> JumpToIdWidget.create(tbl, ActionInfo::actionid))
 				.addFilter(GroovyFilter.forClass(ActionInfo.class, container.getComponent(GroovyManager.class), "it"))
 				.withRightClickRepo(rightClickOptionRepo.withMore(
-						CustomRightClickOption.forRow("Open on XivAPI", ActionInfo.class, ai -> {
-							GuiUtil.openUrl(XivApiUtils.singleItemUrl("Action", ai.actionid()));
-						}),
+						CustomRightClickOption.forRow("Open on XivAPI", ActionInfo.class, XivApiUtils.singleItemUrlOpener("Action", ActionInfo::actionid)),
 						CustomRightClickOption.forRow(
 								"Copy XIVAPI Icon URL",
 								ActionInfo.class,
@@ -187,7 +185,8 @@ public final class ActionTableFactory {
 								ai -> {
 									String md = String.format("![%s](%s)", ai.name(), ai.getXivapiUrl());
 									GuiUtil.copyTextToClipboard(md);
-								})
+								}),
+						CustomRightClickOption.forRow("Open on Tomestone", ActionInfo.class, TomestoneUtils.singleItemUrlOpener("action", ActionInfo::actionid))
 				))
 				.setFixedData(true);
 	}
