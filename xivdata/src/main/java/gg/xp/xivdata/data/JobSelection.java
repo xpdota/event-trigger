@@ -117,6 +117,16 @@ public class JobSelection {
 		}
 	}
 
+	public void setEnabledTypes(Set<JobType> enabledTypes) {
+		this.enabledTypes.clear();
+		this.enabledTypes.addAll(enabledTypes);
+	}
+
+	public void setEnabledJobs(Set<Job> enabledJobs) {
+		this.enabledJobs.clear();
+		this.enabledJobs.addAll(enabledJobs);
+	}
+
 	public boolean isEnabledForAll() {
 		return enabledForAll;
 	}
@@ -165,5 +175,10 @@ public class JobSelection {
 	@Override
 	public int hashCode() {
 		return Objects.hash(isEnabledForAll(), getEnabledTypes(), getEnabledJobs());
+	}
+
+	@Override
+	public String toString() {
+		return "%s{enabledForAll=%s, enabledTypes=%s, enabledJobs=%s}".formatted(getClass().getSimpleName(), enabledForAll, enabledTypes, enabledJobs);
 	}
 }
