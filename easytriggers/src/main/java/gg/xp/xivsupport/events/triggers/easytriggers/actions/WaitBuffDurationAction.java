@@ -64,9 +64,4 @@ public class WaitBuffDurationAction implements SqAction<BuffApplied> {
 			}
 		}
 	}
-
-	@Override
-	public void accept(EasyTriggerContext context, BuffApplied event) {
-		// Handled above
-	}
 }

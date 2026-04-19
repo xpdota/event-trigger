@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.actions;
 
-import gg.xp.reevent.events.BaseEvent;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.Description;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTriggerContext;
@@ -32,10 +31,5 @@ public class WaitCastDurationAction implements SqAction<AbilityCastStart> {
 		if (msToWait > 0) {
 			stc.waitMs(msToWait);
 		}
-	}
-
-	@Override
-	public void accept(EasyTriggerContext context, AbilityCastStart event) {
-		// Handled above
 	}
 }

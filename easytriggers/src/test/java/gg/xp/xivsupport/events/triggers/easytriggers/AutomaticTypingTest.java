@@ -7,12 +7,16 @@ import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.ConditionDescription;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableEventType;
 import org.picocontainer.MutablePicoContainer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.util.List;
 
 public class AutomaticTypingTest {
+	private static final Logger log = LoggerFactory.getLogger(AutomaticTypingTest.class);
+
 	@Test
 	void conditionsTest() {
 		MutablePicoContainer pico = ExampleSetup.setup();

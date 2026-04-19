@@ -16,11 +16,6 @@ public class WaitAction implements SqAction<BaseEvent> {
 	public long waitTimeMs = 1000;
 
 	@Override
-	public void accept(EasyTriggerContext context, BaseEvent event) {
-		// TODO: this method is useless for these
-	}
-
-	@Override
 	public String fixedLabel() {
 		return "Wait";
 	}

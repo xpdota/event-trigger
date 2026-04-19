@@ -30,7 +30,7 @@ public class TelestoEasyTriggersAddons {
 				"Telesto Circle Doodle",
 				() -> new TelestoCircleDoodleAction(state, mgr),
 				(action, trigger) -> new TelestoCircleDoodleEditor(action, container),
-				doodleAddonsSetting::get
+				ignored -> doodleAddonsSetting.get()
 		));
 		easyTriggers.registerActionType(new ActionDescription<>(
 				TelestoLineDoodleAction.class,
@@ -38,7 +38,7 @@ public class TelestoEasyTriggersAddons {
 				"Telesto Line Doodle",
 				() -> new TelestoLineDoodleAction(state, mgr),
 				(action, trigger) -> new TelestoLineDoodleEditor(action, container),
-				doodleAddonsSetting::get
+				ignored -> doodleAddonsSetting.get()
 		));
 		easyTriggers.registerActionType(new ActionDescription<>(
 				TelestoTextDoodleAction.class,
@@ -46,7 +46,7 @@ public class TelestoEasyTriggersAddons {
 				"Telesto Text Doodle",
 				() -> new TelestoTextDoodleAction(state, mgr),
 				(action, trigger) -> new TelestoTextDoodleEditor(action, container),
-				doodleAddonsSetting::get
+				ignored -> doodleAddonsSetting.get()
 		));
 		// TODO: rectangle
 		easyTriggers.registerActionType(new ActionDescription<>(
@@ -55,7 +55,7 @@ public class TelestoEasyTriggersAddons {
 				"Telesto Image Doodle",
 				() -> new TelestoImageDoodleAction(state, mgr),
 				(action, trigger) -> new TelestoImageDoodleEditor(action, container),
-				doodleAddonsSetting::get
+				ignored -> doodleAddonsSetting.get()
 		));
 		easyTriggers.registerActionType(new ActionDescription<>(
 				TelestoCommandAction.class,
@@ -63,7 +63,7 @@ public class TelestoEasyTriggersAddons {
 				"Telesto In-Game Command",
 				() -> new TelestoCommandAction(container.getComponent(GroovyScriptProcessor.class), mgr),
 				(action, trigger) -> new TelestoCommandEditor(action, container),
-				() -> true
+				ignored -> true
 		));
 	}
 

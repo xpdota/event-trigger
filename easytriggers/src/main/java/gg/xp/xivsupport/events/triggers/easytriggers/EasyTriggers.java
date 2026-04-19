@@ -51,6 +51,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.actions.SoundAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.WaitAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.WaitBuffDurationAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.WaitCastDurationAction;
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.WaitUntilDurationAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.gui.ConditionalActionEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.gui.GroovyActionEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.gui.SoundActionEditor;
@@ -129,15 +130,12 @@ import org.slf4j.LoggerFactory;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.BeanProperty;
-import tools.jackson.databind.DefaultTyping;
 import tools.jackson.databind.DeserializationContext;
 import tools.jackson.databind.InjectableValues;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.module.SimpleModule;
-import tools.jackson.databind.node.ArrayNode;
-import tools.jackson.databind.ser.ValueSerializerModifier;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -626,6 +624,7 @@ public final class EasyTriggers implements HasChildTriggers {
 			new ActionDescription<>(AutoMarkTargetAction.class, HasTargetEntity.class, "Mark The Target", () -> new AutoMarkTargetAction(inject(GlobalUiRegistry.class)), this::generic),
 			new ActionDescription<>(ClearAllMarksAction.class, Event.class, "Clear All Marks", () -> new ClearAllMarksAction(inject(GlobalUiRegistry.class)), this::generic),
 			new ActionDescription<>(WaitAction.class, BaseEvent.class, "Wait a fixed time", WaitAction::new, this::generic),
+//			new ActionDescription<>(WaitUntilDurationAction.class, HasDuration.class, "Wait until duration falls below a specified amount", WaitUntilDurationAction::new, this::generic, cls -> !AbilityCastStart.class.isAssignableFrom(cls) && !BuffApplied.class.isAssignableFrom(cls)),
 			new ActionDescription<>(WaitBuffDurationAction.class, BuffApplied.class, "Wait until buff duration falls below a specified amount", () -> new WaitBuffDurationAction(inject(StatusEffectRepository.class)), this::generic),
 			new ActionDescription<>(WaitCastDurationAction.class, AbilityCastStart.class, "Wait until cast duration falls below a specified amount", WaitCastDurationAction::new, this::generic),
 			new ActionDescription<>(GroovyAction.class, Event.class, "Custom script action", () -> new GroovyAction(inject(GroovyManager.class)), (action, trigger) -> new GroovyActionEditor<>(action, trigger)),
@@ -673,7 +672,7 @@ public final class EasyTriggers implements HasChildTriggers {
 	}
 
 	public <X> List<ActionDescription<?, ?>> getActionsApplicableTo(HasMutableActions<X> trigger) {
-		return actions.stream().filter(adesc -> adesc.isEnabled() && adesc.appliesTo(trigger.classForActions())).toList();
+		return actions.stream().filter(adesc -> adesc.appliesTo(trigger.classForActions())).toList();
 	}
 
 	public void registerEventType(EventDescription<?> eventDescription) {
