@@ -25,6 +25,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.actions.CalloutAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.GroovyAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.WaitBuffDurationAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.WaitCastDurationAction;
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.WaitUntilDurationAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.AbilityIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.ChatLineRegexFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.GroovyEventFilter;
@@ -495,6 +496,59 @@ public class EasyTriggersTest {
 		EasyTrigger<AbilityCastStart> trig1 = new EasyTrigger<>();
 		trig1.setEventType(AbilityCastStart.class);
 		WaitCastDurationAction action1 = new WaitCastDurationAction();
+		action1.remainingDurationMs = 15_000;
+		CalloutAction action2 = new CalloutAction();
+		action2.setText("Foo");
+		action2.setTts("Bar");
+
+		trig1.addAction(action1);
+		trig1.addAction(action2);
+		ez1.addTrigger(null, trig1);
+
+		FakeTimeSource fts = new FakeTimeSource();
+		Instant startTime = Instant.now();
+		fts.setNewTime(startTime);
+
+		XivCombatant theCbt = new XivCombatant(0x1000_0001, "Foo");
+		AbilityCastStart acs = new AbilityCastStart(new XivAbility(125), theCbt, theCbt, 18.0);
+		acs.setTimeSource(fts);
+		acs.setHappenedAt(fts.now());
+		master.pushEventAndWait(acs);
+		{
+			List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
+			Assert.assertEquals(calls.size(), 0);
+		}
+		fts.setNewTime(startTime.plusMillis(2_999));
+		{
+			List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
+			Assert.assertEquals(calls.size(), 0);
+		}
+		fts.setNewTime(startTime.plusMillis(3_001));
+		// Need to push a dummy event due to fake time source
+		master.pushEventAndWait(new BaseEvent() {
+		});
+		{
+			List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
+			Assert.assertEquals(calls.size(), 1);
+			TtsRequest theCall = calls.get(0);
+			Assert.assertEquals(theCall.getTtsString(), "Bar");
+		}
+	}
+
+	@Test
+	void testWaitUntilDurationAction() {
+		MutablePicoContainer pico = ExampleSetup.setup();
+		pico.getComponent(FakeTimeSource.class);
+		TestEventCollector coll = new TestEventCollector();
+		EventMaster master = pico.getComponent(EventMaster.class);
+		{
+			EventDistributor dist = pico.getComponent(EventDistributor.class);
+			dist.registerHandler(coll);
+		}
+		EasyTriggers ez1 = pico.getComponent(EasyTriggers.class);
+		EasyTrigger<AbilityCastStart> trig1 = new EasyTrigger<>();
+		trig1.setEventType(AbilityCastStart.class);
+		WaitUntilDurationAction<AbilityCastStart> action1 = new WaitUntilDurationAction<>();
 		action1.remainingDurationMs = 15_000;
 		CalloutAction action2 = new CalloutAction();
 		action2.setText("Foo");
