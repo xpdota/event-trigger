@@ -624,7 +624,6 @@ public final class EasyTriggers implements HasChildTriggers {
 			new ActionDescription<>(AutoMarkTargetAction.class, HasTargetEntity.class, "Mark The Target", () -> new AutoMarkTargetAction(inject(GlobalUiRegistry.class)), this::generic),
 			new ActionDescription<>(ClearAllMarksAction.class, Event.class, "Clear All Marks", () -> new ClearAllMarksAction(inject(GlobalUiRegistry.class)), this::generic),
 			new ActionDescription<>(WaitAction.class, BaseEvent.class, "Wait a fixed time", WaitAction::new, this::generic),
-//			new ActionDescription<>(WaitUntilDurationAction.class, HasDuration.class, "Wait until duration falls below a specified amount", WaitUntilDurationAction::new, this::generic, cls -> !AbilityCastStart.class.isAssignableFrom(cls) && !BuffApplied.class.isAssignableFrom(cls)),
 			new ActionDescription<>(WaitBuffDurationAction.class, BuffApplied.class, "Wait until buff duration falls below a specified amount", () -> new WaitBuffDurationAction(inject(StatusEffectRepository.class)), this::generic),
 			new ActionDescription<>(WaitCastDurationAction.class, AbilityCastStart.class, "Wait until cast duration falls below a specified amount", WaitCastDurationAction::new, this::generic),
 			new ActionDescription<>(GroovyAction.class, Event.class, "Custom script action", () -> new GroovyAction(inject(GroovyManager.class)), (action, trigger) -> new GroovyActionEditor<>(action, trigger)),
@@ -636,6 +635,8 @@ public final class EasyTriggers implements HasChildTriggers {
 	{
 		registerConditionType(new ConditionDescription<>(OrFilter.class, Object.class, "Logical OR or multiple conditions", OrFilter::new, (action, trigger) -> new CompoundConditionEditor(this, action), ConditionTarget.BOTH));
 		registerActionType(new ActionDescription<>(ConditionalAction.class, BaseEvent.class, "If/Else Conditional Action", ConditionalAction::new, (action, trigger) -> new ConditionalActionEditor(this, action)));
+		registerActionType(new ActionDescription<>(WaitUntilDurationAction.class, BaseEvent.class, "Wait until duration falls below a specified amount", WaitUntilDurationAction::new, this::generic,
+				eventType -> HasDuration.class.isAssignableFrom(eventType) && !AbilityCastStart.class.isAssignableFrom(eventType) && !BuffApplied.class.isAssignableFrom(eventType)));
 	}
 
 	public List<EventDescription<?>> getEventDescriptions() {

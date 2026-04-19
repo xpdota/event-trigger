@@ -20,6 +20,7 @@ import gg.xp.xivsupport.events.actlines.events.EntityKilledEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.actlines.parsers.FakeTimeSource;
 import gg.xp.xivsupport.events.misc.EchoEvent;
+import gg.xp.xivsupport.events.state.combatstate.CountdownStartedEvent;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.CalloutAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.GroovyAction;
@@ -29,6 +30,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.actions.WaitUntilDurationAc
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.AbilityIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.ChatLineRegexFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.GroovyEventFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.ActionDescription;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTriggerContext;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.NumericOperator;
@@ -533,6 +535,44 @@ public class EasyTriggersTest {
 			TtsRequest theCall = calls.get(0);
 			Assert.assertEquals(theCall.getTtsString(), "Bar");
 		}
+	}
+
+	@Test
+	void testWaitUntilDurationActionAvailability() {
+		MutablePicoContainer pico = ExampleSetup.setup();
+		EasyTriggers ez = pico.getComponent(EasyTriggers.class);
+
+		// 1. AbilityCastStart should NOT have WaitUntilDurationAction
+		EasyTrigger<AbilityCastStart> castTrigger = new EasyTrigger<>();
+		castTrigger.setEventType(AbilityCastStart.class);
+		List<ActionDescription<?, ?>> castActions = ez.getActionsApplicableTo(castTrigger);
+		Assert.assertFalse(castActions.stream().anyMatch(a -> a.clazz().equals(WaitUntilDurationAction.class)),
+				"WaitUntilDurationAction should not be available for AbilityCastStart");
+		Assert.assertTrue(castActions.stream().anyMatch(a -> a.clazz().equals(WaitCastDurationAction.class)),
+				"WaitCastDurationAction should be available for AbilityCastStart");
+
+		// 2. BuffApplied should NOT have WaitUntilDurationAction
+		EasyTrigger<BuffApplied> buffTrigger = new EasyTrigger<>();
+		buffTrigger.setEventType(BuffApplied.class);
+		List<ActionDescription<?, ?>> buffActions = ez.getActionsApplicableTo(buffTrigger);
+		Assert.assertFalse(buffActions.stream().anyMatch(a -> a.clazz().equals(WaitUntilDurationAction.class)),
+				"WaitUntilDurationAction should not be available for BuffApplied");
+		Assert.assertTrue(buffActions.stream().anyMatch(a -> a.clazz().equals(WaitBuffDurationAction.class)),
+				"WaitBuffDurationAction should be available for BuffApplied");
+
+		// 3. CountdownStartedEvent should HAVE WaitUntilDurationAction
+		EasyTrigger<CountdownStartedEvent> countdownTrigger = new EasyTrigger<>();
+		countdownTrigger.setEventType(CountdownStartedEvent.class);
+		List<ActionDescription<?, ?>> countdownActions = ez.getActionsApplicableTo(countdownTrigger);
+		Assert.assertTrue(countdownActions.stream().anyMatch(a -> a.clazz().equals(WaitUntilDurationAction.class)),
+				"WaitUntilDurationAction should be available for CountdownStartedEvent");
+
+		// 4. ZoneChangeEvent should NOT have WaitUntilDurationAction (not a HasDuration)
+		EasyTrigger<ZoneChangeEvent> zoneTrigger = new EasyTrigger<>();
+		zoneTrigger.setEventType(ZoneChangeEvent.class);
+		List<ActionDescription<?, ?>> zoneActions = ez.getActionsApplicableTo(zoneTrigger);
+		Assert.assertFalse(zoneActions.stream().anyMatch(a -> a.clazz().equals(WaitUntilDurationAction.class)),
+				"WaitUntilDurationAction should not be available for ZoneChangeEvent");
 	}
 
 	@Test
