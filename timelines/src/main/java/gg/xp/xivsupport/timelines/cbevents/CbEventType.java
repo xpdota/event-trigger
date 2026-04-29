@@ -17,6 +17,7 @@ import gg.xp.xivsupport.events.actlines.events.RawAddCombatantEvent;
 import gg.xp.xivsupport.events.actlines.events.RawRemoveCombatantEvent;
 import gg.xp.xivsupport.events.actlines.events.SystemLogMessageEvent;
 import gg.xp.xivsupport.events.actlines.events.TargetabilityUpdate;
+import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.misc.BattleTalkEvent;
 import gg.xp.xivsupport.events.misc.NpcYellEvent;
 import gg.xp.xivsupport.events.state.InCombatChangeEvent;
@@ -80,7 +81,8 @@ public enum CbEventType {
 	// TODO: finally do more work on XivStateImpl to have it emit added/removed events
 	// In the meantime, the raw ACT versions should work fine.
 	AddedCombatant(RawAddCombatantEvent.class, List.of(
-			new CbfMap<>("name", "event.entity.name", named(RawAddCombatantEvent::getEntity))
+			new CbfMap<>("name", "event.entity.name", named(RawAddCombatantEvent::getEntity)),
+			new CbfMap<>("npcBaseId", "event.entity.name", intConv((RawAddCombatantEvent race) -> race.getEntity().getbNpcId(), 10))
 	)),
 	RemovedCombatant(RawRemoveCombatantEvent.class, List.of(
 			new CbfMap<>("name", "event.entity.name", named(RawRemoveCombatantEvent::getEntity))
@@ -171,6 +173,13 @@ public enum CbEventType {
 			new CbfMap<>("param5", "event.data4", intConv(ActorControlSelfExtraEvent::getData4, 16)),
 			new CbfMap<>("param6", "event.data5", intConv(ActorControlSelfExtraEvent::getData5, 16))
 	)),
+	Tether(TetherEvent.class, List.of(
+			new CbfMap<>("sourceId", "event.source.id", id(TetherEvent::getSource)),
+			new CbfMap<>("source", "event.source.name", named(TetherEvent::getSource)),
+			new CbfMap<>("targetId", "event.target.id", id(TetherEvent::getTarget)),
+			new CbfMap<>("target", "event.target.name", named(TetherEvent::getTarget)),
+			new CbfMap<>("id", "event.id", intConv(TetherEvent::getId, 16))
+	))
 
 
 	// TODO: the rest of the events
