@@ -19,6 +19,7 @@ import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import gg.xp.xivsupport.gui.tables.filters.AbilityResolutionFilter;
 import gg.xp.xivsupport.gui.tables.filters.EventAbilityOrBuffFilter;
 import gg.xp.xivsupport.gui.tables.filters.EventClassFilterFilter;
+import gg.xp.xivsupport.gui.tables.filters.EventEffectsFilter;
 import gg.xp.xivsupport.gui.tables.filters.EventEntityFilter;
 import gg.xp.xivsupport.gui.tables.filters.GroovyFilter;
 import gg.xp.xivsupport.gui.tables.filters.PullNumberFilter;
@@ -26,7 +27,6 @@ import gg.xp.xivsupport.gui.tables.filters.QuickFilters;
 import gg.xp.xivsupport.gui.tables.filters.SystemEventFilter;
 import gg.xp.xivsupport.gui.tables.groovy.GroovyColumns;
 import gg.xp.xivsupport.gui.tables.renderers.AbilityEffectAndIndexRenderer;
-import gg.xp.xivsupport.gui.tables.renderers.AbilityEffectListRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
 import gg.xp.xivsupport.gui.tables.timedisplay.TimeDisplayController;
@@ -90,7 +90,8 @@ public class EventsTabFactory {
 						return e;
 					}
 					return null;
-				}, c -> c.setCellRenderer(new AbilityEffectAndIndexRenderer())))
+				}, c -> c.setCellRenderer(new AbilityEffectAndIndexRenderer()))
+						.withFilter(EventEffectsFilter::new))
 				.apply(GroovyColumns::addDetailColumns)
 				.withRightClickRepo(rightClicks)
 				.addFilter(SystemEventFilter::new)
