@@ -69,4 +69,18 @@ public class ActorControlEvent extends BaseEvent implements HasPrimaryValue {
 	public String getPrimaryValue() {
 		return String.format("%X:%X %X:%X:%X:%X", instance, command, data0, data1, data2, data3);
 	}
+
+	@Override
+	public String toString() {
+		return "ActorControlEvent{" +
+		       "instance=" + instance +
+		       ", command=" + command +
+		       ", data0=" + data0 +
+		       ", data1=" + data1 +
+		       ", data2=" + data2 +
+		       ", data3=" + data3 +
+		       ", updateTypeRaw=" + updateTypeRaw +
+		       ", instanceContentTypeRaw=" + instanceContentTypeRaw +
+		       '}';
+	}
 }
