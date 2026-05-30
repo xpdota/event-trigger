@@ -51,6 +51,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.actions.SoundAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.WaitAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.WaitBuffDurationAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.WaitCastDurationAction;
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.WaitUntilDurationAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.gui.ConditionalActionEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.gui.GroovyActionEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.gui.SoundActionEditor;
@@ -129,15 +130,12 @@ import org.slf4j.LoggerFactory;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.BeanProperty;
-import tools.jackson.databind.DefaultTyping;
 import tools.jackson.databind.DeserializationContext;
 import tools.jackson.databind.InjectableValues;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.module.SimpleModule;
-import tools.jackson.databind.node.ArrayNode;
-import tools.jackson.databind.ser.ValueSerializerModifier;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -566,7 +564,7 @@ public final class EasyTriggers implements HasChildTriggers {
 					List.of(NpcYellIdFilter::new)),
 			new EventDescriptionImpl<>(CountdownStartedEvent.class,
 					"Countdown Started",
-					"{event.duration.toSeconds()}",
+					"{event.initialDuration.toSeconds()}",
 					List.of()),
 			new EventDescriptionImpl<>(CountdownCanceledEvent.class,
 					"Countdown Canceled",
@@ -637,6 +635,8 @@ public final class EasyTriggers implements HasChildTriggers {
 	{
 		registerConditionType(new ConditionDescription<>(OrFilter.class, Object.class, "Logical OR or multiple conditions", OrFilter::new, (action, trigger) -> new CompoundConditionEditor(this, action), ConditionTarget.BOTH));
 		registerActionType(new ActionDescription<>(ConditionalAction.class, BaseEvent.class, "If/Else Conditional Action", ConditionalAction::new, (action, trigger) -> new ConditionalActionEditor(this, action)));
+		registerActionType(new ActionDescription<>(WaitUntilDurationAction.class, BaseEvent.class, "Wait until duration falls below a specified amount", WaitUntilDurationAction::new, this::generic,
+				eventType -> HasDuration.class.isAssignableFrom(eventType) && !AbilityCastStart.class.isAssignableFrom(eventType) && !BuffApplied.class.isAssignableFrom(eventType)));
 	}
 
 	public List<EventDescription<?>> getEventDescriptions() {
@@ -673,7 +673,7 @@ public final class EasyTriggers implements HasChildTriggers {
 	}
 
 	public <X> List<ActionDescription<?, ?>> getActionsApplicableTo(HasMutableActions<X> trigger) {
-		return actions.stream().filter(adesc -> adesc.isEnabled() && adesc.appliesTo(trigger.classForActions())).toList();
+		return actions.stream().filter(adesc -> adesc.appliesTo(trigger.classForActions())).toList();
 	}
 
 	public void registerEventType(EventDescription<?> eventDescription) {
