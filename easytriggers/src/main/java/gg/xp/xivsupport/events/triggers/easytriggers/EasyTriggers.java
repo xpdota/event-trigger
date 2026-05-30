@@ -564,7 +564,7 @@ public final class EasyTriggers implements HasChildTriggers {
 					List.of(NpcYellIdFilter::new)),
 			new EventDescriptionImpl<>(CountdownStartedEvent.class,
 					"Countdown Started",
-					"{event.duration.toSeconds()}",
+					"{event.initialDuration.toSeconds()}",
 					List.of()),
 			new EventDescriptionImpl<>(CountdownCanceledEvent.class,
 					"Countdown Canceled",
