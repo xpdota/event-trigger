@@ -8,6 +8,8 @@ import gg.xp.xivsupport.callouts.CalloutVar;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.debug.DebugCommand;
 
+import java.util.Map;
+
 @CalloutRepo(name = "Dummy (/e c:testcall)", duty = KnownDuty.None)
 public class DummyTestFight {
 
@@ -16,7 +18,7 @@ public class DummyTestFight {
 	private final ModifiableCallout<DebugCommand> dummy = new ModifiableCallout<DebugCommand>("Dummy Callout to Test UI", "Test").extendedDescription("""
 			Use the 'Test Callouts' tab (above) to trigger these callouts.""");
 	private final ModifiableCallout<DebugCommand> dummy2 = new ModifiableCallout<>("Dummy Callout to Test Holds", "Test", "Test", x -> !dummyHold);
-	private final ModifiableCallout<DebugCommand> dummy3 = new ModifiableCallout<>("Dummy Callout to Test Variables", "{testVar} {testVar2}", "Test");
+	private final ModifiableCallout<DebugCommand> dummy3 = new ModifiableCallout<>("Dummy Callout to Test Variables", "{testVar} {testVar2} {random}");
 	private final CalloutVar testVar = new CalloutVar("testVar", "Test Variable");
 	private final CalloutVar testVar2 = new CalloutVar("testVar2", "Test Variable 2").extendedDescription("This is a test variable with a description");
 
@@ -53,7 +55,8 @@ public class DummyTestFight {
 	@HandleEvents
 	public void dummyCall3(EventContext context, DebugCommand event) {
 		if (event.getCommand().equals("testcall3")) {
-			context.accept(dummy3.getModified());
+			boolean useVar2 = Math.random() > 0.5;
+			context.accept(dummy3.getModified(Map.of("random", useVar2 ? testVar2 : testVar)));
 		}
 	}
 }

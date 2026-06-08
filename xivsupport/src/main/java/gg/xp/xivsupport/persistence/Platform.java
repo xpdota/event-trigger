@@ -150,7 +150,7 @@ public final class Platform {
 		// Desktop.open seems to open it in such a way that when we exit, we release the mutex, so the updater
 		// can relaunch the application correctly.
 		if (isWindows()) {
-			Desktop.getDesktop().open(Paths.get(getInstallDir().toString(), "triggevent-upd.exe").toFile());
+			Desktop.getDesktop().open(getInstallDir().toPath().resolve("triggevent-upd.exe").toFile());
 		}
 		else {
 			Runtime.getRuntime().exec(new String[]{"sh", "triggevent-upd.sh"});

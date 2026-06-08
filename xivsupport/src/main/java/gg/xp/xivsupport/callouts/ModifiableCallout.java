@@ -353,9 +353,27 @@ public class ModifiableCallout<X> {
 	 * @return the ModifiableCallout
 	 */
 	public static <Y extends HasDuration> ModifiableCallout<Y> durationBasedCall(String desc, String text) {
+		return durationBasedCall(desc, text, text);
+	}
+
+	/**
+	 * Used for things like water stack in TEA or P2S where the callout is based on a buff time or castbar.
+	 * <p>
+	 * Just because something *can* be used with this method doesn't mean it should - many buff/castbar mechanics
+	 * do not warrant this. e.g. if the initial cast merely tells you what you need to do, or if it is expected
+	 * that the buff will.
+	 *
+	 * @param desc The description.
+	 * @param tts  The TTS
+	 * @param text The base text. For the visual text, the duration will be appended in parentheses.
+	 *             e.g. "Water on You" will become "Water on You" (123.4) will be appended, and the timer will count
+	 *             down.
+	 * @return the ModifiableCallout
+	 */
+	public static <Y extends HasDuration> ModifiableCallout<Y> durationBasedCall(String desc, String tts, String text) {
 		// TODO: this warns once per call per program execution, rather than once per call invocation
 		CombinedExpiryCondition<Y> expiry = combinedExpiry(defaultLingerTime);
-		return new ModifiableCallout<>(desc, text, text + " ({event.estimatedRemainingDuration})", expiry);
+		return new ModifiableCallout<>(desc, tts, text + " ({event.estimatedRemainingDuration})", expiry);
 	}
 
 	public static <Y extends HasDuration> ModifiableCallout<Y> durationBasedCall(String descAndText) {
