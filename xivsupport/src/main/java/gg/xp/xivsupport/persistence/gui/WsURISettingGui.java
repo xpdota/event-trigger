@@ -30,7 +30,7 @@ public class WsURISettingGui {
 				throw new IllegalArgumentException("Protocol must be WS or WSS");
 			}
 		}, this::setNewValue, setting.get().toString());
-		textBox.setColumns(20);
+		textBox.setColumns(30);
 		textBox.setComponentPopupMenu(ResetMenuOption.resetOnlyMenu(setting, this::reset));
 		this.label = label;
 	}

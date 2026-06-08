@@ -1,7 +1,6 @@
 package gg.xp.xivsupport.events.actlines.events;
 
 import gg.xp.reevent.events.BaseEvent;
-import gg.xp.reevent.events.SystemEvent;
 import gg.xp.xivsupport.models.XivCombatant;
 
 import java.io.Serial;
@@ -59,5 +58,13 @@ public class ActorControlExtraEvent extends BaseEvent implements HasPrimaryValue
 
 	public long getData3() {
 		return data3;
+	}
+
+	public boolean allFieldsMatch(int category, long data0, long data1, long data2, long data3) {
+		return this.category == category
+		       && this.data0 == data0
+		       && this.data1 == data1
+		       && this.data2 == data2
+		       && this.data3 == data3;
 	}
 }

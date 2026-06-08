@@ -230,6 +230,16 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		log.debug("setParam: '{}'={}", name, value);
 		params.put(name, value);
 	}
+
+	public void deleteParam(String name) {
+		log.debug("deleteParam: '{}'", name);
+		params.remove(name);
+	}
+
+	public void clearParams() {
+		log.debug("clearParams");
+		params.clear();
+	}
 //
 //	/**
 //	 * Sets a parameter which will be passed into ModifiableCallout instances in {@link #call} or {@link #updateCall}.
