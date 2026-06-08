@@ -107,8 +107,10 @@ public class CalloutProcessor {
 			if (handle != null) {
 				CalloutGroup group = handle.getGroup();
 				if (group != null) {
+					// Adding CalloutVars to the binding
 					for (CalloutVarHandle var : group.getVars()) {
 						CalloutVar original = var.getOriginal();
+						// Don't overwrite originals
 						if (ttsBinding == binding) {
 							ttsBinding = new SubBinding(binding);
 						}
@@ -165,6 +167,10 @@ public class CalloutProcessor {
 						Script script = scriptCache.computeIfAbsent(scriptText, this::compile);
 						script.setBinding(binding);
 						rawEval = script.run();
+					}
+					if (rawEval instanceof CalloutVar cv) {
+						// In this case, we need to pull the actual value out of the binding
+						return binding.getVariable(cv.getName()).toString();
 					}
 					return svr.singleReplacement(rawEval);
 				}

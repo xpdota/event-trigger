@@ -145,7 +145,7 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 				Platform.executeUpdater();
 			}
 			catch (Throwable e) {
-				log.error("Error launching updater", e);
+				log.error("Error launching updater: ", e);
 				JOptionPane.showMessageDialog(SwingUtilities.getRoot(applyUpdatesButton), "There was an error launching the updater. You can try running the updater manually by running triggevent-upd.exe, or reinstall if that doesn't work.");
 				return;
 			}
