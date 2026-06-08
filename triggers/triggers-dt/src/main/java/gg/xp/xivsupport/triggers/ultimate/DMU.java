@@ -329,7 +329,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 			});
 
 
-	@NpcCastCallout(0xC622)
+	@NpcCastCallout({0xC622, 0xBABD})
 	private final ModifiableCallout<AbilityCastStart> lightOfJudgment = ModifiableCallout.durationBasedCall("Light of Judgment", "Raidwide");
 
 	private final ModifiableCallout<AbilityCastStart> ttInitial = ModifiableCallout.durationBasedCall("Tele-trouncing", "Arrows");
@@ -376,31 +376,38 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBAB9),
 			(e1, s) -> {
 				s.updateCall(ttInitial, e1);
-				// I think they have two of each to be able to force ordering?
-				// These are the ones that appear left on the party list
-				var buff2 = s.findOrWaitForBuff(buffs, ba -> ba.getTarget().isThePlayer()
-				                                             && ba.buffIdMatches(0x130C, 0x130D, 0x130E, 0x130F));
-				// These are the ones right on the party list
-				var buff1 = s.findOrWaitForBuff(buffs, ba -> ba.getTarget().isThePlayer()
-				                                             && ba.buffIdMatches(0x13D7, 0x13D8, 0x13D9, 0x13DA));
+				// I thought it had a consistent ordering at first, but I think they intentionally try to confuse you
+				// by using multiple different versions with different party list ordering.
+				var shortBuff = s.findOrWaitForBuff(buffs, ba -> ba.getTarget().isThePlayer()
+				                                                 && ba.buffIdMatches(0x130C, 0x130D, 0x130E, 0x130F, 0x13D7, 0x13D8, 0x13D9, 0x13DA)
+				                                                 && ba.getInitialDuration().toMillis() < 8_500);
+				var longBuff = s.findOrWaitForBuff(buffs, ba -> ba.getTarget().isThePlayer()
+				                                                && ba.buffIdMatches(0x130C, 0x130D, 0x130E, 0x130F, 0x13D7, 0x13D8, 0x13D9, 0x13DA)
+				                                                && ba.getInitialDuration().toMillis() > 8_500);
 
-				var dir1 = switch ((int) buff1.getBuff().getId()) {
-					case 0x13D7 -> ArrowDirection.UP;
-					case 0x13D8 -> ArrowDirection.DOWN;
-					case 0x13D9 -> ArrowDirection.RIGHT;
-					case 0x13DA -> ArrowDirection.LEFT;
-					default -> throw new RuntimeException("Bad dir1 ID: " + buff1);
+				var dir1 = switch ((int) shortBuff.getBuff().getId()) {
+					case 0x130C, 0x13D7 -> ArrowDirection.UP;
+					case 0x130D, 0x13D8 -> ArrowDirection.DOWN;
+					case 0x130E, 0x13D9 -> ArrowDirection.RIGHT;
+					case 0x130F, 0x13DA -> ArrowDirection.LEFT;
+					default -> {
+						log.error("Bad dir1 ID: {}", shortBuff);
+						yield null;
+					}
 				};
 
-				var dir2 = switch ((int) buff2.getBuff().getId()) {
-					case 0x130C -> ArrowDirection.UP;
-					case 0x130D -> ArrowDirection.DOWN;
-					case 0x130E -> ArrowDirection.RIGHT;
-					case 0x130F -> ArrowDirection.LEFT;
-					default -> throw new RuntimeException("Bad dir2 ID: " + buff2);
+				var dir2 = switch ((int) longBuff.getBuff().getId()) {
+					case 0x130C, 0x13D7 -> ArrowDirection.UP;
+					case 0x130D, 0x13D8 -> ArrowDirection.DOWN;
+					case 0x130E, 0x13D9 -> ArrowDirection.RIGHT;
+					case 0x130F, 0x13DA -> ArrowDirection.LEFT;
+					default -> {
+						log.error("Bad dir2 ID: {}", longBuff);
+						yield null;
+					}
 				};
 
-				ModifiableCallout<BuffApplied> call = switch (dir1) {
+				ModifiableCallout<BuffApplied> call = (dir1 == null || dir2 == null) ? null : switch (dir1) {
 					case UP -> switch (dir2) {
 						case UP -> ttNN;
 						case RIGHT -> ttNE;
@@ -427,13 +434,13 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 					};
 				};
 				if (call == null) {
-					log.error("TT error: buff1 {} buff2 {} dir1 {} dir2 {}", buff1, buff2, dir1, dir2);
-					s.updateCall(ttError, buff1);
+					log.error("TT error: shortBuff {} longBuff {} dir1 {} dir2 {}", shortBuff, longBuff, dir1, dir2);
+					s.updateCall(ttError, shortBuff);
 				}
 				else {
-					s.updateCall(call, buff1);
+					s.updateCall(call, shortBuff);
 				}
-				s.waitBuffRemoved(buffs, buff2);
+				s.waitBuffRemoved(buffs, longBuff);
 
 				// TODO: sort this with self first
 				var confettis = buffs.findBuffsById(0x13D6);
@@ -510,7 +517,8 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 //	private final ModifiableCallout<?> forsakenFollowupStack = new ModifiableCallout<>("Forsaken: Followup Stack", "Stack");
 //	private final ModifiableCallout<?> forsakenFollowupNothing = new ModifiableCallout<>("Forsaken: Followup Nothing", "Nothing");
 
-	private final ModifiableCallout<?> forsakenTowerCone = new ModifiableCallout<>("Forsaken: Followup Cone + Past/Future (Early Call)", "Cone, Baits")
+	// TODO These seem to fire too quickly after the previous call (forsakenTowerNpPfXyz)
+	private final ModifiableCallout<?> forsakenTowerCone = new ModifiableCallout<>("Forsaken: Followup Cone + Past/Future (Tower Call)", "Cone, Baits")
 			.extendedDescription("""
 					The 'Tower Call' variants of these call remind you of which tower pattern you will need to do. These indicate that the tower set will be accompanied with Past/Future cast bar, while the other four indicate that it will be accompanied with All Things Ending resolving.
 					
@@ -620,7 +628,13 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 					// the Path of Light - tower resolving
 					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xBABE));
 					// Wait for another set of markers
-					var markers = s.waitEventsQuickSuccession(4, HeadMarkerEvent.class, hme -> hme.markerIdMatches(stack, circle, cone));
+					List<HeadMarkerEvent> markers;
+					if (i < 8) {
+						markers = s.waitEventsQuickSuccession(4, HeadMarkerEvent.class, hme -> hme.markerIdMatches(stack, circle, cone));
+					}
+					else {
+						markers = List.of();
+					}
 					var myMech = markers.stream().filter(hm -> hm.getTarget().isThePlayer()).findAny()
 							.map(DMU::mechForHm)
 							.orElse(ForsakenMech.NONE);
@@ -688,14 +702,14 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ArenaPos ap = new ArenaPos(100.0, 100.0, 4.0, 4.0);
 	private static final Set<ArenaSector> trinePositions = Collections.unmodifiableSet(EnumSet.of(CENTER, NORTH, SOUTHEAST, NORTHEAST, SOUTH, SOUTHWEST, NORTHWEST));
 
-	private final ModifiableCallout<?> trinesSafe = new ModifiableCallout<>("{bestStart} to {firstSafe}")
+	private final ModifiableCallout<?> trinesSafe = new ModifiableCallout<>("{bestStart} to {firstTrineLocations}")
 			.extendedDescription("""
 					This call will provide a starting position (prefers center if available, else one that is adjacent to one or more safe spots) and all of
 					the safe spots.""");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> trinesSq = SqtTemplates.sq(120_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBADF), // TODO
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBADF),
 			(e1, s) -> {
 				s.updateCall(trinesInitial, e1);
 				// First set of trines falls first, before cast
@@ -733,6 +747,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 				s.setParam("thirdTrineLocations", thirdTrineLocations.stream().toList());
 				// Try to figure out a reasonable starting location
 				ArenaSector bestStart;
+				// TODO: it's probably always center
 				if (thirdTrineLocations.contains(CENTER)) {
 					bestStart = CENTER;
 				}
