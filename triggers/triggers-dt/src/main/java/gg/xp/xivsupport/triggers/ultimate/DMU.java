@@ -544,8 +544,8 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<?> forsakenFollowupFutureStack = new ModifiableCallout<>("Forsaken: Followup Stack + Future", "Stack, Bait Away");
 	private final ModifiableCallout<?> forsakenFollowupFutureNothing = new ModifiableCallout<>("Forsaken: Followup Nothing + Future", "Nothing, Bait Away");
 
-	private final ModifiableCallout<?> forsakenFinalFuture = new ModifiableCallout<>("Forsaken: Final Future Nothing", "Future");
-	private final ModifiableCallout<?> forsakenFinalPast = new ModifiableCallout<>("Forsaken: Final Future Nothing", "Past");
+	private final ModifiableCallout<?> forsakenFinalFuture = new ModifiableCallout<>("Forsaken: Final Future Nothing", "Bait Away");
+	private final ModifiableCallout<?> forsakenFinalPast = new ModifiableCallout<>("Forsaken: Final Future Nothing", "Bait Between");
 
 	private enum ForsakenMech {
 		CONE,
@@ -677,7 +677,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 								case NONE -> forsakenFollowupPastNothing;
 							});
 						}
-						s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xBADC, 0xBADD));
+						s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBADC, 0xBADD));
 						s.updateCall(switch (myMech) {
 							case CONE -> forsakenTowerNoPfCone;
 							case CIRCLE -> forsakenTowerNoPfCircle;
@@ -784,8 +784,66 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout(0xC3F7)
 	private final ModifiableCallout<AbilityCastStart> aeroIIIAssault = ModifiableCallout.durationBasedCall("Aero III Assault", "Knockback");
 
+//	private final ModifiableCallout<AbilityCastStart> bowelsInitial = ModifiableCallout.durationBasedCall("Bowels of Agony", "Raidwide");
+//
+//	private static final int ENTROPY = 0x640;
+//	private static final int DYNAMIC = 0x641;
+//	private static final int HEADWIND = 0x642;
+//	private static final int TAILWIND = 0x643;
+//
+//
+//	private final ModifiableCallout<BuffApplied> bowelsHeadwind = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Headwind Only", "Headwind").statusIcon(HEADWIND);
+//	private final ModifiableCallout<BuffApplied> bowelsTailwind = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Tailwind Only", "Tailwind").statusIcon(TAILWIND);
+//	private final ModifiableCallout<BuffApplied> bowelsHeadwindEntropy = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Headwind + Entropy", "Headwind and Entropy").statusIcon(ENTROPY);
+//	private final ModifiableCallout<BuffApplied> bowelsTailwindEntropy = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Tailwind + Entropy", "Tailwind and Entropy").statusIcon(ENTROPY);
+//	private final ModifiableCallout<BuffApplied> bowelsHeadwindDynamic = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Headwind + Dynamic Fluid", "Headwind and Dynamic Fluid").statusIcon(DYNAMIC);
+//	private final ModifiableCallout<BuffApplied> bowelsTailwindDynamic = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Tailwind + Dynamic Fluid", "Tailwind and Dynamic Fluid").statusIcon(DYNAMIC);
+//
+//	@AutoFeed
+//	private final SequentialTrigger<BaseEvent> bowelsSq = SqtTemplates.sq(180_000,
+//			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBAF2),
+//			(e1, s) -> {
+//				s.updateCall(bowelsInitial, e1);
+//				var allBuffs = s.waitEventsQuickSuccession(12, BuffApplied.class, ba -> ba.buffIdMatches(ENTROPY, DYNAMIC, HEADWIND, TAILWIND));
+//				XivPlayerCharacter player = state.getPlayer();
+//				var myEntropy = buffs.findStatusOnTarget(player, ENTROPY);
+//				var myDynamic = buffs.findStatusOnTarget(player, DYNAMIC);
+//				var myHeadwind = buffs.findStatusOnTarget(player, HEADWIND);
+//				var myTailwind = buffs.findStatusOnTarget(player, TAILWIND);
+//				if (myHeadwind != null) {
+//					if (myEntropy != null) {
+//						s.updateCall(bowelsHeadwindEntropy, myEntropy);
+//					}
+//					else if (myDynamic != null) {
+//						s.updateCall(bowelsHeadwindDynamic, myDynamic);
+//					}
+//					else {
+//						s.updateCall(bowelsHeadwind, myHeadwind);
+//					}
+//
+//				}
+//				else if (myTailwind != null) {
+//					if (myEntropy != null) {
+//						s.updateCall(bowelsTailwindEntropy, myEntropy);
+//					}
+//					else if (myDynamic != null) {
+//						s.updateCall(bowelsTailwindDynamic, myDynamic);
+//					}
+//					else {
+//						s.updateCall(bowelsTailwind, myTailwind);
+//					}
+//				}
+//				else {
+//					log.error("bowels error: no head/tail");
+//				}
+//
+//			});
 
-	// Buster hits highest then second highest aggro, headmarker on first one
+	/*
+	Limit cut:
+	1-8 numbers
+	Players go to inter-intercards?
+	 */
 
 	// P4
 	/*
