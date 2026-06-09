@@ -82,7 +82,7 @@ public class Line264Parser extends AbstractACTLineParser<Line264Parser.Fields> {
 				double y = fields.getDouble(Fields.y);
 				double z = fields.getDouble(Fields.z);
 				double h = fields.getDouble(Fields.rotation);
-				if (x == 0.0 && y == 0.0 && z == 0.0) {
+				if (Math.abs(x) <= 0.02 && Math.abs(y) <= 0.02 && Math.abs(z) <= 0.02) {
 					AbilityCastStart precursor = firstMatch.getPrecursor();
 					DescribesCastLocation<AbilityCastStart> castLocation;
 					if (precursor != null && (castLocation = precursor.getLocationInfo()) != null && castLocation.getPos() != null) {

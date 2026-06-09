@@ -28,6 +28,7 @@ import gg.xp.xivsupport.models.XivPlayerCharacter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
@@ -105,7 +106,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> gravenTakeTower = ModifiableCallout.durationBasedCall("Graven Image 1: Take Tower", "Take Tower");
 
 	private final ModifiableCallout<BuffApplied> gravenConfetti = ModifiableCallout.<BuffApplied>durationBasedCall("Graven Image 1: Confetti on You", "Confetti").autoIcon();
-	private final ModifiableCallout<BuffApplied> gravenNoConfetti = ModifiableCallout.<BuffApplied>durationBasedCall("Graven Image 1: Confetti on You", "Confetti on {confettiPlayers}");
+	private final ModifiableCallout<BuffApplied> gravenNoConfetti = ModifiableCallout.durationBasedCall("Graven Image 1: Confetti on You", "Confetti on {confettiPlayers}");
 
 	private final ModifiableCallout<HeadMarkerEvent> gravenRealIceRealThunder = new ModifiableCallout<>("Graven Image 1: Real Ice, Real Thunder", "Avoid Both");
 	private final ModifiableCallout<HeadMarkerEvent> gravenRealIceFakeThunder = new ModifiableCallout<>("Graven Image 1: Real Ice, Fake Thunder", "Out of Cones, In Lines");
@@ -263,7 +264,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 					s.waitThenRefreshCombatants(100);
 					var myTether = rawTethers.stream().filter(te -> te.eitherTargetMatches(XivCombatant::isThePlayer)).findAny().orElseThrow();
 					var myTetherFrom = state.getLatestCombatantData(myTether.getTargetMatching(cbt -> !cbt.isPc()));
-					playerStone = myTetherFrom.getPos().x() > 120;
+					playerStone = myTetherFrom.getPos().x() > 100;
 					s.setParam("playerStone", playerStone);
 				}
 
@@ -305,7 +306,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 					s.waitThenRefreshCombatants(100);
 					var myTether = rawTethers.stream().filter(te -> te.eitherTargetMatches(XivCombatant::isThePlayer)).findAny().orElseThrow();
 					var myTetherFrom = state.getLatestCombatantData(myTether.getTargetMatching(cbt -> !cbt.isPc()));
-					playerStone = myTetherFrom.getPos().x() > 120;
+					playerStone = myTetherFrom.getPos().x() > 100;
 					s.setParam("playerStone", playerStone);
 				}
 				// No ice with this set
@@ -457,7 +458,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 					s.waitThenRefreshCombatants(100);
 					var myTether = rawTethers.stream().filter(te -> te.eitherTargetMatches(XivCombatant::isThePlayer)).findAny().orElseThrow();
 					var myTetherFrom = state.getLatestCombatantData(myTether.getTargetMatching(cbt -> !cbt.isPc()));
-					playerStone = myTetherFrom.getPos().x() > 120;
+					playerStone = myTetherFrom.getPos().x() > 100;
 					s.setParam("playerStone", playerStone);
 				}
 				// This call will not overwrite the confetti call
@@ -776,68 +777,142 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 				}
 				s.setParam("bestStart", bestStart);
 				s.updateCall(trinesSafe);
-
 			});
+
 	@NpcCastCallout(0xBAE1)
 	private final ModifiableCallout<AbilityCastStart> lightOfJudgmentEnrage = ModifiableCallout.durationBasedCall("Failed P2 Enrage", "Failed");
 
 	@NpcCastCallout(0xC3F7)
 	private final ModifiableCallout<AbilityCastStart> aeroIIIAssault = ModifiableCallout.durationBasedCall("Aero III Assault", "Knockback");
 
-//	private final ModifiableCallout<AbilityCastStart> bowelsInitial = ModifiableCallout.durationBasedCall("Bowels of Agony", "Raidwide");
-//
-//	private static final int ENTROPY = 0x640;
-//	private static final int DYNAMIC = 0x641;
-//	private static final int HEADWIND = 0x642;
-//	private static final int TAILWIND = 0x643;
-//
-//
-//	private final ModifiableCallout<BuffApplied> bowelsHeadwind = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Headwind Only", "Headwind").statusIcon(HEADWIND);
-//	private final ModifiableCallout<BuffApplied> bowelsTailwind = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Tailwind Only", "Tailwind").statusIcon(TAILWIND);
-//	private final ModifiableCallout<BuffApplied> bowelsHeadwindEntropy = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Headwind + Entropy", "Headwind and Entropy").statusIcon(ENTROPY);
-//	private final ModifiableCallout<BuffApplied> bowelsTailwindEntropy = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Tailwind + Entropy", "Tailwind and Entropy").statusIcon(ENTROPY);
-//	private final ModifiableCallout<BuffApplied> bowelsHeadwindDynamic = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Headwind + Dynamic Fluid", "Headwind and Dynamic Fluid").statusIcon(DYNAMIC);
-//	private final ModifiableCallout<BuffApplied> bowelsTailwindDynamic = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Tailwind + Dynamic Fluid", "Tailwind and Dynamic Fluid").statusIcon(DYNAMIC);
-//
-//	@AutoFeed
-//	private final SequentialTrigger<BaseEvent> bowelsSq = SqtTemplates.sq(180_000,
-//			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBAF2),
-//			(e1, s) -> {
-//				s.updateCall(bowelsInitial, e1);
-//				var allBuffs = s.waitEventsQuickSuccession(12, BuffApplied.class, ba -> ba.buffIdMatches(ENTROPY, DYNAMIC, HEADWIND, TAILWIND));
-//				XivPlayerCharacter player = state.getPlayer();
-//				var myEntropy = buffs.findStatusOnTarget(player, ENTROPY);
-//				var myDynamic = buffs.findStatusOnTarget(player, DYNAMIC);
-//				var myHeadwind = buffs.findStatusOnTarget(player, HEADWIND);
-//				var myTailwind = buffs.findStatusOnTarget(player, TAILWIND);
-//				if (myHeadwind != null) {
-//					if (myEntropy != null) {
-//						s.updateCall(bowelsHeadwindEntropy, myEntropy);
-//					}
-//					else if (myDynamic != null) {
-//						s.updateCall(bowelsHeadwindDynamic, myDynamic);
-//					}
-//					else {
-//						s.updateCall(bowelsHeadwind, myHeadwind);
-//					}
-//
-//				}
-//				else if (myTailwind != null) {
-//					if (myEntropy != null) {
-//						s.updateCall(bowelsTailwindEntropy, myEntropy);
-//					}
-//					else if (myDynamic != null) {
-//						s.updateCall(bowelsTailwindDynamic, myDynamic);
-//					}
-//					else {
-//						s.updateCall(bowelsTailwind, myTailwind);
-//					}
-//				}
-//				else {
-//					log.error("bowels error: no head/tail");
-//				}
-//
-//			});
+	// TODO: do the boss equivalents (epic villain 1061 and fated villain 1063) always go on same bosses? epic chaos
+	@PlayerStatusCallout(0x1060)
+	private final ModifiableCallout<BuffApplied> epicHero = new ModifiableCallout<BuffApplied>("Epic Hero", "Attack Chaos").autoIcon();
+	@PlayerStatusCallout(0x1062)
+	private final ModifiableCallout<BuffApplied> fatedHero = new ModifiableCallout<BuffApplied>("Fated Hero", "Attack Exdeath").autoIcon();
+
+	private final ModifiableCallout<AbilityCastStart> bowelsInitial = ModifiableCallout.durationBasedCall("Bowels of Agony", "Raidwide");
+
+	private static final int ENTROPY = 0x640;
+	private static final int DYNAMIC = 0x641;
+	private static final int HEADWIND = 0x642;
+	private static final int TAILWIND = 0x643;
+
+
+	private final ModifiableCallout<BuffApplied> bowelsHeadwind = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Headwind Only", "Headwind").statusIcon(HEADWIND);
+	private final ModifiableCallout<BuffApplied> bowelsTailwind = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Tailwind Only", "Tailwind").statusIcon(TAILWIND);
+	private final ModifiableCallout<BuffApplied> bowelsHeadwindEntropy = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Headwind + Entropy", "Headwind and Entropy").statusIcon(ENTROPY);
+	private final ModifiableCallout<BuffApplied> bowelsTailwindEntropy = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Tailwind + Entropy", "Tailwind and Entropy").statusIcon(ENTROPY);
+	private final ModifiableCallout<BuffApplied> bowelsHeadwindDynamic = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Headwind + Dynamic Fluid", "Headwind and Dynamic Fluid").statusIcon(DYNAMIC);
+	private final ModifiableCallout<BuffApplied> bowelsTailwindDynamic = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Tailwind + Dynamic Fluid", "Tailwind and Dynamic Fluid").statusIcon(DYNAMIC);
+
+	private final ModifiableCallout<BuffApplied> bowelsMyEntropySoon = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: My Entropy Soon", "My Entropy Soon").statusIcon(ENTROPY);
+	private final ModifiableCallout<BuffApplied> bowelsOtherEntropySoon = ModifiableCallout.durationBasedCall("Bowels: Other Entropy Soon", "Entropies Soon");
+	private final ModifiableCallout<BuffApplied> bowelsMyDynamicSoon = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: My Dynamic Soon", "My Dynamic Soon").statusIcon(DYNAMIC);
+	private final ModifiableCallout<BuffApplied> bowelsOtherDynamicSoon = ModifiableCallout.durationBasedCall("Bowels: Other Dynamic Soon", "Dynamics Soon");
+
+	private final ModifiableCallout<BuffApplied> bowelsHeadwindAfter = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Headwind After Entropy/Dynamic", "Headwind").statusIcon(HEADWIND);
+	private final ModifiableCallout<BuffApplied> bowelsTailwindAfter = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Tailwind After Entropy/Dynamic", "Tailwind").statusIcon(TAILWIND);
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> bowelsSq = SqtTemplates.sq(180_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBAF2),
+			(e1, s) -> {
+				s.updateCall(bowelsInitial, e1);
+				var allBuffs = s.waitEventsQuickSuccession(12, BuffApplied.class, ba -> ba.buffIdMatches(ENTROPY, DYNAMIC, HEADWIND, TAILWIND));
+				XivPlayerCharacter player = state.getPlayer();
+				var myEntropy = buffs.findStatusOnTarget(player, ENTROPY);
+				var myDynamic = buffs.findStatusOnTarget(player, DYNAMIC);
+				var myHeadwind = buffs.findStatusOnTarget(player, HEADWIND);
+				var myTailwind = buffs.findStatusOnTarget(player, TAILWIND);
+				if (myHeadwind != null) {
+					if (myEntropy != null) {
+						s.updateCall(bowelsHeadwindEntropy, myEntropy);
+					}
+					else if (myDynamic != null) {
+						s.updateCall(bowelsHeadwindDynamic, myDynamic);
+					}
+					else {
+						s.updateCall(bowelsHeadwind, myHeadwind);
+					}
+
+				}
+				else if (myTailwind != null) {
+					if (myEntropy != null) {
+						s.updateCall(bowelsTailwindEntropy, myEntropy);
+					}
+					else if (myDynamic != null) {
+						s.updateCall(bowelsTailwindDynamic, myDynamic);
+					}
+					else {
+						s.updateCall(bowelsTailwind, myTailwind);
+					}
+				}
+				else {
+					log.error("bowels error: no head/tail");
+				}
+				BuffApplied anyEntropy = buffs.findBuffById(ENTROPY);
+				// Wait until 5s left on buff
+				s.waitDuration(anyEntropy.remainingDurationPlus(Duration.ofSeconds(-5)));
+				if (myEntropy != null) {
+					s.updateCall(bowelsMyEntropySoon, myEntropy);
+					s.waitBuffRemoved(buffs, myEntropy);
+					if (myHeadwind != null) {
+						s.updateCall(bowelsHeadwindAfter, myHeadwind);
+					}
+					else if (myTailwind != null) {
+						s.updateCall(bowelsTailwindAfter, myTailwind);
+					}
+				}
+				else {
+					s.call(bowelsOtherEntropySoon, anyEntropy);
+				}
+
+				// TODO: TB already handled elsewhere?
+				// TODO: vac wave KB?
+				BuffApplied anyDynamic = buffs.findBuffById(DYNAMIC);
+				// Wait until 5s left on buff
+				s.waitDuration(anyDynamic.remainingDurationPlus(Duration.ofSeconds(-5)));
+				if (myDynamic != null) {
+					s.updateCall(bowelsMyDynamicSoon, myDynamic);
+					s.waitBuffRemoved(buffs, myDynamic);
+					if (myHeadwind != null) {
+						s.updateCall(bowelsHeadwindAfter, myHeadwind);
+					}
+					else if (myTailwind != null) {
+						s.updateCall(bowelsTailwindAfter, myTailwind);
+					}
+				}
+				else {
+					s.call(bowelsOtherDynamicSoon, anyDynamic);
+				}
+
+			});
+
+	private final ModifiableCallout<AbilityCastStart> longitudinalCast = ModifiableCallout.durationBasedCallWithExtraCastTime("Longitudinal Implosion: Cast", "Sides Then Front/Back");
+	private final ModifiableCallout<AbilityCastStart> latitudinalCast = ModifiableCallout.durationBasedCallWithExtraCastTime("Latitudinal Implosion: Cast", "Front/Back then Sides");
+	private final ModifiableCallout<AbilityUsedEvent> longitudinalMove = new ModifiableCallout<>("Longitudinal Implosion: Move", "Front/Back");
+	private final ModifiableCallout<AbilityUsedEvent> latitudinalMove = new ModifiableCallout<>("Latitudinal Implosion: Move", "Sides");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> longitudinalLatitudinalSq = SqtTemplates.sq(30_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBAFD, 0xBAFE),
+			(e1, s) -> {
+				boolean longi = e1.abilityIdMatches(0xBAFD);
+				s.updateCall(longi ? longitudinalCast : latitudinalCast, e1);
+				// BAFF is the actual hit
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xBAFF));
+				s.updateCall(longi ? longitudinalMove : latitudinalMove);
+			});
+
+	@NpcCastCallout(0xBB13)
+	private final ModifiableCallout<AbilityCastStart> vacuumWave = ModifiableCallout.durationBasedCall("Vacuum Wave", "Knockback from {event.source}");
+
+
+	// Exdeath Thunder III 6.7 BB12
+	// Exdeath Thunder III 4.7 BB09
+	// Longitudinal BAFD: Sides safe first
+	// Latitudinal BAFE: Front/back safe first
 
 	/*
 	Limit cut:
