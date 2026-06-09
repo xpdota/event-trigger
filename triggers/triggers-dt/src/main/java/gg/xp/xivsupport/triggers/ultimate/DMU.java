@@ -458,7 +458,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 					s.waitThenRefreshCombatants(100);
 					var myTether = rawTethers.stream().filter(te -> te.eitherTargetMatches(XivCombatant::isThePlayer)).findAny().orElseThrow();
 					var myTetherFrom = state.getLatestCombatantData(myTether.getTargetMatching(cbt -> !cbt.isPc()));
-					playerStone = myTetherFrom.getPos().x() > 120;
+					playerStone = myTetherFrom.getPos().x() > 100;
 					s.setParam("playerStone", playerStone);
 				}
 				// This call will not overwrite the confetti call
