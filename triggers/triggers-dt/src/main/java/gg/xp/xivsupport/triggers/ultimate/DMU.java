@@ -264,7 +264,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 					s.waitThenRefreshCombatants(100);
 					var myTether = rawTethers.stream().filter(te -> te.eitherTargetMatches(XivCombatant::isThePlayer)).findAny().orElseThrow();
 					var myTetherFrom = state.getLatestCombatantData(myTether.getTargetMatching(cbt -> !cbt.isPc()));
-					playerStone = myTetherFrom.getPos().x() > 100;
+					playerStone = myTetherFrom.getPos().x() > 120;
 					s.setParam("playerStone", playerStone);
 				}
 
@@ -306,7 +306,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 					s.waitThenRefreshCombatants(100);
 					var myTether = rawTethers.stream().filter(te -> te.eitherTargetMatches(XivCombatant::isThePlayer)).findAny().orElseThrow();
 					var myTetherFrom = state.getLatestCombatantData(myTether.getTargetMatching(cbt -> !cbt.isPc()));
-					playerStone = myTetherFrom.getPos().x() > 100;
+					playerStone = myTetherFrom.getPos().x() > 120;
 					s.setParam("playerStone", playerStone);
 				}
 				// No ice with this set
@@ -458,7 +458,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 					s.waitThenRefreshCombatants(100);
 					var myTether = rawTethers.stream().filter(te -> te.eitherTargetMatches(XivCombatant::isThePlayer)).findAny().orElseThrow();
 					var myTetherFrom = state.getLatestCombatantData(myTether.getTargetMatching(cbt -> !cbt.isPc()));
-					playerStone = myTetherFrom.getPos().x() > 100;
+					playerStone = myTetherFrom.getPos().x() > 120;
 					s.setParam("playerStone", playerStone);
 				}
 				// This call will not overwrite the confetti call
