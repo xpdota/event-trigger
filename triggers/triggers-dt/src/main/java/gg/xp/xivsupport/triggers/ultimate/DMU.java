@@ -362,11 +362,12 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<BuffApplied> ttConfettiOnYou = ModifiableCallout.<BuffApplied>durationBasedCall("TT: Confetti on You", "Confetti on {confettiPlayers}").autoIcon();
 	private final ModifiableCallout<BuffApplied> ttConfettiNotOnYou = ModifiableCallout.<BuffApplied>durationBasedCall("TT: Confetti not on You", "Confetti on {confettiPlayers}").autoIcon();
 
-	private final ModifiableCallout<TetherEvent> ttStoneTetherInitial = new ModifiableCallout<>("TT: Stone Tether (Initial)", "Stone");
-	private final ModifiableCallout<TetherEvent> ttDarkTetherInitial = new ModifiableCallout<>("TT: Dark Tether (Initial)", "Dark");
+	private final ModifiableCallout<TetherEvent> ttSleepTetherInitial = new ModifiableCallout<TetherEvent>("TT: Sleep Tether (Initial)", "Sleep Tether").statusIcon(4894);
+	private final ModifiableCallout<TetherEvent> ttConfusionTetherInitial = new ModifiableCallout<TetherEvent>("TT: Confusion Tether (Initial)", "Confusion Tether").statusIcon(1283);
+	;
 
-	private final ModifiableCallout<TetherEvent> ttStoneTether = new ModifiableCallout<>("TT: Stone Tether (After Confetti)", "Spread for Stone");
-	private final ModifiableCallout<TetherEvent> ttDarkTether = new ModifiableCallout<>("TT: Dark Tether (After Confetti)", "Spread for Dark");
+	private final ModifiableCallout<TetherEvent> ttSleepTether = new ModifiableCallout<TetherEvent>("TT: Sleep Tether (After Confetti)", "Spread for Sleep").statusIcon(4894);
+	private final ModifiableCallout<TetherEvent> ttConfuseTether = new ModifiableCallout<TetherEvent>("TT: Confusion Tether (After Confetti)", "Spread for Confusion").statusIcon(1283);
 
 	private final ModifiableCallout<ActorControlExtraEvent> ttEarlyFakeGaze = new ModifiableCallout<>("TT: Fake Gaze (Early Call)", "Fake Gaze");
 	private final ModifiableCallout<ActorControlExtraEvent> ttEarlyRealGaze = new ModifiableCallout<>("TT: Real Gaze (Early Call)", "Real Gaze");
@@ -462,10 +463,10 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 					s.setParam("playerStone", playerStone);
 				}
 				// This call will not overwrite the confetti call
-				var tetherCall = s.call(playerStone ? ttStoneTetherInitial : ttDarkTetherInitial);
+				var tetherCall = s.call(playerStone ? ttSleepTetherInitial : ttConfusionTetherInitial);
 				s.waitBuffRemoved(buffs, confettis.get(0));
 				tetherCall.forceExpire();
-				s.updateCall(playerStone ? ttStoneTether : ttDarkTether);
+				s.updateCall(playerStone ? ttSleepTether : ttConfuseTether);
 
 				var lookMechanic = s.waitEvent(ActorControlExtraEvent.class, acee -> acee.allFieldsMatch(0x19D, 0x40, 0x80, 0, 0));
 				s.waitThenRefreshCombatants(100);
@@ -806,9 +807,9 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<BuffApplied> bowelsHeadwindDynamic = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Headwind + Dynamic Fluid", "Headwind and Dynamic Fluid").statusIcon(DYNAMIC);
 	private final ModifiableCallout<BuffApplied> bowelsTailwindDynamic = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Tailwind + Dynamic Fluid", "Tailwind and Dynamic Fluid").statusIcon(DYNAMIC);
 
-	private final ModifiableCallout<BuffApplied> bowelsMyEntropySoon = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: My Entropy Soon", "My Entropy Soon").statusIcon(ENTROPY);
+	private final ModifiableCallout<BuffApplied> bowelsMyEntropySoon = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: My Entropy Soon", "Entropy On You Soon").statusIcon(ENTROPY);
 	private final ModifiableCallout<BuffApplied> bowelsOtherEntropySoon = ModifiableCallout.durationBasedCall("Bowels: Other Entropy Soon", "Entropies Soon");
-	private final ModifiableCallout<BuffApplied> bowelsMyDynamicSoon = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: My Dynamic Soon", "My Dynamic Soon").statusIcon(DYNAMIC);
+	private final ModifiableCallout<BuffApplied> bowelsMyDynamicSoon = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: My Dynamic Soon", "Dynamic On You Soon").statusIcon(DYNAMIC);
 	private final ModifiableCallout<BuffApplied> bowelsOtherDynamicSoon = ModifiableCallout.durationBasedCall("Bowels: Other Dynamic Soon", "Dynamics Soon");
 
 	private final ModifiableCallout<BuffApplied> bowelsHeadwindAfter = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Headwind After Entropy/Dynamic", "Headwind").statusIcon(HEADWIND);
@@ -818,6 +819,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final SequentialTrigger<BaseEvent> bowelsSq = SqtTemplates.sq(180_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBAF2),
 			(e1, s) -> {
+				// TODO: would be cool for headwind call to expire when you lose it
 				s.updateCall(bowelsInitial, e1);
 				var allBuffs = s.waitEventsQuickSuccession(12, BuffApplied.class, ba -> ba.buffIdMatches(ENTROPY, DYNAMIC, HEADWIND, TAILWIND));
 				XivPlayerCharacter player = state.getPlayer();
@@ -886,6 +888,40 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 				else {
 					s.call(bowelsOtherDynamicSoon, anyDynamic);
 				}
+			});
+
+	private final ModifiableCallout<HeadMarkerEvent> lc1 = new ModifiableCallout<>("Limit Cut: 1", "1");
+	private final ModifiableCallout<HeadMarkerEvent> lc2 = new ModifiableCallout<>("Limit Cut: 2", "2");
+	private final ModifiableCallout<HeadMarkerEvent> lc3 = new ModifiableCallout<>("Limit Cut: 3", "3");
+	private final ModifiableCallout<HeadMarkerEvent> lc4 = new ModifiableCallout<>("Limit Cut: 4", "4");
+	private final ModifiableCallout<HeadMarkerEvent> lc5 = new ModifiableCallout<>("Limit Cut: 5", "5");
+	private final ModifiableCallout<HeadMarkerEvent> lc6 = new ModifiableCallout<>("Limit Cut: 6", "6");
+	private final ModifiableCallout<HeadMarkerEvent> lc7 = new ModifiableCallout<>("Limit Cut: 7", "7");
+	private final ModifiableCallout<HeadMarkerEvent> lc8 = new ModifiableCallout<>("Limit Cut: 8", "8");
+	private final ModifiableCallout<HeadMarkerEvent> lcUnknown = new ModifiableCallout<>("Limit Cut: Error", "Error");
+
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> lcSq = SqtTemplates.sq(180_000,
+			// There isn't a good cut point for a new trigger here, so just use the same start condition as bowels
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBAF2),
+			(e1, s) -> {
+				var myHm = s.waitEvent(HeadMarkerEvent.class, hme -> hme.getTarget().isThePlayer());
+				ModifiableCallout<HeadMarkerEvent> markerCall = switch ((int) myHm.getMarkerId()) {
+					case 336 -> lc1;
+					case 337 -> lc2;
+					case 338 -> lc3;
+					case 339 -> lc4;
+					case 437 -> lc5;
+					case 438 -> lc6;
+					case 439 -> lc7;
+					case 440 -> lc8;
+					default -> {
+						log.error("Bad LC headmarker: {}", myHm);
+						yield lcUnknown;
+					}
+				};
+				s.updateCall(markerCall, myHm);
 
 			});
 
@@ -908,11 +944,15 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout(0xBB13)
 	private final ModifiableCallout<AbilityCastStart> vacuumWave = ModifiableCallout.durationBasedCall("Vacuum Wave", "Knockback from {event.source}");
 
+	@NpcCastCallout({0xBB09, 0xBB12})
+	private final ModifiableCallout<AbilityCastStart> thunderIII = ModifiableCallout.durationBasedCall("Thunder III (Exdeath)", "Away from {event.source}");
+
 
 	// Exdeath Thunder III 6.7 BB12
 	// Exdeath Thunder III 4.7 BB09
 	// Longitudinal BAFD: Sides safe first
 	// Latitudinal BAFE: Front/back safe first
+	// Umbra smash BJ jump BB00 at same time as BB13 vacuum wave - should combine call
 
 	/*
 	Limit cut:
