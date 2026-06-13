@@ -504,8 +504,9 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<AbilityCastStart> forsaken = ModifiableCallout.durationBasedCall("Forsaken", "Raidwide");
 
+	// Duration is fake - it auto refreshes
 	@PlayerStatusCallout(value = 0x13DB, cancellable = true)
-	private final ModifiableCallout<BuffApplied> forsakenDebuffReminder = ModifiableCallout.<BuffApplied>durationBasedCall("Forsaken: Debuff Tracker", "", "{event.stacks} Stacks").autoIcon()
+	private final ModifiableCallout<BuffApplied> forsakenDebuffReminder = new ModifiableCallout<BuffApplied>("Forsaken: Debuff Tracker", "", "{event.stacks} Stacks").autoIcon()
 			.extendedDescription("""
 					This callout shows only your debuff stacks. You should NOT add TTS to this, because the game continuously refreshes this debuff.""");
 
@@ -701,7 +702,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> trinesInitial = ModifiableCallout.durationBasedCall("Trines (Initial)", "Trines");
 	private final ModifiableCallout<AbilityCastStart> wingsOfDestruction = ModifiableCallout.durationBasedCall("Trines: Wings of Destruction 1", "{wingsSafe} Safe");
 
-	private final ArenaPos ap = new ArenaPos(100.0, 100.0, 4.0, 4.0);
+	private final ArenaPos tightAp = new ArenaPos(100.0, 100.0, 4.0, 4.0);
 	private static final Set<ArenaSector> trinePositions = Collections.unmodifiableSet(EnumSet.of(CENTER, NORTH, SOUTHEAST, NORTHEAST, SOUTH, SOUTHWEST, NORTHWEST));
 
 	private final ModifiableCallout<?> trinesSafe = new ModifiableCallout<>("{bestStart} to {firstTrineLocations}")
@@ -729,7 +730,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 				var firstSet = s.waitEventsQuickSuccession(3, ActorControlExtraEvent.class, acee -> acee.allFieldsMatch(0x19D, 0x10, 0x20, 0, 0));
 				// We have to do this every time because it re-uses the entities
 				s.waitThenRefreshCombatants(100);
-				var firstTrineLocations = firstSet.stream().map(e -> state.getLatestCombatantData(e.getTarget())).map(ap::forCombatant).toList();
+				var firstTrineLocations = firstSet.stream().map(e -> state.getLatestCombatantData(e.getTarget())).map(tightAp::forCombatant).toList();
 				s.setParam("firstTrineLocations", firstTrineLocations);
 				var wings1 = s.findOrWaitForCastWithLocation(casts, acs -> acs.abilityIdMatches(0xBACE, 0xBACD), false);
 				// Half room cleave - BACE = cleaving relative right, so safe spot is relative left
@@ -740,7 +741,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 				// Second set we don't directly care about - but there's no reason to wait for the third set here, when we know that the third set will consist of anything not hit by first or second sets.
 				var secondSet = s.waitEventsQuickSuccession(3, ActorControlExtraEvent.class, acee -> acee.allFieldsMatch(0x19D, 0x10, 0x20, 0, 0));
 				s.waitThenRefreshCombatants(100);
-				var secondTrineLocations = secondSet.stream().map(e -> state.getLatestCombatantData(e.getTarget())).map(ap::forCombatant).toList();
+				var secondTrineLocations = secondSet.stream().map(e -> state.getLatestCombatantData(e.getTarget())).map(tightAp::forCombatant).toList();
 				s.setParam("secondTrineLocations", secondTrineLocations);
 
 				var thirdTrineLocations = EnumSet.copyOf(trinePositions);
@@ -874,10 +875,14 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 				// TODO: vac wave KB?
 				BuffApplied anyDynamic = buffs.findBuffById(DYNAMIC);
 				// Wait until 5s left on buff
-				s.waitDuration(anyDynamic.remainingDurationPlus(Duration.ofSeconds(-5)));
+				if (anyDynamic != null) {
+					s.waitDuration(anyDynamic.remainingDurationPlus(Duration.ofSeconds(-5)));
+				}
 				if (myDynamic != null) {
-					s.updateCall(bowelsMyDynamicSoon, myDynamic);
-					s.waitBuffRemoved(buffs, myDynamic);
+					if (buffs.statusOrRefreshActive(myDynamic)) {
+						s.updateCall(bowelsMyDynamicSoon, myDynamic);
+						s.waitBuffRemoved(buffs, myDynamic);
+					}
 					if (myHeadwind != null) {
 						s.updateCall(bowelsHeadwindAfter, myHeadwind);
 					}
@@ -886,44 +891,119 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 					}
 				}
 				else {
-					s.call(bowelsOtherDynamicSoon, anyDynamic);
+					if (buffs.findBuffById(DYNAMIC) != null) {
+						s.call(bowelsOtherDynamicSoon, anyDynamic);
+					}
 				}
 			});
 
-	private final ModifiableCallout<HeadMarkerEvent> lc1 = new ModifiableCallout<>("Limit Cut: 1", "1");
-	private final ModifiableCallout<HeadMarkerEvent> lc2 = new ModifiableCallout<>("Limit Cut: 2", "2");
-	private final ModifiableCallout<HeadMarkerEvent> lc3 = new ModifiableCallout<>("Limit Cut: 3", "3");
-	private final ModifiableCallout<HeadMarkerEvent> lc4 = new ModifiableCallout<>("Limit Cut: 4", "4");
-	private final ModifiableCallout<HeadMarkerEvent> lc5 = new ModifiableCallout<>("Limit Cut: 5", "5");
-	private final ModifiableCallout<HeadMarkerEvent> lc6 = new ModifiableCallout<>("Limit Cut: 6", "6");
-	private final ModifiableCallout<HeadMarkerEvent> lc7 = new ModifiableCallout<>("Limit Cut: 7", "7");
-	private final ModifiableCallout<HeadMarkerEvent> lc8 = new ModifiableCallout<>("Limit Cut: 8", "8");
+	private final ModifiableCallout<?> lcInitial = new ModifiableCallout<>("Limit Cut: Initial", "Starting {resultingStart} -> {resultingClockwise ? 'Clockwise' : 'CCW'}")
+			.extendedDescription("""
+					The four variables you can use in this call are `initialClone` and `initialClockwise` which are the first clone and which direction the initial waves are going.
+					`resultingStart` and `resultingClockwise` are where the limit cut hits will start from and which direction.""");
+	private final ModifiableCallout<HeadMarkerEvent> lc1 = new ModifiableCallout<HeadMarkerEvent>("Limit Cut: 1", "{myNumber} { myPosition } { resultingClockwise ? 'Left' : 'Right' }")
+			.extendedDescription("""
+					For the individual number calls, you can use {myNumber} which is your limit cut number, starting at 1, in case you want to do math in the expressions.
+					You can also use {myPosition} for the arena position opposite your clone.
+					For example, the default call of `{ myPosition } { resultingClockwise ? 'Left' : 'Right' }` would call out something like "North Right" (left/right is looking inwards) for the typical LC strategy.
+					""");
+	private final ModifiableCallout<HeadMarkerEvent> lc2 = new ModifiableCallout<>("Limit Cut: 2", "{myNumber} { myPosition } { resultingClockwise ? 'Left' : 'Right' }");
+	private final ModifiableCallout<HeadMarkerEvent> lc3 = new ModifiableCallout<>("Limit Cut: 3", "{myNumber} { myPosition } { resultingClockwise ? 'Left' : 'Right' }");
+	private final ModifiableCallout<HeadMarkerEvent> lc4 = new ModifiableCallout<>("Limit Cut: 4", "{myNumber} { myPosition } { resultingClockwise ? 'Left' : 'Right' }");
+	private final ModifiableCallout<HeadMarkerEvent> lc5 = new ModifiableCallout<>("Limit Cut: 5", "{myNumber} { myPosition } { resultingClockwise ? 'Left' : 'Right' }");
+	private final ModifiableCallout<HeadMarkerEvent> lc6 = new ModifiableCallout<>("Limit Cut: 6", "{myNumber} { myPosition } { resultingClockwise ? 'Left' : 'Right' }");
+	private final ModifiableCallout<HeadMarkerEvent> lc7 = new ModifiableCallout<>("Limit Cut: 7", "{myNumber} { myPosition } { resultingClockwise ? 'Left' : 'Right' }");
+	private final ModifiableCallout<HeadMarkerEvent> lc8 = new ModifiableCallout<>("Limit Cut: 8", "{myNumber} { myPosition } { resultingClockwise ? 'Left' : 'Right' }");
 	private final ModifiableCallout<HeadMarkerEvent> lcUnknown = new ModifiableCallout<>("Limit Cut: Error", "Error");
 
+	private final ArenaPos ap = new ArenaPos(100, 100, 10, 10);
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> lcSq = SqtTemplates.sq(180_000,
 			// There isn't a good cut point for a new trigger here, so just use the same start condition as bowels
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBAF2),
 			(e1, s) -> {
+
+				var hit1 = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xBAE3) && aue.isFirstTarget());
+				var hit2 = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xBAE3) && aue.isFirstTarget());
+				s.waitThenRefreshCombatants(100);
+				var from1 = ap.forCombatant(state.getLatestCombatantData(hit1.getSource()));
+				s.setParam("initialClone", from1);
+				var from2 = ap.forCombatant(state.getLatestCombatantData(hit2.getSource()));
+				Boolean resultingClockwise;
+				ArenaSector resultingStart;
+
+				if (!from1.isStrictlyAdjacentTo(from2)) {
+					log.error("Error determining LC positions: from1 {} not adjacent to from2 {} (hit1={}, hit2={})", from1, from2, hit1, hit2);
+					resultingStart = null;
+					resultingClockwise = null;
+				}
+				else {
+					/*
+					Example: First is E, second is SE
+					initialClone = E
+					initialClockwise = true
+					resultingClockwise = false
+					resultingStart = W
+
+					Player numbers 1 - 8 are [W, SW, ..., SE]
+					 */
+					boolean initialClockwise = from1.eighthsTo(from2) == 1;
+					s.setParam("initialClockwise", initialClockwise);
+					resultingClockwise = !initialClockwise;
+					s.setParam("resultingClockwise", resultingClockwise);
+					resultingStart = from1.opposite();
+					s.setParam("resultingStart", resultingStart);
+				}
+				s.updateCall(lcInitial);
+
+
 				var myHm = s.waitEvent(HeadMarkerEvent.class, hme -> hme.getTarget().isThePlayer());
-				ModifiableCallout<HeadMarkerEvent> markerCall = switch ((int) myHm.getMarkerId()) {
-					case 336 -> lc1;
-					case 337 -> lc2;
-					case 338 -> lc3;
-					case 339 -> lc4;
-					case 437 -> lc5;
-					case 438 -> lc6;
-					case 439 -> lc7;
-					case 440 -> lc8;
+				int myNumber = switch ((int) myHm.getMarkerId()) {
+					case 336 -> 1;
+					case 337 -> 2;
+					case 338 -> 3;
+					case 339 -> 4;
+					case 437 -> 5;
+					case 438 -> 6;
+					case 439 -> 7;
+					case 440 -> 8;
 					default -> {
 						log.error("Bad LC headmarker: {}", myHm);
-						yield lcUnknown;
+						yield -1;
 					}
 				};
+				s.setParam("myNumber", myNumber);
+				if (resultingClockwise != null) {
+					s.setParam("myPosition", resultingStart.plusEighths( (myNumber - 1) * (resultingClockwise ? 1 : -1) ));
+				}
+				else {
+					s.setParam("muPosition", ArenaSector.UNKNOWN);
+				}
+				ModifiableCallout<HeadMarkerEvent> markerCall = switch (myNumber) {
+					case 1 -> lc1;
+					case 2 -> lc2;
+					case 3 -> lc3;
+					case 4 -> lc4;
+					case 5 -> lc5;
+					case 6 -> lc6;
+					case 7 -> lc7;
+					case 8 -> lc8;
+					default -> lcUnknown;
+				};
 				s.updateCall(markerCall, myHm);
+				/*
+				Mechanics:
+				Kefka charges through arena from a random direction, doing mini-raidwides
+				What matters is where he starts and whether he moves CW or CCW.
+				Some strats use wind crystal as north?
+				Then markers come out.
+				For LC, Kefka will start at the same place, but in the opposite direction.
+				Then, Exdeath does two lightning III TBs which are proximity? TODO maybe I need to change the other lightning call.
+				 */
 
 			});
+
 
 	private final ModifiableCallout<AbilityCastStart> longitudinalCast = ModifiableCallout.durationBasedCallWithExtraCastTime("Longitudinal Implosion: Cast", "Sides Then Front/Back");
 	private final ModifiableCallout<AbilityCastStart> latitudinalCast = ModifiableCallout.durationBasedCallWithExtraCastTime("Latitudinal Implosion: Cast", "Front/Back then Sides");
@@ -944,15 +1024,29 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout(0xBB13)
 	private final ModifiableCallout<AbilityCastStart> vacuumWave = ModifiableCallout.durationBasedCall("Vacuum Wave", "Knockback from {event.source}");
 
-	@NpcCastCallout({0xBB09, 0xBB12})
-	private final ModifiableCallout<AbilityCastStart> thunderIII = ModifiableCallout.durationBasedCall("Thunder III (Exdeath)", "Away from {event.source}");
+	@NpcCastCallout(0xBB12)
+	private final ModifiableCallout<AbilityCastStart> thunderIII = ModifiableCallout.durationBasedCall("Thunder III (Exdeath AoE)", "Away from {event.source}");
+	@NpcCastCallout(0xBB09)
+	private final ModifiableCallout<AbilityCastStart> thunderIIItb = ModifiableCallout.durationBasedCall("Thunder III (Exdeath Proximity)", "Proximity Buster");
 
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> decisiveBattleSq = SqtTemplates.multiInvocation(30_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xC2E2),
+			(e1, s) -> {
+				// Nothing here that isn't already covered by other triggers
+			}, (e1, s) -> {
+				// The one after limit cut
+			});
+
+//	@AutoFeed
+//	private final ModifiableCallout<>
 
 	// Exdeath Thunder III 6.7 BB12
 	// Exdeath Thunder III 4.7 BB09
 	// Longitudinal BAFD: Sides safe first
 	// Latitudinal BAFE: Front/back safe first
 	// Umbra smash BJ jump BB00 at same time as BB13 vacuum wave - should combine call
+	// Does BB13 vacuum wave come up later?
 
 	/*
 	Limit cut:
