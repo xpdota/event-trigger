@@ -901,19 +901,19 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 			.extendedDescription("""
 					The four variables you can use in this call are `initialClone` and `initialClockwise` which are the first clone and which direction the initial waves are going.
 					`resultingStart` and `resultingClockwise` are where the limit cut hits will start from and which direction.""");
-	private final ModifiableCallout<HeadMarkerEvent> lc1 = new ModifiableCallout<HeadMarkerEvent>("Limit Cut: 1", "{myNumber} { myPosition } { resultingClockwise ? 'Left' : 'Right' }")
+	private final ModifiableCallout<HeadMarkerEvent> lc1 = new ModifiableCallout<HeadMarkerEvent>("Limit Cut: 1", "{myNumber} { myPosition } { resultingClockwise ? 'CW' : 'CCW' }")
 			.extendedDescription("""
 					For the individual number calls, you can use {myNumber} which is your limit cut number, starting at 1, in case you want to do math in the expressions.
 					You can also use {myPosition} for the arena position opposite your clone.
-					For example, the default call of `{ myPosition } { resultingClockwise ? 'Left' : 'Right' }` would call out something like "North Right" (left/right is looking inwards) for the typical LC strategy.
+					For example, `{ myPosition } { resultingClockwise ? 'Left' : 'Right' }` would call out something like "North Right" (left/right is looking inwards) for the typical LC strategy.
 					""");
-	private final ModifiableCallout<HeadMarkerEvent> lc2 = new ModifiableCallout<>("Limit Cut: 2", "{myNumber} { myPosition } { resultingClockwise ? 'Left' : 'Right' }");
-	private final ModifiableCallout<HeadMarkerEvent> lc3 = new ModifiableCallout<>("Limit Cut: 3", "{myNumber} { myPosition } { resultingClockwise ? 'Left' : 'Right' }");
-	private final ModifiableCallout<HeadMarkerEvent> lc4 = new ModifiableCallout<>("Limit Cut: 4", "{myNumber} { myPosition } { resultingClockwise ? 'Left' : 'Right' }");
-	private final ModifiableCallout<HeadMarkerEvent> lc5 = new ModifiableCallout<>("Limit Cut: 5", "{myNumber} { myPosition } { resultingClockwise ? 'Left' : 'Right' }");
-	private final ModifiableCallout<HeadMarkerEvent> lc6 = new ModifiableCallout<>("Limit Cut: 6", "{myNumber} { myPosition } { resultingClockwise ? 'Left' : 'Right' }");
-	private final ModifiableCallout<HeadMarkerEvent> lc7 = new ModifiableCallout<>("Limit Cut: 7", "{myNumber} { myPosition } { resultingClockwise ? 'Left' : 'Right' }");
-	private final ModifiableCallout<HeadMarkerEvent> lc8 = new ModifiableCallout<>("Limit Cut: 8", "{myNumber} { myPosition } { resultingClockwise ? 'Left' : 'Right' }");
+	private final ModifiableCallout<HeadMarkerEvent> lc2 = new ModifiableCallout<>("Limit Cut: 2", "{myNumber} { myPosition } { resultingClockwise ? 'CW' : 'CCW' }");
+	private final ModifiableCallout<HeadMarkerEvent> lc3 = new ModifiableCallout<>("Limit Cut: 3", "{myNumber} { myPosition } { resultingClockwise ? 'CW' : 'CCW' }");
+	private final ModifiableCallout<HeadMarkerEvent> lc4 = new ModifiableCallout<>("Limit Cut: 4", "{myNumber} { myPosition } { resultingClockwise ? 'CW' : 'CCW' }");
+	private final ModifiableCallout<HeadMarkerEvent> lc5 = new ModifiableCallout<>("Limit Cut: 5", "{myNumber} { myPosition } { resultingClockwise ? 'CW' : 'CCW' }");
+	private final ModifiableCallout<HeadMarkerEvent> lc6 = new ModifiableCallout<>("Limit Cut: 6", "{myNumber} { myPosition } { resultingClockwise ? 'CW' : 'CCW' }");
+	private final ModifiableCallout<HeadMarkerEvent> lc7 = new ModifiableCallout<>("Limit Cut: 7", "{myNumber} { myPosition } { resultingClockwise ? 'CW' : 'CCW' }");
+	private final ModifiableCallout<HeadMarkerEvent> lc8 = new ModifiableCallout<>("Limit Cut: 8", "{myNumber} { myPosition } { resultingClockwise ? 'CW' : 'CCW' }");
 	private final ModifiableCallout<HeadMarkerEvent> lcUnknown = new ModifiableCallout<>("Limit Cut: Error", "Error");
 
 	private final ArenaPos ap = new ArenaPos(100, 100, 10, 10);
@@ -975,7 +975,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 				};
 				s.setParam("myNumber", myNumber);
 				if (resultingClockwise != null) {
-					s.setParam("myPosition", resultingStart.plusEighths( (myNumber - 1) * (resultingClockwise ? 1 : -1) ));
+					s.setParam("myPosition", resultingStart.plusEighths((myNumber - 1) * (resultingClockwise ? 1 : -1)));
 				}
 				else {
 					s.setParam("muPosition", ArenaSector.UNKNOWN);
