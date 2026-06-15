@@ -280,6 +280,7 @@
                     <jre>
                         <path>jre</path>
                         <minVersion>${java.version}</minVersion>
+                        <maxVersion>${java.maxVersion}</maxVersion>
                         <opts>
                             <opt>@args.txt</opt>
                         </opts>
@@ -302,10 +303,10 @@
                         <originalFilename>triggevent.exe</originalFilename>
                     </versionInfo>
                     <messages>
-                        <bundledJreErr>You need to download Java version 17 or higher, or download the version
+                        <bundledJreErr>You need to download Java version 17, or download the version
                             of Triggevent with bundled Java.
                         </bundledJreErr>
-                        <jreVersionErr>You need to download Java version 17 or higher, or download the version
+                        <jreVersionErr>You need to download Java version 17, or download the version
                             of Triggevent with bundled Java.
                         </jreVersionErr>
                     </messages>

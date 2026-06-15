@@ -40,6 +40,7 @@ public class DummyTestGui implements DutyPluginTab {
 		panel.add(new EasyAction("Test With Holds (Start)", () -> master.pushEvent(new DebugCommand("testcall_on"))).asButton());
 		panel.add(new EasyAction("Test With Holds (Stop)", () -> master.pushEvent(new DebugCommand("testcall_off"))).asButton());
 		panel.add(new EasyAction("Test With Vars", () -> master.pushEvent(new DebugCommand("testcall3"))).asButton());
+		panel.add(new EasyAction("Test With Icons", () -> master.pushEvent(new DebugCommand("testcall4"))).asButton());
 		outer.add(panel, BorderLayout.NORTH);
 		return outer;
 	}

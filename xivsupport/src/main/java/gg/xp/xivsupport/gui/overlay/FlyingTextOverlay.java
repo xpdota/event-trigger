@@ -117,8 +117,8 @@ public class FlyingTextOverlay extends XivOverlay {
 				else {
 					Dimension oldPref = extraComponent.getPreferredSize();
 					int newPrefHeight = templateHeight;
-					// New width is template height times preferred aspect ratio, but not to be more than 4:1
-					int extraComponentDesiredWidth = (int) Math.min(newPrefHeight * 4, oldPref.getWidth() / oldPref.getHeight() * newPrefHeight);
+					// New width is template height times preferred aspect ratio, but not to be more than 8:1
+					int extraComponentDesiredWidth = (int) Math.min(newPrefHeight * 8, oldPref.getWidth() / oldPref.getHeight() * newPrefHeight);
 					if (extraComponentDesiredWidth == 0) {
 						// If no preferred size set, just assume 1:1 is fine
 						//noinspection SuspiciousNameCombination

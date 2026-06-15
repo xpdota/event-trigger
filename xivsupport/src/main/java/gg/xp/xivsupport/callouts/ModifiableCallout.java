@@ -7,8 +7,12 @@ import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
 import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
+import gg.xp.xivsupport.gui.tables.renderers.ComponentListRenderer;
+import gg.xp.xivsupport.gui.tables.renderers.ComponentListStretchyRenderer;
+import gg.xp.xivsupport.gui.tables.renderers.HorizontalStretchIconList;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
+import gg.xp.xivsupport.gui.tables.renderers.StatusEffectListRenderer;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -18,10 +22,13 @@ import java.awt.*;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 // TODO: refactor all of this into a builder pattern
 
@@ -161,6 +168,15 @@ public class ModifiableCallout<X> {
 	 */
 	public ModifiableCallout<X> statusIcon(long statusId) {
 		this.guiProvider = e -> IconTextRenderer.getStretchyIcon(StatusEffectLibrary.iconForId(statusId, 0));
+		return this;
+	}
+
+	public ModifiableCallout<X> statusIcons(long... statusIds) {
+		this.guiProvider = e -> {
+			var renderer = new HorizontalStretchIconList(0.75f);
+			renderer.setComponents(Arrays.stream(statusIds).mapToObj(id -> IconTextRenderer.getStretchyIcon(StatusEffectLibrary.iconForId(id, 0))).toList());
+			return renderer;
+		};
 		return this;
 	}
 

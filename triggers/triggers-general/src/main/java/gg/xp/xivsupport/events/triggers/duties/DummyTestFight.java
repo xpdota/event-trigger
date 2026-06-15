@@ -19,6 +19,7 @@ public class DummyTestFight {
 			Use the 'Test Callouts' tab (above) to trigger these callouts.""");
 	private final ModifiableCallout<DebugCommand> dummy2 = new ModifiableCallout<>("Dummy Callout to Test Holds", "Test", "Test", x -> !dummyHold);
 	private final ModifiableCallout<DebugCommand> dummy3 = new ModifiableCallout<>("Dummy Callout to Test Variables", "{testVar} {testVar2} {random}");
+	private final ModifiableCallout<DebugCommand> dummy4 = new ModifiableCallout<DebugCommand>("Dummy Callout to Test Icons", "Foo").statusIcons(0x640, 0x641, 0x642, 0x643);
 	private final CalloutVar testVar = new CalloutVar("testVar", "Test Variable");
 	private final CalloutVar testVar2 = new CalloutVar("testVar2", "Test Variable 2").extendedDescription("This is a test variable with a description");
 
@@ -57,6 +58,13 @@ public class DummyTestFight {
 		if (event.getCommand().equals("testcall3")) {
 			boolean useVar2 = Math.random() > 0.5;
 			context.accept(dummy3.getModified(Map.of("random", useVar2 ? testVar2 : testVar)));
+		}
+	}
+
+	@HandleEvents
+	public void dummyCall4(EventContext context, DebugCommand event) {
+		if (event.getCommand().equals("testcall4")) {
+			context.accept(dummy4.getModified(event));
 		}
 	}
 }

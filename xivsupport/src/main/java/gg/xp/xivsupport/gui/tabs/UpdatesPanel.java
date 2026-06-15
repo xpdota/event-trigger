@@ -142,6 +142,9 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 				JOptionPane.showMessageDialog(SwingUtilities.getRoot(applyUpdatesButton), "There was an error updating the updater. This may fix itself after updates. ");
 			}
 			try {
+				// I think part of the issue with the random update launch failures might be that we write the file, but
+				// the writes haven't flushed yet so it fails to launch. See if this sleep fixes the issue.
+				Thread.sleep(1_000);
 				Platform.executeUpdater();
 			}
 			catch (Throwable e) {

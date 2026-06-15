@@ -569,6 +569,10 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		}
 	}
 
+	public AbilityCastStart findOrWaitForCastWithLocation(ActiveCastRepository repo, Predicate<AbilityCastStart> condition) {
+		return findOrWaitForCastWithLocation(repo, condition, false);
+	}
+
 	public DescribesCastLocation<AbilityCastStart> waitForCastLocation(AbilityCastStart event) {
 		if (event.getLocationInfo() != null) {
 			return event.getLocationInfo();

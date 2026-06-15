@@ -12,27 +12,38 @@ import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.ActorControlExtraEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
+import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
+import gg.xp.xivsupport.events.state.combatstate.StatusEffectCurrentStatus;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
+import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerConcurrencyMode;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.events.triggers.support.NpcCastCallout;
 import gg.xp.xivsupport.events.triggers.support.PlayerStatusCallout;
+import gg.xp.xivsupport.gui.util.HasFriendlyName;
 import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
+import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.EnumSetting;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -56,10 +67,14 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	private ActiveCastRepository casts;
 	private StatusEffectRepository buffs;
 
-	public DMU(XivState state, ActiveCastRepository casts, StatusEffectRepository buffs) {
+	private EnumSetting<CleanseCallOption> cleanseCallSetting;
+
+	public DMU(XivState state, ActiveCastRepository casts, StatusEffectRepository buffs, PersistenceProvider pers) {
 		this.state = state;
 		this.casts = casts;
 		this.buffs = buffs;
+		String settingsBase = "triggers.dmu.";
+		cleanseCallSetting = new EnumSetting<>(pers, settingsBase + "cleanse-call-setting", CleanseCallOption.class, CleanseCallOption.PRIOR_SET);
 	}
 
 	@Override
@@ -319,7 +334,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 				s.waitThenRefreshCombatants(200);
 				boolean westSafe2 = state.getLatestCombatantData(glowingHand2.getTarget()).getPos().x() > 100;
 
-				s.setParam("safeSpot2", westSafe2 ? WEST : ArenaSector.EAST);
+				s.setParam("safeSpot2", westSafe2 ? WEST : EAST);
 
 				confettis.stream().filter(ba -> ba.getTarget().isThePlayer()).findAny()
 						.ifPresentOrElse(ba -> s.updateCall(gravenConfetti2, ba), () -> {
@@ -342,21 +357,22 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 		LEFT,
 	}
 
-	private final ModifiableCallout<BuffApplied> ttNN = ModifiableCallout.durationBasedCall("TT: Double N", "Double North");
-	private final ModifiableCallout<BuffApplied> ttSS = ModifiableCallout.durationBasedCall("TT: Double S", "Double South");
-	private final ModifiableCallout<BuffApplied> ttEE = ModifiableCallout.durationBasedCall("TT: Double E", "Double East");
-	private final ModifiableCallout<BuffApplied> ttWW = ModifiableCallout.durationBasedCall("TT: Double W", "Double West");
+	// TODO: add double icons to these now that it is supported
+	private final ModifiableCallout<BuffApplied> ttNN = ModifiableCallout.<BuffApplied>durationBasedCall("TT: Double N", "Double North").statusIcons(0x130C, 0x130C);
+	private final ModifiableCallout<BuffApplied> ttSS = ModifiableCallout.<BuffApplied>durationBasedCall("TT: Double S", "Double South").statusIcons(0x130D, 0x130D);
+	private final ModifiableCallout<BuffApplied> ttEE = ModifiableCallout.<BuffApplied>durationBasedCall("TT: Double E", "Double East").statusIcons(0x130E, 0x130E);
+	private final ModifiableCallout<BuffApplied> ttWW = ModifiableCallout.<BuffApplied>durationBasedCall("TT: Double W", "Double West").statusIcons(0x130F, 0x130F);
 
-	private final ModifiableCallout<BuffApplied> ttNW = ModifiableCallout.<BuffApplied>durationBasedCall("TT: N -> W", "North West", "North -> West")
+	private final ModifiableCallout<BuffApplied> ttNW = ModifiableCallout.<BuffApplied>durationBasedCall("TT: N -> W", "North West", "North -> West").statusIcons(0x130C, 0x130F)
 			.extendedDescription("""
 					Note that these by default call the order in which the arrows will expire, i.e. right-to-left on the HUD.""");
-	private final ModifiableCallout<BuffApplied> ttNE = ModifiableCallout.durationBasedCall("TT: N -> E", "North East", "North -> East");
-	private final ModifiableCallout<BuffApplied> ttSW = ModifiableCallout.durationBasedCall("TT: S -> W", "South West", "South -> West");
-	private final ModifiableCallout<BuffApplied> ttSE = ModifiableCallout.durationBasedCall("TT: S -> E", "South East", "South -> East");
-	private final ModifiableCallout<BuffApplied> ttEN = ModifiableCallout.durationBasedCall("TT: E -> N", "East North", "East -> North");
-	private final ModifiableCallout<BuffApplied> ttES = ModifiableCallout.durationBasedCall("TT: E -> S", "East South", "East -> South");
-	private final ModifiableCallout<BuffApplied> ttWN = ModifiableCallout.durationBasedCall("TT: W -> N", "West North", "West -> North");
-	private final ModifiableCallout<BuffApplied> ttWS = ModifiableCallout.durationBasedCall("TT: W -> S", "West South", "West -> South");
+	private final ModifiableCallout<BuffApplied> ttNE = ModifiableCallout.<BuffApplied>durationBasedCall("TT: N -> E", "North East", "North -> East").statusIcons(0x130C, 0x130E);
+	private final ModifiableCallout<BuffApplied> ttSW = ModifiableCallout.<BuffApplied>durationBasedCall("TT: S -> W", "South West", "South -> West").statusIcons(0x130D, 0x130F);
+	private final ModifiableCallout<BuffApplied> ttSE = ModifiableCallout.<BuffApplied>durationBasedCall("TT: S -> E", "South East", "South -> East").statusIcons(0x130D, 0x130E);
+	private final ModifiableCallout<BuffApplied> ttEN = ModifiableCallout.<BuffApplied>durationBasedCall("TT: E -> N", "East North", "East -> North").statusIcons(0x130E, 0x130C);
+	private final ModifiableCallout<BuffApplied> ttES = ModifiableCallout.<BuffApplied>durationBasedCall("TT: E -> S", "East South", "East -> South").statusIcons(0x130E, 0x130D);
+	private final ModifiableCallout<BuffApplied> ttWN = ModifiableCallout.<BuffApplied>durationBasedCall("TT: W -> N", "West North", "West -> North").statusIcons(0x130F, 0x130C);
+	private final ModifiableCallout<BuffApplied> ttWS = ModifiableCallout.<BuffApplied>durationBasedCall("TT: W -> S", "West South", "West -> South").statusIcons(0x130F, 0x130D);
 	private final ModifiableCallout<BuffApplied> ttError = ModifiableCallout.durationBasedCall("TT: Error", "Error");
 
 	private final ModifiableCallout<BuffApplied> ttConfettiOnYou = ModifiableCallout.<BuffApplied>durationBasedCall("TT: Confetti on You", "Confetti on {confettiPlayers}").autoIcon();
@@ -787,7 +803,6 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout(0xC3F7)
 	private final ModifiableCallout<AbilityCastStart> aeroIIIAssault = ModifiableCallout.durationBasedCall("Aero III Assault", "Knockback");
 
-	// TODO: do the boss equivalents (epic villain 1061 and fated villain 1063) always go on same bosses? epic chaos
 	@PlayerStatusCallout(0x1060)
 	private final ModifiableCallout<BuffApplied> epicHero = new ModifiableCallout<BuffApplied>("Epic Hero", "Attack Chaos").autoIcon();
 	@PlayerStatusCallout(0x1062)
@@ -803,10 +818,10 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<BuffApplied> bowelsHeadwind = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Headwind Only", "Headwind").statusIcon(HEADWIND);
 	private final ModifiableCallout<BuffApplied> bowelsTailwind = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Tailwind Only", "Tailwind").statusIcon(TAILWIND);
-	private final ModifiableCallout<BuffApplied> bowelsHeadwindEntropy = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Headwind + Entropy", "Headwind and Entropy").statusIcon(ENTROPY);
-	private final ModifiableCallout<BuffApplied> bowelsTailwindEntropy = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Tailwind + Entropy", "Tailwind and Entropy").statusIcon(ENTROPY);
-	private final ModifiableCallout<BuffApplied> bowelsHeadwindDynamic = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Headwind + Dynamic Fluid", "Headwind and Dynamic Fluid").statusIcon(DYNAMIC);
-	private final ModifiableCallout<BuffApplied> bowelsTailwindDynamic = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Tailwind + Dynamic Fluid", "Tailwind and Dynamic Fluid").statusIcon(DYNAMIC);
+	private final ModifiableCallout<BuffApplied> bowelsHeadwindEntropy = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Headwind + Entropy", "Headwind and Entropy").statusIcons(ENTROPY, HEADWIND);
+	private final ModifiableCallout<BuffApplied> bowelsTailwindEntropy = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Tailwind + Entropy", "Tailwind and Entropy").statusIcons(ENTROPY, TAILWIND);
+	private final ModifiableCallout<BuffApplied> bowelsHeadwindDynamic = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Headwind + Dynamic Fluid", "Headwind and Dynamic Fluid").statusIcons(DYNAMIC, HEADWIND);
+	private final ModifiableCallout<BuffApplied> bowelsTailwindDynamic = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: Tailwind + Dynamic Fluid", "Tailwind and Dynamic Fluid").statusIcons(DYNAMIC, TAILWIND);
 
 	private final ModifiableCallout<BuffApplied> bowelsMyEntropySoon = ModifiableCallout.<BuffApplied>durationBasedCall("Bowels: My Entropy Soon", "Entropy On You Soon").statusIcon(ENTROPY);
 	private final ModifiableCallout<BuffApplied> bowelsOtherEntropySoon = ModifiableCallout.durationBasedCall("Bowels: Other Entropy Soon", "Entropies Soon");
@@ -871,8 +886,6 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 					s.call(bowelsOtherEntropySoon, anyEntropy);
 				}
 
-				// TODO: TB already handled elsewhere?
-				// TODO: vac wave KB?
 				BuffApplied anyDynamic = buffs.findBuffById(DYNAMIC);
 				// Wait until 5s left on buff
 				if (anyDynamic != null) {
@@ -1010,17 +1023,6 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityUsedEvent> longitudinalMove = new ModifiableCallout<>("Longitudinal Implosion: Move", "Front/Back");
 	private final ModifiableCallout<AbilityUsedEvent> latitudinalMove = new ModifiableCallout<>("Latitudinal Implosion: Move", "Sides");
 
-	@AutoFeed
-	private final SequentialTrigger<BaseEvent> longitudinalLatitudinalSq = SqtTemplates.sq(30_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBAFD, 0xBAFE),
-			(e1, s) -> {
-				boolean longi = e1.abilityIdMatches(0xBAFD);
-				s.updateCall(longi ? longitudinalCast : latitudinalCast, e1);
-				// BAFF is the actual hit
-				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xBAFF));
-				s.updateCall(longi ? longitudinalMove : latitudinalMove);
-			});
-
 	@NpcCastCallout(0xBB13)
 	private final ModifiableCallout<AbilityCastStart> vacuumWave = ModifiableCallout.durationBasedCall("Vacuum Wave", "Knockback from {event.source}");
 
@@ -1038,8 +1040,485 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 				// The one after limit cut
 			});
 
-//	@AutoFeed
-//	private final ModifiableCallout<>
+	private final ModifiableCallout<AbilityCastStart> earthquake = ModifiableCallout.durationBasedCall("Earthquake Initial", "Earthquake - 1 HP");
+
+	// These tell us the same information that the Primordial Crust duration tells us
+	// First = 72s, second = 106s, third = 139s
+	private static final int LINE_1 = 0xBBC;
+	private static final int LINE_2 = 0xBBD;
+	private static final int LINE_3 = 0xBBE;
+
+	private static final int ACCRETION = 0x644;
+	private static final int CRUST = 0x154E;
+
+	private enum AccretionRole {
+		FIRST_DPS(1),
+		FIRST_SUPPORT(1),
+		FIRST_ACCRETION(1),
+		SECOND_DPS(2, FIRST_DPS),
+		SECOND_SUPPORT(2, FIRST_SUPPORT),
+		SECOND_ACCRETION(2, FIRST_ACCRETION),
+		THIRD_DPS(3, SECOND_DPS),
+		THIRD_SUPPORT(3, SECOND_SUPPORT);
+
+		private final int set;
+		private final @Nullable AccretionRole previous;
+
+		AccretionRole(int set) {
+			this(set, null);
+		}
+
+		AccretionRole(int set, AccretionRole previous) {
+			this.set = set;
+			this.previous = previous;
+		}
+
+		public int getSet() {
+			return set;
+		}
+
+		public @Nullable AccretionRole getPrevious() {
+			return previous;
+		}
+	}
+
+	enum CleanseCallOption implements HasFriendlyName {
+		ALL("All Cleanses"),
+		MATCHED("Prior Set, Same Role"),
+		PRIOR_SET("Entire Prior Set");
+
+		private final String friendlyName;
+
+		CleanseCallOption(String friendlyName) {
+			this.friendlyName = friendlyName;
+		}
+
+		@Override
+		public String getFriendlyName() {
+			return friendlyName;
+		}
+	}
+
+	private final ModifiableCallout<BuffApplied> earthquake1supp = ModifiableCallout.<BuffApplied>durationBasedCall("Earthquake: First in Line (Support, No Accretion)", "First").statusIcon(LINE_1)
+			.extendedDescription("""
+					The variable {accretions} will contain the players who have accretion. Consider adding that to your callout if you are a healer or have a single-target healing buff.""");
+	private final ModifiableCallout<BuffApplied> earthquake2supp = ModifiableCallout.<BuffApplied>durationBasedCall("Earthquake: Second in Line (Support, No Accretion)", "Second").statusIcon(LINE_2);
+	private final ModifiableCallout<BuffApplied> earthquake3supp = ModifiableCallout.<BuffApplied>durationBasedCall("Earthquake: Third in Line (Support, No Accretion)", "Third").statusIcon(LINE_3);
+	private final ModifiableCallout<BuffApplied> earthquake1dps = ModifiableCallout.<BuffApplied>durationBasedCall("Earthquake: First in Line (Support, No Accretion)", "First").statusIcon(LINE_1);
+	private final ModifiableCallout<BuffApplied> earthquake2dps = ModifiableCallout.<BuffApplied>durationBasedCall("Earthquake: Second in Line (Support, No Accretion)", "Second").statusIcon(LINE_2);
+	private final ModifiableCallout<BuffApplied> earthquake3dps = ModifiableCallout.<BuffApplied>durationBasedCall("Earthquake: Third in Line (Support, No Accretion)", "Third").statusIcon(LINE_3);
+	private final ModifiableCallout<BuffApplied> earthquake1acc = ModifiableCallout.<BuffApplied>durationBasedCall("Earthquake: First in Line (Accretion)", "First + Accretion").statusIcons(LINE_1, ACCRETION);
+	private final ModifiableCallout<BuffApplied> earthquake2acc = ModifiableCallout.<BuffApplied>durationBasedCall("Earthquake: Second in Line (Accretion)", "Second + Accretion").statusIcons(LINE_2, ACCRETION);
+	private final ModifiableCallout<?> earthquakeInvalid = new ModifiableCallout<>("Earthquake: Invalid", "Error");
+
+	private static final Duration slapHappyDelay = Duration.ofMillis(3_700);
+	private final ModifiableCallout<AbilityCastStart> slapHappyRoles = ModifiableCallout.durationBasedCallWithOffset("Slap Happy: Roles", "Roles {safe}", slapHappyDelay);
+	private final ModifiableCallout<AbilityCastStart> slapHappyStack = ModifiableCallout.durationBasedCallWithOffset("Slap Happy: Stack", "Stack {safe}", slapHappyDelay);
+	private final ModifiableCallout<AbilityCastStart> damningEdict = ModifiableCallout.durationBasedCall("Damning Edict", "{safe} Behind Chaos");
+
+	private final ModifiableCallout<AbilityCastStart> earthquakeBodySlamDamningEdict = ModifiableCallout.durationBasedCall("Earthquake: Body Slam + Damning Edict", "{safeSpots} safe");
+	// Lat: front/back then sides
+	// Long: sides then front/back
+	private final ModifiableCallout<AbilityCastStart> earthquakeSlapHappyRolesLat = ModifiableCallout.<AbilityCastStart>durationBasedCall("Earthquake: Slap Happy + Lat: Front/Back First then Roles", "{firstSafe} then Roles {finalSafe}")
+			.extendedDescription("""
+					Please note that Chaos is not necessarily going to perfectly face a cardinal or intercard for this, so these directions are best-effort.
+					You may still need to use eyes.""");
+	private final ModifiableCallout<AbilityCastStart> earthquakeSlapHappyRolesLong = ModifiableCallout.durationBasedCall("Earthquake: Slap Happy + Long: Sides First then Roles", "{firstSafe} then Roles {finalSafe}");
+	private final ModifiableCallout<AbilityCastStart> earthquakeSlapHappyStackLat = ModifiableCallout.durationBasedCall("Earthquake: Slap Happy + Lat: Front/Back First then Stack", "{firstSafe} then Stack {finalSafe}");
+	private final ModifiableCallout<AbilityCastStart> earthquakeSlapHappyStackLong = ModifiableCallout.durationBasedCall("Earthquake: Slap Happy + Long: Sides First then Stack", "{firstSafe} then Stack {finalSafe}");
+
+	private final ModifiableCallout<AbilityCastStart> earthquakeSlapHappyFinalRolesLat = ModifiableCallout.durationBasedCallWithOffset("Earthquake: Slap Happy + Lat: Sides + Stack", "Roles {finalSafe}", slapHappyDelay);
+	private final ModifiableCallout<AbilityCastStart> earthquakeSlapHappyFinalRolesLong = ModifiableCallout.durationBasedCallWithOffset("Earthquake: Slap Happy + Long: Front/Back + Stack", "Roles {finalSafe}", slapHappyDelay);
+	private final ModifiableCallout<AbilityCastStart> earthquakeSlapHappyFinalStackLat = ModifiableCallout.durationBasedCallWithOffset("Earthquake: Slap Happy + Lat: Sides + Stack", "Stack {finalSafe}", slapHappyDelay);
+	private final ModifiableCallout<AbilityCastStart> earthquakeSlapHappyFinalStackLong = ModifiableCallout.durationBasedCallWithOffset("Earthquake: Slap Happy + Long: Front/Back + Stack", "Stack {finalSafe}", slapHappyDelay);
+
+	private final ModifiableCallout<AccretionRolesEvent> earthquakePersistentTracker = new ModifiableCallout<AccretionRolesEvent>("Earthquake: Persistent Text", "", "{event.onesRemaining} #1, {event.twosRemaining} #2, {event.threesRemaining #3}", AccretionRolesEvent::anyRemain)
+			.disabledByDefault()
+			.extendedDescription("""
+					This is a text-only callout that provides a persistent view of how many debuffs are still present in each role. You can use .onesRemaining, .twosRemaining, .threesRemaining, or .totalRemaining.""");
+
+	private final ModifiableCallout<BuffRemoved> earthquakeCleansed = new ModifiableCallout<BuffRemoved>("Earthquake: Debuff Cleansed", "{event.target} Cleansed")
+			.extendedDescription("""
+					You can control when this callout fires on the settings tab above.
+					By default, it works on a same-role, prior-set basis - i.e. #1 accretion cleansing will trigger this if you are #2 accretion.
+					This does NOT call your own debuff being removed - use the self cleanse call below for that.""");
+	private final ModifiableCallout<BuffRemoved> earthquakeSelfCleanse = new ModifiableCallout<>("Earthquake: Self Cleansed", "Cleansed");
+
+	// These are used in callout scriptlets
+	@SuppressWarnings("unused")
+	private final class AccretionRolesEvent extends BaseEvent {
+		final Map<AccretionRole, XivPlayerCharacter> roleMap;
+		final Map<XivPlayerCharacter, AccretionRole> combatantMap;
+		final @Nullable AccretionRole myRole;
+		final Map<XivPlayerCharacter, BuffApplied> crustBuffs;
+
+		private AccretionRolesEvent(Map<AccretionRole, XivPlayerCharacter> roleMap, Map<XivPlayerCharacter, AccretionRole> combatantMap, @Nullable AccretionRole myRole, Map<XivPlayerCharacter, BuffApplied> crustBuffs) {
+			this.roleMap = roleMap;
+			this.combatantMap = combatantMap;
+			this.myRole = myRole;
+			this.crustBuffs = crustBuffs;
+		}
+
+		long getTotalRemaining() {
+			return crustBuffs.values().stream().filter(crust -> buffs.statusOf(crust) == StatusEffectCurrentStatus.ACTIVE).count();
+		}
+
+		boolean anyRemain() {
+			return getTotalRemaining() > 0;
+		}
+
+		private long getRemaining(AccretionRole... roles) {
+			return Arrays.stream(roles).map(roleMap::get).filter(Objects::nonNull)
+					.map(crustBuffs::get).filter(Objects::nonNull)
+					.filter(buffs::originalStatusActive).count();
+		}
+
+		long getOnesRemaining() {
+			return getRemaining(AccretionRole.FIRST_ACCRETION, AccretionRole.FIRST_DPS, AccretionRole.FIRST_SUPPORT);
+		}
+
+		long getTwosRemaining() {
+			return getRemaining(AccretionRole.SECOND_ACCRETION, AccretionRole.SECOND_DPS, AccretionRole.SECOND_SUPPORT);
+		}
+
+		long getThreesRemaining() {
+			return getRemaining(AccretionRole.THIRD_DPS, AccretionRole.THIRD_SUPPORT);
+		}
+	}
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> earthquakeSq = SqtTemplates.sq(180_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xC571, 0xC572),
+			(e1, s) -> {
+				s.updateCall(earthquake, e1);
+				var crusts = s.waitEventsQuickSuccession(8, BuffApplied.class, ba -> ba.buffIdMatches(CRUST));
+				// Give time for accretions
+				s.waitMs(100);
+				var accretions = buffs.findBuffsById(ACCRETION);
+				List<XivCombatant> accretionPlayers = accretions.stream().map(BuffApplied::getTarget).toList();
+				s.setParam("accretions", accretionPlayers);
+				boolean iHaveAccretion = accretionPlayers.stream().anyMatch(XivCombatant::isThePlayer);
+				s.setParam("iHaveAccretion", iHaveAccretion);
+
+				Map<AccretionRole, XivPlayerCharacter> roleMap = new EnumMap<>(AccretionRole.class);
+				Map<XivPlayerCharacter, AccretionRole> combatantMap = new HashMap<>();
+				Map<XivPlayerCharacter, BuffApplied> crustBuffs = new HashMap<>();
+
+				/*
+				The role assignments are:
+				DPS with #1
+				Support with #1
+				DPS or support with #1 + accretion
+				DPS with #2
+				Support with #2
+				DPS or support with #2 + accretion
+				DPS with #3
+				Support with #3
+
+
+				 */
+				for (BuffApplied crust : crusts) {
+					long seconds = crust.getInitialDuration().toSeconds();
+					XivPlayerCharacter target = (XivPlayerCharacter) crust.getTarget();
+					boolean accretion = accretionPlayers.contains(target);
+					AccretionRole role;
+					if (seconds < 90) {
+						if (accretion) {
+							role = AccretionRole.FIRST_ACCRETION;
+						}
+						else if (target.getJob().isSupport()) {
+							role = AccretionRole.FIRST_SUPPORT;
+						}
+						else {
+							role = AccretionRole.FIRST_DPS;
+						}
+					}
+					else if (seconds < 120) {
+						if (accretion) {
+							role = AccretionRole.SECOND_ACCRETION;
+						}
+						else if (target.getJob().isSupport()) {
+							role = AccretionRole.SECOND_SUPPORT;
+						}
+						else {
+							role = AccretionRole.SECOND_DPS;
+						}
+					}
+					else {
+						if (accretion) {
+							// This isn't supposed to happen
+							log.error("Third in line also has accretion: crust {}, accretions {}", crust, accretions);
+							role = null;
+						}
+						else if (target.getJob().isSupport()) {
+							role = AccretionRole.THIRD_SUPPORT;
+						}
+						else {
+							role = AccretionRole.THIRD_DPS;
+						}
+					}
+					if (role != null) {
+						roleMap.put(role, target);
+						combatantMap.put(target, role);
+					}
+					crustBuffs.put(target, crust);
+				}
+				AccretionRole myRole = combatantMap.get(state.getPlayer());
+				s.accept(new AccretionRolesEvent(roleMap, combatantMap, myRole, crustBuffs));
+				// Everything past here on THIS SQ has no relation to roles or tethers. Just fire the event and let other SQs do that.
+
+				// Role slap happy:
+				// Boss ACEE 197 1E3A:0:0:0
+				// then ACEE 197 1E44:0:0:0
+				// Slap Happy BAE7 (4.7)
+				// Slap Happy BAE9 (1.2s)
+				// BB01 behind
+
+				{
+					log.info("Waiting for slap happy");
+					var slapHappy = s.findOrWaitForCastWithLocation(casts, acs -> acs.abilityIdMatches(0xBAE6, 0xBAE7));
+					ArenaSector bossFacing = ArenaPos.combatantFacing(slapHappy.getLocationInfo().getBestHeading());
+					s.setParam("bossFacing", bossFacing);
+					// People typically call these "left safe" or "right safe" but that is left/right looking at the boss
+					// who is actually outside the arena. The actual left/right relative to the boss's true facing direction
+					// is the opposite.
+					if (slapHappy.abilityIdMatches(0xBAE7)) {
+						// role stacks
+						s.setParam("safe", bossFacing.plusQuads(1));
+						s.updateCall(slapHappyRoles, slapHappy);
+					}
+					else {
+						// whole party stack
+						s.setParam("safe", bossFacing.plusQuads(-1));
+						s.updateCall(slapHappyStack, slapHappy);
+					}
+				}
+
+
+				/*
+				Stuff that might be useful to call:
+				* Persistent visual callout for how many people still have the debuff in each set
+				* One-by-one call for a member of the prior set cleansing
+				 */
+
+				// There is the front/back damning edict cleave and a slap happy at approximately the same time next
+				{
+					log.info("Waiting for Damning Edict");
+					AbilityCastStart damningEdictCast = s.findOrWaitForCastWithLocation(casts, acs -> acs.abilityIdMatches(0xBB01));
+					ArenaSector chaosFacing = ArenaPos.combatantFacing(damningEdictCast.getLocationInfo().getBestHeading());
+					s.setParam("chaosFacing", chaosFacing);
+					s.setParam("safe", chaosFacing.opposite());
+					// This will overlap, so don't use an exclusive call
+					s.call(damningEdict, damningEdictCast);
+				}
+				// Delay slightly so calls don't overlap too much
+				s.waitMs(1_500);
+				{
+					log.info("Waiting for Slap Happy #2");
+					var slapHappy = s.findOrWaitForCastWithLocation(casts, acs -> acs.abilityIdMatches(0xBAE6, 0xBAE7));
+					ArenaSector bossFacing = ArenaPos.combatantFacing(slapHappy.getLocationInfo().getBestHeading());
+					s.setParam("bossFacing", bossFacing);
+					// People typically call these "left safe" or "right safe" but that is left/right looking at the boss
+					// who is actually outside the arena. The actual left/right relative to the boss's true facing direction
+					// is the opposite.
+					if (slapHappy.abilityIdMatches(0xBAE7)) {
+						// role stacks
+						s.setParam("safe", bossFacing.plusQuads(1));
+						s.updateCall(slapHappyRoles, slapHappy);
+					}
+					else {
+						// whole party stack
+						s.setParam("safe", bossFacing.plusQuads(-1));
+						s.updateCall(slapHappyStack, slapHappy);
+					}
+					s.waitCastFinished(casts, slapHappy);
+				}
+				// Done:
+				// Next is damning edict again, but with Kefka doing a body slam cleave through the middle from whatever direction he's facing.
+				// Next up is lat/long + slap happy at the same time. Not entirely sure on the best way to call. Are they always aligned in some manner in terms of directions?
+
+				// Not done yet:
+				// Next is another body slam at the same time as the final tether appears.
+				/*
+				After that is a sequence of mechanics:
+				All players get blizzard AoEs which should be dropped in center.
+				One player will get a stack marker. Four players (commonly same role as stack marker player) will need to stack.
+				The other four, commonly the other role, will need to do a pair of 2-man towers.
+				Then the roles swap and you do stack/towers again.
+				Then you move out of middle (or wherever you put the stacks)
+				Exdeath casts blizzard III which is an ordained motion
+				 */
+
+				// slam + damning
+				{
+					log.info("Waiting for Damning + Despair (1/2)");
+					// this one is messy because the body slam is baited on a player. So it could be a massive safe spot, or
+					// two smaller safe spots, or a large safe spot and a small safe spot that sucks for melees.
+					// BAEC is the boss cast (3.7s + 1.0s), BAEE is cast by a fake actor (4.7s) but I'm pretty sure the latter is the real damaging AoE.
+					AbilityCastStart despairCast = s.findOrWaitForCastWithLocation(casts, acs -> acs.abilityIdMatches(0xBAEE));
+					// We intentionally look for these out-of-order to prevent issues with a previous cast interfering
+					AbilityCastStart damningEdictCast = s.findOrWaitForCastWithLocation(casts, acs -> acs.abilityIdMatches(0xBB01));
+					log.info("Waiting for Damning + Despair (2/2)");
+					// Frontal cleave
+					var edictFacing = ArenaPos.combatantFacing(damningEdictCast.getLocationInfo().getBestHeading());
+					// Line aoe
+					var despairFacing = ArenaPos.combatantFacing(despairCast.getLocationInfo().getBestHeading());
+					s.setParam("edictFacing", edictFacing);
+					s.setParam("despairFacing", despairFacing);
+					Set<ArenaSector> safe;
+					// case 1: body slam is in the same direction, or exact opposite direction, of the half room cleave
+					// e.g. both facing north - we want to call SW and SE
+					if (edictFacing == despairFacing || edictFacing.opposite() == despairFacing) {
+						log.info("Edict/despair case 1: {} {}", edictFacing, despairFacing);
+						safe = EnumSet.of(despairFacing.plusEighths(3), despairFacing.plusEighths(-3));
+					}
+					// case 2: body slam is perpendicular
+					// If slam is E-W, body slam N, then safe spot is S
+					else if (edictFacing.plusQuads(1) == despairFacing || edictFacing.plusQuads(-1) == despairFacing) {
+						log.info("Edict/despair case 2: {} {}", edictFacing, despairFacing);
+						safe = EnumSet.of(edictFacing.opposite());
+					}
+					// case 3: body slam is diagonal
+					// There are multiple ways we could do this, but I think it's best to call out the most melee-friendly
+					// safe spot.
+					// e.g. if cleave is E-W, cleave is NW, then we should call S.
+					else {
+						log.info("Edict/despair case 3: {} {}", edictFacing, despairFacing);
+						// The sides of the line aoe might be safe
+						safe = EnumSet.of(despairFacing.plusQuads(1), despairFacing.plusQuads(-1));
+						// Remove the areas getting hit by edict
+						safe.remove(edictFacing);
+						safe.remove(edictFacing.plusEighths(1));
+						safe.remove(edictFacing.plusEighths(-1));
+					}
+					s.setParam("safeSpots", safe);
+					s.updateCall(earthquakeBodySlamDamningEdict, despairCast);
+					// TODO: got wrong call
+					/*
+					Damning edict was South-Southwest - likely interpreted as south
+					Cleave was NW-SE
+					should have called NE
+					It called SE safe
+					 */
+				}
+
+				// lat/long + slap happy
+				{
+
+					log.info("Waiting for Slap Happy + Lat/Long (1/2)");
+					var slapHappy = s.findOrWaitForCastWithLocation(casts, acs -> acs.abilityIdMatches(0xBAE6, 0xBAE7));
+					log.info("Waiting for Slap Happy + Lat/Long (2/2)");
+					var latLong = s.findOrWaitForCastWithLocation(casts, acs -> acs.abilityIdMatches(0xBAFD, 0xBAFE));
+					boolean longi = latLong.abilityIdMatches(0xBAFD);
+					boolean roles = slapHappy.abilityIdMatches(0xBAE7);
+					ArenaSector bossFacing = ArenaPos.combatantFacing(slapHappy.getLocationInfo().getBestHeading());
+					ArenaSector latLongFacing = ArenaPos.combatantFacing(latLong.getLocationInfo().getBestHeading());
+					s.setParam("bossFacing", bossFacing);
+					s.setParam("latLongFacing", latLongFacing);
+					List<ArenaSector> slapHappyCleaving = roles ? List.of(bossFacing.plusEighths(-1), bossFacing.plusEighths(-2), bossFacing.plusEighths(-3))
+							: List.of(bossFacing.plusEighths(1), bossFacing.plusEighths(2), bossFacing.plusEighths(3));
+					Set<ArenaSector> frontBackSafe = EnumSet.of(latLongFacing.plusQuads(-1), latLongFacing.plusQuads(1));
+					Set<ArenaSector> sidesSafe = EnumSet.of(latLongFacing, latLongFacing.opposite());
+					frontBackSafe.removeAll(slapHappyCleaving);
+					sidesSafe.removeAll(slapHappyCleaving);
+					Set<ArenaSector> firstSafe;
+					Set<ArenaSector> finalSafe;
+					ModifiableCallout<AbilityCastStart> call;
+					ModifiableCallout<AbilityCastStart> nextCall;
+					if (longi) {
+						// sides first
+						firstSafe = sidesSafe;
+						finalSafe = frontBackSafe;
+						call = roles ? earthquakeSlapHappyRolesLong : earthquakeSlapHappyStackLong;
+						nextCall = roles ? earthquakeSlapHappyFinalRolesLong : earthquakeSlapHappyFinalStackLong;
+					}
+					else {
+						// front/back first
+						firstSafe = frontBackSafe;
+						finalSafe = sidesSafe;
+						call = roles ? earthquakeSlapHappyRolesLat : earthquakeSlapHappyStackLat;
+						nextCall = roles ? earthquakeSlapHappyFinalRolesLat : earthquakeSlapHappyFinalStackLat;
+					}
+					s.setParam("firstSafe", firstSafe);
+					s.setParam("finalSafe", finalSafe);
+					s.updateCall(call, latLong);
+
+					// BAFF is the actual hit
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xBAFF));
+					s.updateCall(nextCall, slapHappy);
+				}
+			}).setConcurrency(SequentialTriggerConcurrencyMode.BLOCK_NEW);
+
+	// This has to be defined after earthquakeSq
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> longitudinalLatitudinalSq = SqtTemplates.sq(30_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBAFD, 0xBAFE),
+			(e1, s) -> {
+				if (earthquakeSq.isActive()) {
+					return;
+				}
+				boolean longi = e1.abilityIdMatches(0xBAFD);
+				s.updateCall(longi ? longitudinalCast : latitudinalCast, e1);
+				// BAFF is the actual hit
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xBAFF));
+				s.updateCall(longi ? longitudinalMove : latitudinalMove);
+			});
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> earthquakeTethers = SqtTemplates.sq(180_000,
+			AccretionRolesEvent.class, ignored -> true,
+			(e1, s) -> {
+				// Initial call
+				var myRole = e1.myRole;
+				if (myRole == null) {
+					s.updateCall(earthquakeInvalid);
+					return;
+				}
+				var myBuff = e1.crustBuffs.get(state.getPlayer());
+				s.updateCall(switch (myRole) {
+					case FIRST_DPS -> earthquake1dps;
+					case FIRST_SUPPORT -> earthquake1supp;
+					case FIRST_ACCRETION -> earthquake1acc;
+					case SECOND_DPS -> earthquake2dps;
+					case SECOND_SUPPORT -> earthquake2supp;
+					case SECOND_ACCRETION -> earthquake2acc;
+					case THIRD_DPS -> earthquake3dps;
+					case THIRD_SUPPORT -> earthquake3supp;
+				}, myBuff);
+				s.call(earthquakePersistentTracker, e1);
+
+				while (e1.anyRemain()) {
+					BuffRemoved br = s.waitEvent(BuffRemoved.class, e -> e.buffIdMatches(CRUST));
+					XivPlayerCharacter target = (XivPlayerCharacter) br.getTarget();
+					AccretionRole targetRole = e1.combatantMap.get(target);
+					if (targetRole == null) {
+						// TODO
+						continue;
+					}
+					if (target.isThePlayer()) {
+						s.updateCall(earthquakeSelfCleanse);
+					}
+					else {
+						CleanseCallOption opt = cleanseCallSetting.get();
+						switch (opt) {
+							// Unconditional
+							case ALL -> s.updateCall(earthquakeCleansed, br);
+							case MATCHED -> {
+								if (myRole.getPrevious() == targetRole) {
+									s.updateCall(earthquakeCleansed, br);
+								}
+							}
+							case PRIOR_SET -> {
+								if (targetRole.getSet() == myRole.getSet() - 1) {
+									s.updateCall(earthquakeCleansed, br);
+								}
+							}
+						}
+					}
+				}
+				// TODO: tether calls
+				// Should really have a custom priority
+			});
 
 	// Exdeath Thunder III 6.7 BB12
 	// Exdeath Thunder III 4.7 BB09
@@ -1059,4 +1538,8 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	Agony:
 	Debuff players are one LP, non-debuff is another LP
 	 */
+
+	public EnumSetting<CleanseCallOption> getCleanseCallSetting() {
+		return cleanseCallSetting;
+	}
 }
