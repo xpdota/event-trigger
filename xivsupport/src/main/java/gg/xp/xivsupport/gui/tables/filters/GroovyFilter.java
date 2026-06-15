@@ -66,6 +66,7 @@ public class GroovyFilter<X> implements SplitVisualFilter<X> {
 		}
 		lastFilterText = filterText;
 		if (filterText == null || filterText.isBlank()) {
+			textBox.setToolTipText(null);
 			return null;
 		}
 		try {

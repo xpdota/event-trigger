@@ -87,14 +87,6 @@ public class TextFieldAsync<X> extends JTextField implements ResettableField {
 
 	private @Nullable String validationErrorMessage;
 
-	@Override
-	public String getToolTipText() {
-		if (validationErrorMessage != null) {
-			return validationErrorMessage;
-		}
-		return super.getToolTipText();
-	}
-
 	public boolean hasValidationError() {
 		return validationError;
 	}
