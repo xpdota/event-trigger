@@ -1593,6 +1593,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 			tetherCandidates = state.npcsById(19512).stream()
 					.map(blackholeTetherAp::forCombatant)
 					.filter(ArenaSector::isCardinal)
+					.sorted()
 					.toList();
 			log.info("getSimpleTetherSet: found {} candidates", tetherCandidates.size());
 		} while (tetherCandidates.size() < 3);
@@ -1634,10 +1635,11 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 					.filter(npc -> !seen.contains(npc))
 					.map(blackholeTetherAp::forCombatant)
 					.filter(ArenaSector::isCardinal)
+					.sorted()
 					.toList();
 			log.info("getStaggeredTetherSet: found {}/{} second set candidates", secondSet.size(), remainingSize);
 		} while (secondSet.size() < remainingSize);
-		var firstSet = tethers.stream().map(state::getLatestCombatantData).map(blackholeTetherAp::forCombatant).toList();
+		var firstSet = tethers.stream().map(state::getLatestCombatantData).map(blackholeTetherAp::forCombatant).sorted().toList();
 		var combined = new ArrayList<>(firstSet);
 		combined.addAll(secondSet);
 		return new StaggeredTethersResult(firstSet, secondSet, combined);
@@ -1648,6 +1650,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 			AccretionRolesEvent.class, ignored -> true,
 			(e1, s) -> {
 				// TODO: increase delays on these - it causes a lot of log spam
+				// TODO: think about better ways to sort these. Setting for TN vs boss relative?
 				// "Black Hole" action
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xBAFB));
 				// staggered 1 > 2 set
@@ -1710,7 +1713,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	Debuff players are one LP, non-debuff is another LP
 	 */
 
-	public EnumSetting<CleanseCallOption> getCleanseCallSetting() {
+	EnumSetting<CleanseCallOption> getCleanseCallSetting() {
 		return cleanseCallSetting;
 	}
 }
