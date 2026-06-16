@@ -21,6 +21,7 @@ import gg.xp.xivsupport.events.state.combatstate.StatusEffectCurrentStatus;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerConcurrencyMode;
+import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerController;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.events.triggers.support.NpcCastCallout;
 import gg.xp.xivsupport.events.triggers.support.PlayerStatusCallout;
@@ -36,11 +37,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -118,6 +121,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<?> gravenSpreadForLaser = new ModifiableCallout<>("Graven Image 1: Spread For Laser", "Line Spread");
 	private final ModifiableCallout<AbilityUsedEvent> gravenAvoidTower = new ModifiableCallout<>("Graven Image 1: Got Hit by Laser", "Avoid Tower");
+	// TODO: since everyone seems to conga this anyway, can look at X positions
 	private final ModifiableCallout<AbilityCastStart> gravenTakeTower = ModifiableCallout.durationBasedCall("Graven Image 1: Take Tower", "Take Tower");
 
 	private final ModifiableCallout<BuffApplied> gravenConfetti = ModifiableCallout.<BuffApplied>durationBasedCall("Graven Image 1: Confetti on You", "Confetti").autoIcon();
@@ -836,6 +840,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBAF2),
 			(e1, s) -> {
 				// TODO: would be cool for headwind call to expire when you lose it
+				// TODO: call crystal locations?
 				s.updateCall(bowelsInitial, e1);
 				var allBuffs = s.waitEventsQuickSuccession(12, BuffApplied.class, ba -> ba.buffIdMatches(ENTROPY, DYNAMIC, HEADWIND, TAILWIND));
 				XivPlayerCharacter player = state.getPlayer();
@@ -1144,6 +1149,23 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 					This does NOT call your own debuff being removed - use the self cleanse call below for that.""");
 	private final ModifiableCallout<BuffRemoved> earthquakeSelfCleanse = new ModifiableCallout<>("Earthquake: Self Cleansed", "Cleansed");
 
+	private final ModifiableCallout<?> earthquakeEarlyTetherSet1 = new ModifiableCallout<>("Earthquake: Tether Set #1 (One Tether)", "1: One Tether")
+			.extendedDescription("""
+					These calls are a reminder of which tether set will spawn, before the locations of the tether are known. '""");
+	private final ModifiableCallout<?> earthquakeEarlyTetherSet2 = new ModifiableCallout<>("Earthquake: Tether Set #2 (Two Tethers)", "2: Two Tethers");
+	private final ModifiableCallout<?> earthquakeEarlyTetherSet3 = new ModifiableCallout<>("Earthquake: Tether Set #3 (Three Tethers)", "3: Three Tethers");
+	private final ModifiableCallout<?> earthquakeEarlyTetherSet4 = new ModifiableCallout<>("Earthquake: Tether Set #4 (Three Tethers)", "4: Three Tethers");
+	private final ModifiableCallout<?> earthquakeEarlyTetherSet5 = new ModifiableCallout<>("Earthquake: Tether Set #5 (Two Tethers)", "5: Two Tethers");
+	private final ModifiableCallout<?> earthquakeEarlyTetherSet6 = new ModifiableCallout<>("Earthquake: Tether Set #6 (One Tether)", "6: One Tether");
+
+	private final ModifiableCallout<?> earthquakeTetherSet1 = new ModifiableCallout<>("Earthquake: Tether Set #1 (One then Two)", "{firstTethers} then {secondTethers}")
+			.extendedDescription("""
+					For tether sets that are 1 + 2 or 2 + 1 staggered spawns, {firstTethers} and {secondTethers} tell you the first vs second locations.
+					You can use {allTethers} for all locations.""");
+	private final ModifiableCallout<?> earthquakeTetherSet2 = new ModifiableCallout<>("Earthquake: Tether Set #3 (Three Tethers)", "{allTethers}");
+	private final ModifiableCallout<?> earthquakeTetherSet3 = new ModifiableCallout<>("Earthquake: Tether Set #4 (Three Tethers)", "{allTethers}");
+	private final ModifiableCallout<?> earthquakeTetherSet4 = new ModifiableCallout<>("Earthquake: Tether Set #6 (Two then One)", "{firstTethers} then {secondTethers}");
+
 	// These are used in callout scriptlets
 	@SuppressWarnings("unused")
 	private final class AccretionRolesEvent extends BaseEvent {
@@ -1151,6 +1173,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 		final Map<XivPlayerCharacter, AccretionRole> combatantMap;
 		final @Nullable AccretionRole myRole;
 		final Map<XivPlayerCharacter, BuffApplied> crustBuffs;
+		final Map<XivPlayerCharacter, AbilityUsedEvent> lastNothingnessHit = new HashMap<>();
 
 		private AccretionRolesEvent(Map<AccretionRole, XivPlayerCharacter> roleMap, Map<XivPlayerCharacter, AccretionRole> combatantMap, @Nullable AccretionRole myRole, Map<XivPlayerCharacter, BuffApplied> crustBuffs) {
 			this.roleMap = roleMap;
@@ -1183,6 +1206,13 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 
 		long getThreesRemaining() {
 			return getRemaining(AccretionRole.THIRD_DPS, AccretionRole.THIRD_SUPPORT);
+		}
+
+		public void recordNothingnessHit(AbilityUsedEvent hit) {
+			if (hit.getTarget() instanceof XivPlayerCharacter pc) {
+				lastNothingnessHit.put(pc, hit);
+
+			}
 		}
 	}
 
@@ -1417,8 +1447,8 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 					s.setParam("latLongFacing", latLongFacing);
 					List<ArenaSector> slapHappyCleaving = roles ? List.of(bossFacing.plusEighths(-1), bossFacing.plusEighths(-2), bossFacing.plusEighths(-3))
 							: List.of(bossFacing.plusEighths(1), bossFacing.plusEighths(2), bossFacing.plusEighths(3));
-					Set<ArenaSector> frontBackSafe = EnumSet.of(latLongFacing.plusQuads(-1), latLongFacing.plusQuads(1));
-					Set<ArenaSector> sidesSafe = EnumSet.of(latLongFacing, latLongFacing.opposite());
+					Set<ArenaSector> sidesSafe = EnumSet.of(latLongFacing.plusQuads(-1), latLongFacing.plusQuads(1));
+					Set<ArenaSector> frontBackSafe = EnumSet.of(latLongFacing, latLongFacing.opposite());
 					frontBackSafe.removeAll(slapHappyCleaving);
 					sidesSafe.removeAll(slapHappyCleaving);
 					Set<ArenaSector> firstSafe;
@@ -1465,7 +1495,17 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 			});
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> earthquakeTethers = SqtTemplates.sq(180_000,
+	private final SequentialTrigger<BaseEvent> earthquakeRolesRealCleanseTracker = SqtTemplates.sq(180_000,
+			AccretionRolesEvent.class, ignored -> true,
+			(e1, s) -> {
+				while (e1.anyRemain()) {
+					var hit = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xBAFC) && aue.isFirstTarget());
+					e1.recordNothingnessHit(hit);
+				}
+			});
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> earthquakeRolesCleanses = SqtTemplates.sq(180_000,
 			AccretionRolesEvent.class, ignored -> true,
 			(e1, s) -> {
 				// Initial call
@@ -1500,16 +1540,24 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 					}
 					else {
 						CleanseCallOption opt = cleanseCallSetting.get();
+						// An intended cleanse is one where the player in question was recently the primary target of "nothingness"
+						AbilityUsedEvent lastNothingnessHit = e1.lastNothingnessHit.get(target);
+						boolean isIntendedCleanse = lastNothingnessHit != null && lastNothingnessHit.getEffectiveTimeSince().toMillis() < 2_000;
 						switch (opt) {
 							// Unconditional
-							case ALL -> s.updateCall(earthquakeCleansed, br);
+							case ALL -> {
+								if (isIntendedCleanse) {
+									s.updateCall(earthquakeCleansed, br);
+								}
+							}
 							case MATCHED -> {
+								// This one does NOT have "intended cleanse" logic
 								if (myRole.getPrevious() == targetRole) {
 									s.updateCall(earthquakeCleansed, br);
 								}
 							}
 							case PRIOR_SET -> {
-								if (targetRole.getSet() == myRole.getSet() - 1) {
+								if (isIntendedCleanse && targetRole.getSet() == myRole.getSet() - 1) {
 									s.updateCall(earthquakeCleansed, br);
 								}
 							}
@@ -1518,6 +1566,129 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 				}
 				// TODO: tether calls
 				// Should really have a custom priority
+			});
+
+	// Tethers appear on four specific locations
+	private static final ArenaPos blackholeTetherAp = new ArenaPos(100, 100, 16.9, 16.9);
+
+	private static final int BLACK_HOLE = 0xBAFB;
+
+	private record StaggeredTethersResult(List<ArenaSector> firstSet, List<ArenaSector> secondSet,
+	                                      List<ArenaSector> combined) {
+	}
+
+	/**
+	 * For sets of three tethers, you can just look at the black hole NPCs and ignore tether events entirely,
+	 * since you can tell which ones will have the tethers.
+	 *
+	 * @param s
+	 * @return
+	 */
+	private List<ArenaSector> getSimpleTetherSet(SequentialTriggerController<BaseEvent> s) {
+		log.info("getSimpleTetherSet: start");
+		List<ArenaSector> tetherCandidates;
+		do {
+			s.waitThenRefreshCombatants(50);
+			// They should be 17 units away from center and on a cardinal
+			tetherCandidates = state.npcsById(19512).stream()
+					.map(blackholeTetherAp::forCombatant)
+					.filter(ArenaSector::isCardinal)
+					.toList();
+			log.info("getSimpleTetherSet: found {} candidates", tetherCandidates.size());
+		} while (tetherCandidates.size() < 3);
+		return tetherCandidates;
+	}
+
+	/**
+	 * For staggered tether sets, you can identify where the tethers will come from, but not which ones will be the first vs second set.
+	 * <p>
+	 * TODO: look into if there's some entity ID shenanigans that can be used
+	 *
+	 * @param s
+	 * @param firstSetExpected
+	 * @return
+	 */
+	private StaggeredTethersResult getStaggeredTetherSet(SequentialTriggerController<BaseEvent> s, int firstSetExpected) {
+		log.info("getStaggeredTetherSet: start");
+		List<XivCombatant> tethers = new ArrayList<>(firstSetExpected);
+		// Need to account for the possibility that a tether jumps instantly - we don't want to double count an NPC.
+		Set<XivCombatant> seen = new HashSet<>();
+		while (tethers.size() < firstSetExpected) {
+			var tetherEvent = s.waitEvent(TetherEvent.class, te -> te.eitherTargetMatches(cbt -> cbt.npcIdMatches(19512)));
+			var blackHole = tetherEvent.getTargetMatching(cbt -> cbt.npcIdMatches(19512));
+			boolean unique = seen.add(blackHole);
+			if (unique) {
+				tethers.add(blackHole);
+			}
+			log.info("getStaggeredTetherSet: found {} tethers", tethers.size());
+		}
+		int remainingSize = 3 - firstSetExpected;
+		log.info("getStaggeredTetherSet: finding non-tether NPCs");
+
+		List<ArenaSector> secondSet;
+		do {
+			s.waitThenRefreshCombatants(50);
+			// They should be 17 units away from center and on a cardinal
+			secondSet = state.npcsById(19512).stream()
+					// Exclude things we already got a tether from
+					.filter(npc -> !seen.contains(npc))
+					.map(blackholeTetherAp::forCombatant)
+					.filter(ArenaSector::isCardinal)
+					.toList();
+			log.info("getStaggeredTetherSet: found {}/{} second set candidates", secondSet.size(), remainingSize);
+		} while (secondSet.size() < remainingSize);
+		var firstSet = tethers.stream().map(state::getLatestCombatantData).map(blackholeTetherAp::forCombatant).toList();
+		var combined = new ArrayList<>(firstSet);
+		combined.addAll(secondSet);
+		return new StaggeredTethersResult(firstSet, secondSet, combined);
+	}
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> earthquakeTethers = SqtTemplates.sq(180_000,
+			AccretionRolesEvent.class, ignored -> true,
+			(e1, s) -> {
+				// TODO: increase delays on these - it causes a lot of log spam
+				// "Black Hole" action
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xBAFB));
+				// staggered 1 > 2 set
+				{
+					var set1 = getStaggeredTetherSet(s, 1);
+					s.setParam("firstTethers", set1.firstSet);
+					s.setParam("secondTethers", set1.secondSet);
+					s.setParam("allTethers", set1.secondSet);
+					s.updateCall(earthquakeTetherSet1);
+				}
+				// Damning Edict (frontal cleave)
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xBB01));
+
+				{
+					var set2 = getSimpleTetherSet(s);
+					s.clearParams();
+					s.setParam("allTethers", set2);
+					s.updateCall(earthquakeTetherSet2);
+				}
+
+				// Damning Edict (frontal cleave) again
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xBB01));
+
+				{
+					var set3 = getSimpleTetherSet(s);
+					s.clearParams();
+					s.setParam("allTethers", set3);
+					s.updateCall(earthquakeTetherSet3);
+				}
+
+				// White Hole
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xBD66));
+				// staggered 2 > 1 set
+				{
+					var set4 = getStaggeredTetherSet(s, 2);
+					s.setParam("firstTethers", set4.firstSet);
+					s.setParam("secondTethers", set4.secondSet);
+					s.setParam("allTethers", set4.secondSet);
+					s.updateCall(earthquakeTetherSet4);
+				}
+
 			});
 
 	// Exdeath Thunder III 6.7 BB12
