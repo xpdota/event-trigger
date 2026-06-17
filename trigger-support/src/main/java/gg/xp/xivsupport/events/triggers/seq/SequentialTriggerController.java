@@ -544,6 +544,10 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		}
 	}
 
+	public AbilityCastStart findOrWaitForCast(ActiveCastRepository repo, Predicate<AbilityCastStart> condition) {
+		return findOrWaitForCast(repo, condition, false);
+	}
+
 	/**
 	 * Like {@link #findOrWaitForCast(ActiveCastRepository, Predicate, boolean)}, but also requires that the cast have
 	 * location data. Waits if it does not find said data.

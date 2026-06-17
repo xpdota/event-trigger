@@ -50,6 +50,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static gg.xp.xivsupport.models.ArenaSector.CENTER;
 import static gg.xp.xivsupport.models.ArenaSector.EAST;
@@ -541,30 +542,30 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 //	private final ModifiableCallout<?> forsakenFollowupNothing = new ModifiableCallout<>("Forsaken: Followup Nothing", "Nothing");
 
 	// TODO These seem to fire too quickly after the previous call (forsakenTowerNpPfXyz)
-	private final ModifiableCallout<?> forsakenTowerCone = new ModifiableCallout<>("Forsaken: Followup Cone + Past/Future (Tower Call)", "Cone, Baits")
+	private final ModifiableCallout<?> forsakenTowerCone = new ModifiableCallout<>("Forsaken: Followup Cone + Past/Future (Tower Call)", "Cone with {buddy}, Baits")
 			.extendedDescription("""
 					The 'Tower Call' variants of these call remind you of which tower pattern you will need to do. These indicate that the tower set will be accompanied with Past/Future cast bar, while the other four indicate that it will be accompanied with All Things Ending resolving.
 					
 					In addition, the `towerSet` variable will let you see which set of towers it is (starting at 1 then incrementing each time towers go off). You can use expressions like `{towerSet % 2 == 0 ? 'even' : 'odd'}` to have conditional logic based on whether it is even or odd towers, or for doing things like swap callouts.""");
-	private final ModifiableCallout<?> forsakenTowerCircle = new ModifiableCallout<>("Forsaken: Followup Circle + Past/Future (Tower Call)", "Circle, Baits");
+	private final ModifiableCallout<?> forsakenTowerCircle = new ModifiableCallout<>("Forsaken: Followup Circle + Past/Future (Tower Call)", "Circle with {buddy}, Baits");
 	private final ModifiableCallout<?> forsakenTowerStack = new ModifiableCallout<>("Forsaken: Followup Stack + Past/Future (Tower Call)", "Stack, Baits");
 	private final ModifiableCallout<?> forsakenTowerNothing = new ModifiableCallout<>("Forsaken: Followup Nothing + Past/Future (Tower Call)", "Nothing, Baits");
 
 	private final ModifiableCallout<?> forsakenTowerNoPfCone = new ModifiableCallout<>("Forsaken: Followup Cone + No Past/Future (Tower Call)", "Cone");
 	private final ModifiableCallout<?> forsakenTowerNoPfCircle = new ModifiableCallout<>("Forsaken: Followup Circle + No Past/Future (Tower Call)", "Circle");
-	private final ModifiableCallout<?> forsakenTowerNoPfStack = new ModifiableCallout<>("Forsaken: Followup Stack + No Past/Future (Tower Call)", "Stack");
+	private final ModifiableCallout<?> forsakenTowerNoPfStack = new ModifiableCallout<>("Forsaken: Followup Stack + No Past/Future (Tower Call)", "Stack with {buddy}");
 	private final ModifiableCallout<?> forsakenTowerNoPfNothing = new ModifiableCallout<>("Forsaken: Followup Nothing + No Past/Future (Tower Call)", "Nothing");
 
 	private final ModifiableCallout<?> forsakenFollowupPastCone = new ModifiableCallout<>("Forsaken: Followup Cone + Past", "Cone, Bait Between")
 			.extendedDescription("""
 					This set of eight calls tells you that you need to bait for All Things Ending.""");
 	private final ModifiableCallout<?> forsakenFollowupPastCircle = new ModifiableCallout<>("Forsaken: Followup Circle + Past", "Circle, Bait Between");
-	private final ModifiableCallout<?> forsakenFollowupPastStack = new ModifiableCallout<>("Forsaken: Followup Stack + Past", "Stack, Bait Between");
+	private final ModifiableCallout<?> forsakenFollowupPastStack = new ModifiableCallout<>("Forsaken: Followup Stack + Past", "Stack with {buddy}, Bait Between");
 	private final ModifiableCallout<?> forsakenFollowupPastNothing = new ModifiableCallout<>("Forsaken: Followup Nothing + Past", "Nothing, Bait Between");
 
 	private final ModifiableCallout<?> forsakenFollowupFutureCone = new ModifiableCallout<>("Forsaken: Followup Cone + Future", "Cone, Bait Away");
 	private final ModifiableCallout<?> forsakenFollowupFutureCircle = new ModifiableCallout<>("Forsaken: Followup Circle + Future", "Circle, Bait Away");
-	private final ModifiableCallout<?> forsakenFollowupFutureStack = new ModifiableCallout<>("Forsaken: Followup Stack + Future", "Stack, Bait Away");
+	private final ModifiableCallout<?> forsakenFollowupFutureStack = new ModifiableCallout<>("Forsaken: Followup Stack + Future", "Stack with {buddy}, Bait Away");
 	private final ModifiableCallout<?> forsakenFollowupFutureNothing = new ModifiableCallout<>("Forsaken: Followup Nothing + Future", "Nothing, Bait Away");
 
 	private final ModifiableCallout<?> forsakenFinalFuture = new ModifiableCallout<>("Forsaken: Final Future Nothing", "Bait Away");
@@ -661,6 +662,14 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 					var myMech = markers.stream().filter(hm -> hm.getTarget().isThePlayer()).findAny()
 							.map(DMU::mechForHm)
 							.orElse(ForsakenMech.NONE);
+
+					// Find other person with same mechanic
+					s.setParam("buddy", markers.stream().filter(hm -> !hm.getTarget().isThePlayer())
+							.filter(hm -> mechForHm(hm) == myMech)
+							.findFirst()
+							.map(hm -> hm.getTargetMatching(XivCombatant::isPc))
+							.orElse(null));
+
 					// towerSet is which set of towers are about to go off. Initial towers were 1. First towers after that are 2.
 					// So even numbers are where we see the past/future cast (and require bait pattern), odd numbers are where we need to first bait the cleaves, and then get in "stack pattern".
 					s.setParam("towerSet", i);
@@ -669,6 +678,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 					if (hasPastFuture) {
 						// If this is a tower set with past/future, then what we need to do is:
 						// First call the "early call bait pattern"
+						// These are 0/2/2 pattern
 						s.updateCall(switch (myMech) {
 							case CONE -> forsakenTowerCone;
 							case CIRCLE -> forsakenTowerCircle;
@@ -684,6 +694,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 					else {
 						// If this is a tower set with all things ending, then what we need to do is:
 						// First call the correct future/past bait spot
+						// These are the 2/1/1 sets
 						if (nextFuture) {
 							s.updateCall(switch (myMech) {
 								case CONE -> forsakenFollowupFutureCone;
@@ -1109,9 +1120,9 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 					The variable {accretions} will contain the players who have accretion. Consider adding that to your callout if you are a healer or have a single-target healing buff.""");
 	private final ModifiableCallout<BuffApplied> earthquake2supp = ModifiableCallout.<BuffApplied>durationBasedCall("Earthquake: Second in Line (Support, No Accretion)", "Second").statusIcon(LINE_2);
 	private final ModifiableCallout<BuffApplied> earthquake3supp = ModifiableCallout.<BuffApplied>durationBasedCall("Earthquake: Third in Line (Support, No Accretion)", "Third").statusIcon(LINE_3);
-	private final ModifiableCallout<BuffApplied> earthquake1dps = ModifiableCallout.<BuffApplied>durationBasedCall("Earthquake: First in Line (Support, No Accretion)", "First").statusIcon(LINE_1);
-	private final ModifiableCallout<BuffApplied> earthquake2dps = ModifiableCallout.<BuffApplied>durationBasedCall("Earthquake: Second in Line (Support, No Accretion)", "Second").statusIcon(LINE_2);
-	private final ModifiableCallout<BuffApplied> earthquake3dps = ModifiableCallout.<BuffApplied>durationBasedCall("Earthquake: Third in Line (Support, No Accretion)", "Third").statusIcon(LINE_3);
+	private final ModifiableCallout<BuffApplied> earthquake1dps = ModifiableCallout.<BuffApplied>durationBasedCall("Earthquake: First in Line (DPS, No Accretion)", "First").statusIcon(LINE_1);
+	private final ModifiableCallout<BuffApplied> earthquake2dps = ModifiableCallout.<BuffApplied>durationBasedCall("Earthquake: Second in Line (DPS, No Accretion)", "Second").statusIcon(LINE_2);
+	private final ModifiableCallout<BuffApplied> earthquake3dps = ModifiableCallout.<BuffApplied>durationBasedCall("Earthquake: Third in Line (DPS, No Accretion)", "Third").statusIcon(LINE_3);
 	private final ModifiableCallout<BuffApplied> earthquake1acc = ModifiableCallout.<BuffApplied>durationBasedCall("Earthquake: First in Line (Accretion)", "First + Accretion").statusIcons(LINE_1, ACCRETION);
 	private final ModifiableCallout<BuffApplied> earthquake2acc = ModifiableCallout.<BuffApplied>durationBasedCall("Earthquake: Second in Line (Accretion)", "Second + Accretion").statusIcons(LINE_2, ACCRETION);
 	private final ModifiableCallout<?> earthquakeInvalid = new ModifiableCallout<>("Earthquake: Invalid", "Error");
@@ -1682,6 +1693,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 				}
 
 				// White Hole
+				// TODO: do we need a call for white hole?
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xBD66));
 				// staggered 2 > 1 set
 				{
@@ -1711,7 +1723,36 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	/*
 	Agony:
 	Debuff players are one LP, non-debuff is another LP
+
+
+	Kefka Says:
+	We get the various debuffs but they can be real or fake
+
+	Kefka does the arena stuff
+	Exdeath gives the debuffs - the debuffs are real or fake based on his headmarker
+
+	Acceleration bomb will be stillness or motion
+	e.g. fake = motion
+
+	Chaos cats tsunami but it's fake so actually inferno
+
+
+	Second set of grand cross debuffs
+
+	Next set doesn't matter if it's real or fake, they're double negative
+
+	e.g. undying means you want to get hit by blue
+	Always just get hit by the color you have
+
+	Next part seems to be debuff vomit
 	 */
+
+	private static final int WHITE_WOUND = 0x15A5;
+	private static final int BLACK_WOUND = 0x15A6;
+	private static final int SHRIEK = 0x15A7;
+	private static final int FORK = 0x15A8;
+	private static final int WATER = 0x15A9;
+	private static final int ACCEL = 0x15AA;
 
 	EnumSetting<CleanseCallOption> getCleanseCallSetting() {
 		return cleanseCallSetting;

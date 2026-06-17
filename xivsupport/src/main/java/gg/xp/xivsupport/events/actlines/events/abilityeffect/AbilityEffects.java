@@ -136,6 +136,8 @@ public final class AbilityEffects {
 				// reflect
 				return new ReflectFlagEffect(flags, value);
 
+			// 1F is knockback
+
 			case 61:
 				return new TeleportEffect(flags, value);
 
