@@ -227,6 +227,11 @@ public class WsHandlerTests {
 		// something irrelevant.
 		master.pushEventAndWait(new ActWsRawMsg(combatantsMsg.replaceAll("10000", "9999")));
 
+		// Just doing this to force a memory barrier
+		Object foo = new Object();
+		synchronized (foo) {
+			log.info("Dummy synchronized block to force memory barrier");
+		}
 		player = xivState.getPlayer();
 		Assert.assertEquals(player.getHp(), hpOver);
 		Assert.assertEquals(player.getPos(), originalPos);

@@ -940,6 +940,8 @@ public class GuiMain {
 			allOverlayControls.add(new IntSettingSpinner(oc.getMinFps(), "Min Overlay FPS").getComponent());
 			allOverlayControls.add(new IntSettingSpinner(oc.getMaxFps(), "Max Overlay FPS").getComponent());
 
+			allOverlayControls.add(new EasyAction("Fix Visibility", overlayMain::resetOverlayVisibility).asButton());
+
 			panel.add(allOverlayControls, c);
 			c.gridy++;
 		}

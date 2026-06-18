@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.gui.tabs;
 
 import gg.xp.reevent.events.BasicEventDistributor;
+import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.NoAutoScan;
 import gg.xp.xivsupport.callouts.audio.SoundPlayer;
@@ -10,6 +11,7 @@ import gg.xp.xivsupport.events.misc.Stats;
 import gg.xp.xivsupport.events.triggers.duties.ewult.omega.BooleanSettingHidingPanel;
 import gg.xp.xivsupport.events.ws.ActWsConnectionStatusChangedEvent;
 import gg.xp.xivsupport.events.ws.ActWsLogSource;
+import gg.xp.xivsupport.events.ws.ActWsReconnectRequest;
 import gg.xp.xivsupport.events.ws.WsState;
 import gg.xp.xivsupport.gui.KeyValueDisplaySet;
 import gg.xp.xivsupport.gui.KeyValuePairDisplay;
@@ -21,6 +23,7 @@ import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.WrapperPanel;
 import gg.xp.xivsupport.gui.overlay.OverlayConfig;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
+import gg.xp.xivsupport.gui.util.EasyAction;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
@@ -310,6 +313,8 @@ public class AdvancedTab extends SmartTabbedPane implements Refreshable {
 						}
 				)));
 				connPanel.add(connectedDisp);
+				var reconnectButton = new EasyAction("Force Reconnect", () -> container.getComponent(EventMaster.class).pushEvent(new ActWsReconnectRequest()));
+				connPanel.add(reconnectButton.asButton());
 				WsURISettingGui ui = new WsURISettingGui(actWs.getUriSetting(), "OverlayPlugin WS URI:");
 				connPanel.add(Box.createHorizontalStrut(16384));
 				connPanel.add(ui.getLabelOnly());

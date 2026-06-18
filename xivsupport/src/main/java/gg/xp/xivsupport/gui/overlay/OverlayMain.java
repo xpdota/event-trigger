@@ -12,7 +12,6 @@ import gg.xp.xivsupport.events.state.InCombatChangeEvent;
 import gg.xp.xivsupport.events.state.PrimaryPlayerOnlineStatusChangedEvent;
 import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
-import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -115,7 +114,8 @@ public final class OverlayMain {
 			}, om -> 200L).start();
 			try {
 				// Wait for EDT queue to drain
-				SwingUtilities.invokeAndWait(() -> {});
+				SwingUtilities.invokeAndWait(() -> {
+				});
 			}
 			catch (InterruptedException | InvocationTargetException e) {
 				//
@@ -192,6 +192,35 @@ public final class OverlayMain {
 			}
 		});
 	}
+
+	public void resetOverlayVisibility() {
+		// TODO: investigate more why this actually happens.
+		// Maybe the frame is the correct size, but the contents are 0x0, but frame-level visibility toggle causes it to repack?
+		new Thread(() -> {
+			this.overlays.forEach(o -> {
+				try {
+					SwingUtilities.invokeAndWait(() -> {
+						o.getFrame().setVisible(false);
+					});
+				}
+				catch (InterruptedException | InvocationTargetException e) {
+					throw new RuntimeException(e);
+				}
+			});
+			this.overlays.forEach(o -> {
+				try {
+					SwingUtilities.invokeAndWait(() -> {
+						o.getFrame().setVisible(true);
+					});
+				}
+				catch (InterruptedException | InvocationTargetException e) {
+					throw new RuntimeException(e);
+				}
+			});
+			this.recalc();
+		}).start();
+	}
+
 
 	public List<XivOverlay> getOverlays() {
 		return new ArrayList<>(overlays);

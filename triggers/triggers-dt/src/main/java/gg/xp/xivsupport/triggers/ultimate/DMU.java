@@ -1135,18 +1135,24 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> earthquakeBodySlamDamningEdict = ModifiableCallout.durationBasedCall("Earthquake: Body Slam + Damning Edict", "{safeSpots} safe");
 	// Lat: front/back then sides
 	// Long: sides then front/back
-	private final ModifiableCallout<AbilityCastStart> earthquakeSlapHappyRolesLat = ModifiableCallout.<AbilityCastStart>durationBasedCall("Earthquake: Slap Happy + Lat: Front/Back First then Roles", "{firstSafe} then Roles {finalSafe}")
+	private final ModifiableCallout<AbilityCastStart> earthquakeSlapHappyRolesLat = ModifiableCallout.<AbilityCastStart>durationBasedCall("Earthquake: Slap Happy + Lat: Front/Back First then Roles", "{firstSafe} to {secondSafe}, Roles {finalSafe}")
 			.extendedDescription("""
 					Please note that Chaos is not necessarily going to perfectly face a cardinal or intercard for this, so these directions are best-effort.
-					You may still need to use eyes.""");
-	private final ModifiableCallout<AbilityCastStart> earthquakeSlapHappyRolesLong = ModifiableCallout.durationBasedCall("Earthquake: Slap Happy + Long: Sides First then Roles", "{firstSafe} then Roles {finalSafe}");
-	private final ModifiableCallout<AbilityCastStart> earthquakeSlapHappyStackLat = ModifiableCallout.durationBasedCall("Earthquake: Slap Happy + Lat: Front/Back First then Stack", "{firstSafe} then Stack {finalSafe}");
-	private final ModifiableCallout<AbilityCastStart> earthquakeSlapHappyStackLong = ModifiableCallout.durationBasedCall("Earthquake: Slap Happy + Long: Sides First then Stack", "{firstSafe} then Stack {finalSafe}");
+					You may still need to use eyes.
+					`{firstSafe}` is one or more directions that is/are safe for the initial hit of lat/long and are adjacent to the final safe spot.
+					`{secondSafe}` is one or more directions that is/are safe for the second hit of lat/long and are adjacent to the final safe spot.
+					`{finalSafe}` is the slap happy safe direction.
+					Note that it is technically possible to use the {secondSafe} spot for a party stack, but this is not a standard strategy.""");
+	private final ModifiableCallout<AbilityCastStart> earthquakeSlapHappyRolesLong = ModifiableCallout.durationBasedCall("Earthquake: Slap Happy + Long: Sides First then Roles", "{firstSafe} to {secondSafe}, Roles {finalSafe}");
+	private final ModifiableCallout<AbilityCastStart> earthquakeSlapHappyStackLat = ModifiableCallout.durationBasedCall("Earthquake: Slap Happy + Lat: Front/Back First then Stack", "{firstSafe} to {secondSafe}, Stack {finalSafe}");
+	private final ModifiableCallout<AbilityCastStart> earthquakeSlapHappyStackLong = ModifiableCallout.durationBasedCall("Earthquake: Slap Happy + Long: Sides First then Stack", "{firstSafe} to {secondSafe}, Stack {finalSafe}");
 
 	private final ModifiableCallout<AbilityCastStart> earthquakeSlapHappyFinalRolesLat = ModifiableCallout.durationBasedCallWithOffset("Earthquake: Slap Happy + Lat: Sides + Stack", "Roles {finalSafe}", slapHappyDelay);
 	private final ModifiableCallout<AbilityCastStart> earthquakeSlapHappyFinalRolesLong = ModifiableCallout.durationBasedCallWithOffset("Earthquake: Slap Happy + Long: Front/Back + Stack", "Roles {finalSafe}", slapHappyDelay);
 	private final ModifiableCallout<AbilityCastStart> earthquakeSlapHappyFinalStackLat = ModifiableCallout.durationBasedCallWithOffset("Earthquake: Slap Happy + Lat: Sides + Stack", "Stack {finalSafe}", slapHappyDelay);
 	private final ModifiableCallout<AbilityCastStart> earthquakeSlapHappyFinalStackLong = ModifiableCallout.durationBasedCallWithOffset("Earthquake: Slap Happy + Long: Front/Back + Stack", "Stack {finalSafe}", slapHappyDelay);
+
+	private final ModifiableCallout<AbilityCastStart> earthquakeDespairOnly = ModifiableCallout.durationBasedCall("Earthquake: Despair Only", "{safe} Safe");
 
 	private final ModifiableCallout<AccretionRolesEvent> earthquakePersistentTracker = new ModifiableCallout<AccretionRolesEvent>("Earthquake: Persistent Text", "", "{event.onesRemaining} #1, {event.twosRemaining} #2, {event.threesRemaining #3}", AccretionRolesEvent::anyRemain)
 			.disabledByDefault()
@@ -1159,15 +1165,6 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 					By default, it works on a same-role, prior-set basis - i.e. #1 accretion cleansing will trigger this if you are #2 accretion.
 					This does NOT call your own debuff being removed - use the self cleanse call below for that.""");
 	private final ModifiableCallout<BuffRemoved> earthquakeSelfCleanse = new ModifiableCallout<>("Earthquake: Self Cleansed", "Cleansed");
-
-	private final ModifiableCallout<?> earthquakeEarlyTetherSet1 = new ModifiableCallout<>("Earthquake: Tether Set #1 (One Tether)", "1: One Tether")
-			.extendedDescription("""
-					These calls are a reminder of which tether set will spawn, before the locations of the tether are known. '""");
-	private final ModifiableCallout<?> earthquakeEarlyTetherSet2 = new ModifiableCallout<>("Earthquake: Tether Set #2 (Two Tethers)", "2: Two Tethers");
-	private final ModifiableCallout<?> earthquakeEarlyTetherSet3 = new ModifiableCallout<>("Earthquake: Tether Set #3 (Three Tethers)", "3: Three Tethers");
-	private final ModifiableCallout<?> earthquakeEarlyTetherSet4 = new ModifiableCallout<>("Earthquake: Tether Set #4 (Three Tethers)", "4: Three Tethers");
-	private final ModifiableCallout<?> earthquakeEarlyTetherSet5 = new ModifiableCallout<>("Earthquake: Tether Set #5 (Two Tethers)", "5: Two Tethers");
-	private final ModifiableCallout<?> earthquakeEarlyTetherSet6 = new ModifiableCallout<>("Earthquake: Tether Set #6 (One Tether)", "6: One Tether");
 
 	private final ModifiableCallout<?> earthquakeTetherSet1 = new ModifiableCallout<>("Earthquake: Tether Set #1 (One then Two)", "{firstTethers} then {secondTethers}")
 			.extendedDescription("""
@@ -1228,7 +1225,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	}
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> earthquakeSq = SqtTemplates.sq(180_000,
+	private final SequentialTrigger<BaseEvent> earthquakeSq = SqtTemplates.sq(240_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xC571, 0xC572),
 			(e1, s) -> {
 				s.updateCall(earthquake, e1);
@@ -1456,37 +1453,49 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 					ArenaSector latLongFacing = ArenaPos.combatantFacing(latLong.getLocationInfo().getBestHeading());
 					s.setParam("bossFacing", bossFacing);
 					s.setParam("latLongFacing", latLongFacing);
-					List<ArenaSector> slapHappyCleaving = roles ? List.of(bossFacing.plusEighths(-1), bossFacing.plusEighths(-2), bossFacing.plusEighths(-3))
-							: List.of(bossFacing.plusEighths(1), bossFacing.plusEighths(2), bossFacing.plusEighths(3));
+					ArenaSector slapHappyCleavingTowards = roles ? bossFacing.plusQuads(-1) : bossFacing.plusQuads(1);
+					List<ArenaSector> slapHappyCleaving = List.of(slapHappyCleavingTowards.plusEighths(-1), slapHappyCleavingTowards, slapHappyCleavingTowards.plusEighths(1));
 					Set<ArenaSector> sidesSafe = EnumSet.of(latLongFacing.plusQuads(-1), latLongFacing.plusQuads(1));
 					Set<ArenaSector> frontBackSafe = EnumSet.of(latLongFacing, latLongFacing.opposite());
 					frontBackSafe.removeAll(slapHappyCleaving);
 					sidesSafe.removeAll(slapHappyCleaving);
 					Set<ArenaSector> firstSafe;
-					Set<ArenaSector> finalSafe;
+					Set<ArenaSector> secondSafe;
+					ArenaSector finalSafe = slapHappyCleavingTowards.opposite();
 					ModifiableCallout<AbilityCastStart> call;
 					ModifiableCallout<AbilityCastStart> nextCall;
 					if (longi) {
 						// sides first
 						firstSafe = sidesSafe;
-						finalSafe = frontBackSafe;
+						secondSafe = frontBackSafe;
 						call = roles ? earthquakeSlapHappyRolesLong : earthquakeSlapHappyStackLong;
 						nextCall = roles ? earthquakeSlapHappyFinalRolesLong : earthquakeSlapHappyFinalStackLong;
 					}
 					else {
 						// front/back first
 						firstSafe = frontBackSafe;
-						finalSafe = sidesSafe;
+						secondSafe = sidesSafe;
 						call = roles ? earthquakeSlapHappyRolesLat : earthquakeSlapHappyStackLat;
 						nextCall = roles ? earthquakeSlapHappyFinalRolesLat : earthquakeSlapHappyFinalStackLat;
 					}
 					s.setParam("firstSafe", firstSafe);
+					s.setParam("secondSafe", secondSafe);
 					s.setParam("finalSafe", finalSafe);
 					s.updateCall(call, latLong);
 
 					// BAFF is the actual hit
 					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xBAFF));
 					s.updateCall(nextCall, slapHappy);
+				}
+
+				// Despair only
+				{
+					AbilityCastStart despairCast = s.findOrWaitForCastWithLocation(casts, acs -> acs.abilityIdMatches(0xBAEE));
+					var despairFacing = ArenaPos.combatantFacing(despairCast.getLocationInfo().getBestHeading());
+					s.setParam("despairFacing", despairFacing);
+					var safe = List.of(despairFacing.plusQuads(1), despairFacing.plusQuads(-1));
+					s.setParam("safe", safe);
+					s.updateCall(earthquakeDespairOnly, despairCast);
 				}
 			}).setConcurrency(SequentialTriggerConcurrencyMode.BLOCK_NEW);
 
@@ -1705,6 +1714,82 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 				}
 
 			});
+
+	private final ModifiableCallout<AbilityCastStart> stompAMole = ModifiableCallout.durationBasedCall("Stomp-a-Mole: Initial Cast", "Stacks");
+	private final ModifiableCallout<AbilityCastStart> stompAMoleMove1 = ModifiableCallout.durationBasedCall("Stomp-a-Mole: Move 1", "Move");
+	private final ModifiableCallout<HeadMarkerEvent> stompAMoleStackMarker1 = new ModifiableCallout<HeadMarkerEvent>("Stomp-a-Mole: Stack Marker 1", "Stack on {event.target.job.support ? 'Support' : 'DPS'}")
+			.extendedDescription("""
+					You can reference your own role to make this call directly tell you whether to stack or take towers,
+					e.g. `{event.target.job.support == state.player.job.support ? 'Stack' : 'Towers'}""");
+	// TODO: split this
+	private final ModifiableCallout<AbilityCastStart> stompAMoleMove2 = ModifiableCallout.durationBasedCall("Stomp-a-Mole: Move 2", "Move");
+	private final ModifiableCallout<AbilityCastStart> stompAMoleSwitch = ModifiableCallout.durationBasedCall("Stomp-a-Mole: Swap", "Swap");
+	private final ModifiableCallout<AbilityCastStart> bigBangAndB3 = ModifiableCallout.durationBasedCall("Stomp-a-Mole: Blizzard + Big Bang", "Away from Stacks, Keep Moving");
+
+	private final ModifiableCallout<AbilityCastStart> p3normalEnrage = ModifiableCallout.durationBasedCall("P3 Enrage (Normal)", "Enrage");
+	private final ModifiableCallout<AbilityCastStart> p3bowelsEnrage = ModifiableCallout.durationBasedCall("P3 Enrage (Bowels of Agony)", "Failed");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> stompAMoleSq = SqtTemplates.sq(30_000,
+			// TODO: this starts too late
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBAEF),
+			(e1, s) -> {
+				s.updateCall(stompAMole, e1);
+				// Blizzard
+				var b1 = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBB0D));
+				s.updateCall(stompAMoleMove1, b1);
+				var stackMarker = s.waitEvent(HeadMarkerEvent.class, hme -> hme.markerIdMatches(0xA1));
+				s.setParam("stackOn", stackMarker.getTarget());
+				s.call(stompAMoleStackMarker1, stackMarker);
+				var b2 = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBB0D));
+				s.updateCall(stompAMoleMove2, b2);
+
+				// Did we get hit by first stomp??
+				List<AbilityUsedEvent> knockHits = s.collectAoeHits(aue -> aue.abilityIdMatches(0xBB03));
+				List<AbilityUsedEvent> stompHits = s.collectAoeHits(aue -> aue.abilityIdMatches(0xBAF0));
+				if (Stream.concat(knockHits.stream(), stompHits.stream()).anyMatch(e -> e.getTarget().isThePlayer())) {
+					s.updateCall(stompAMoleSwitch);
+				}
+				else {
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xBAF0));
+					s.updateCall(stompAMoleSwitch);
+				}
+
+				var b3 = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBB11));
+				s.updateCall(bigBangAndB3, b3);
+
+				// TODO enrage
+				// Confirmed:
+				// C258 = meteor fail
+				// C259 = bowels of agony fail
+
+				// From fflogs:
+				// C61E = meteor normal enrage
+
+				// Unconfirmed:
+				// C61F = bowels of agony normal enrage
+				var enrages = s.waitEventsQuickSuccession(2, AbilityCastStart.class, acs -> acs.abilityIdMatches(0xC61E, 0xC61F, 0xC258, 0xC259));
+				enrages.stream().filter(e -> e.abilityIdMatches(0xC258, 0xC259))
+						.findAny()
+						.ifPresentOrElse(badEnrage -> {
+							s.updateCall(p3bowelsEnrage, badEnrage);
+						}, () -> {
+							var anyEnrage = enrages.get(0);
+							s.updateCall(p3normalEnrage, anyEnrage);
+						});
+
+
+				/*
+				IDs:
+				BAEF 4.7s initial cast
+				BAF0 1.2s individual food (staggered)
+				BB0D 2.7s blizzard
+				BB02 4.7s knock down (stack?)
+				BB03 knock down actual damage
+				 */
+
+			});
+
 
 	// Exdeath Thunder III 6.7 BB12
 	// Exdeath Thunder III 4.7 BB09

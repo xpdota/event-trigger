@@ -1,7 +1,5 @@
 package gg.xp.xivsupport.events.ws;
 
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
 import gg.xp.reevent.context.StateStore;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
@@ -20,11 +18,13 @@ import gg.xp.xivsupport.speech.TtsRequest;
 import gg.xp.xivsupport.sys.KnownLogSource;
 import gg.xp.xivsupport.sys.PrimaryLogSource;
 import gg.xp.xivsupport.sys.Threading;
-import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
@@ -33,7 +33,6 @@ import javax.net.ssl.X509TrustManager;
 import java.net.URI;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Map;
@@ -45,25 +44,51 @@ import java.util.stream.Collectors;
 
 // TODO: EventSource interface
 // TODO: persistent setting of overridden remote player
+
+/*
+Simplified way of making this work:
+
+The inner client is replaceable rather than final.
+When you disconnect or change settings, create a new client.
+ */
 public class ActWsLogSource implements EventSource {
 
 	private static final Logger log = LoggerFactory.getLogger(ActWsLogSource.class);
-	private static final ExecutorService taskPool = Executors.newSingleThreadExecutor(Threading.namedDaemonThreadFactory("OpWs"));
-	private static final ExecutorService subTaskPool = Executors.newCachedThreadPool(Threading.namedDaemonThreadFactory("OpWsSub"));
+	private static final ExecutorService taskPool = Executors.newCachedThreadPool(Threading.namedDaemonThreadFactory("OpWs"));
 	private static final ObjectMapper mapper = new ObjectMapper();
 	private static final URI defaultUri = URI.create("ws://127.0.0.1:10501/ws");
-	private final Object connectLock = new Object();
+
+	// Settings
 	private final WsURISetting uriSetting;
 	private final BooleanSetting allowBadCert;
 	private final BooleanSetting allowTts;
 	private final BooleanSetting allowSound;
 	private final BooleanSetting fastRefreshNonCombatant;
 
+	private final Object stateLock = new Object();
+
+	private enum ClientState {
+		NOT_STARTED,
+		OPENING,
+		CONNECTED,
+		DISCONNECTED,
+	}
+
+	private record WsConnectingSettings(
+			URI uri,
+			boolean allowBadCerts
+	) {
+	}
+
 	private final class ActWsClientInternal extends WebSocketClient {
 
-		public ActWsClientInternal() {
-			super(uriSetting.get());
-			if (allowBadCert.get() && "wss".equalsIgnoreCase(getURI().getScheme())) {
+		private volatile ClientState clientState = ClientState.NOT_STARTED;
+		private final WsConnectingSettings settings;
+
+		public ActWsClientInternal(WsConnectingSettings settings) {
+			super(settings.uri);
+			this.settings = settings;
+			if (settings.allowBadCerts && "wss".equalsIgnoreCase(getURI().getScheme())) {
 
 
 				TrustManager tm = new X509TrustManager() {
@@ -98,44 +123,41 @@ public class ActWsLogSource implements EventSource {
 			}
 		}
 
-		void recheckUri() {
-			this.uri = uriSetting.get();
-			subTaskPool.submit(this::reconnect);
+		@Override
+		public void connect() {
+			this.clientState = ClientState.OPENING;
+			super.connect();
 		}
 
 		@Override
 		public void onOpen(ServerHandshake serverHandshake) {
 			log.info("Open: {}", serverHandshake);
 			subscribeEvents();
-			state.setConnected(true);
-			eventConsumer.accept(new ActWsConnectedEvent());
+			this.clientState = ClientState.CONNECTED;
+			onClientConnected(this);
 		}
 
 		@Override
 		public void onMessage(String s) {
 			log.trace("WS Message: {}", s);
-			eventConsumer.accept(new ActWsRawMsg(s));
+			submitEvent(new ActWsRawMsg(s));
 		}
 
 		@Override
 		public void onClose(int i, String s, boolean b) {
 			log.info("Close: {};{};{}", i, s, b);
-			state.setConnected(false);
-			eventConsumer.accept(new ActWsDisconnectedEvent());
+			onClientDisconnected(this);
 		}
 
 		@Override
 		public void onError(Exception e) {
 			if (e.getMessage().equals("Connection refused: connect")) {
-				log.info("WS Connection refused, waiting then trying again");
+				log.info("WS Connection refused, waiting then trying again ({})", this.uri);
 			}
 			else {
 				log.error("WS Error!", e);
 			}
-			// TODO: hmmm.....is an "error" always fatal here? We *should* reconnect just in case, but I just don't
-			// know how to differentiate between fatal (which we should ignore, because onClose will get called next)
-			// and non-fatal (we need to reconnect it outselves).
-			eventConsumer.accept(new ActWsReconnectRequest());
+			onClientDisconnected(this);
 		}
 
 		private void subscribeEvents() {
@@ -156,12 +178,50 @@ public class ActWsLogSource implements EventSource {
 		private void subscribeEvent(String event) {
 			send("{\"call\":\"subscribe\",\"events\":[\"" + event + "\"]}");
 		}
+
+		private void submitEvent(Event event) {
+			submitEventFrom(this, event);
+		}
 	}
 
 	private final Consumer<Event> eventConsumer;
 	private final PrimaryLogSource pls;
-	private final ActWsClientInternal client;
 	private final WsState state = new WsState();
+
+	private void submitEventFrom(ActWsClientInternal client, Event event) {
+		if (client == currentClient) {
+			eventConsumer.accept(event);
+		}
+		else {
+			log.warn("Event rejected due to stale WS client: {}", event);
+		}
+	}
+
+	// TODO: is volatile needed?
+	private volatile @Nullable ActWsClientInternal currentClient;
+
+	private void recheckState() {
+		ActWsClientInternal cc = currentClient;
+		state.setConnected(cc != null && cc.clientState == ClientState.CONNECTED);
+	}
+
+	private void onClientConnected(ActWsClientInternal client) {
+		// Only care if this is the current client
+		if (client == currentClient) {
+			log.info("onClientConnected");
+			eventConsumer.accept(new ActWsConnectedEvent());
+		}
+		recheckState();
+	}
+
+	private void onClientDisconnected(ActWsClientInternal client) {
+		if (client == currentClient) {
+			currentClient = null;
+			log.info("onClientDisconnected");
+			eventConsumer.accept(new ActWsDisconnectedEvent());
+		}
+		recheckState();
+	}
 
 	public ActWsLogSource(EventMaster master, StateStore stateStore, PersistenceProvider pers, PrimaryLogSource pls) {
 		this.uriSetting = new WsURISetting(pers, "actws-uri", defaultUri);
@@ -171,28 +231,66 @@ public class ActWsLogSource implements EventSource {
 		this.allowSound = new BooleanSetting(pers, "actws-allow-sound", false);
 		this.fastRefreshNonCombatant = new BooleanSetting(pers, "actws-fast-noncombatants-refresh", false);
 		this.pls = pls;
-		this.client = new ActWsClientInternal();
-		uriSetting.addListener(client::recheckUri);
+		uriSetting.addListener(this::makeConnected);
+		allowBadCert.addListener(this::makeConnected);
 		// TODO: drop this
 		stateStore.putCustom(WsState.class, state);
 	}
 
 	private final AtomicInteger rseqCounter = new AtomicInteger();
 
-	@LiveOnly
-	@HandleEvents
-	public void getCombatantsDbg(EventContext context, DebugCommand event) {
-		if (event.getCommand().equals("combatants")) {
-			context.accept(new RefreshCombatantsRequest());
+	private void makeConnected() {
+		makeConnected(false);
+	}
+
+	private WsConnectingSettings currentSettings() {
+		return new WsConnectingSettings(uriSetting.get(), allowBadCert.get());
+	}
+
+	private void clearOldClient() {
+		// Does an old client need to be shut down?
+		@Nullable ActWsClientInternal oldClient;
+		synchronized (stateLock) {
+			oldClient = currentClient;
+			currentClient = null;
+		}
+		if (oldClient != null) {
+			log.info("Clearing old client");
+			eventConsumer.accept(new ActWsDisconnectedEvent());
+			@Nullable ActWsClientInternal finalOldClient = oldClient;
+			taskPool.submit(() -> {
+				finalOldClient.close();
+			});
+		}
+		else {
+			log.info("No old client to clear");
 		}
 	}
 
-	@LiveOnly
-	@HandleEvents
-	public void forceReconnect(EventContext context, DebugCommand event) {
-		if (event.getCommand().equals("reconnect_ws")) {
-			log.info("Reconnect requested");
-			context.accept(new ActWsReconnectRequest());
+	private void makeConnected(boolean forceReconnect) {
+		log.info("makeConnected: {}", forceReconnect);
+		// Does a new client need to be opened?
+		@Nullable ActWsClientInternal newClient = null;
+		synchronized (stateLock) {
+			WsConnectingSettings newSettings = currentSettings();
+			ActWsClientInternal cc = currentClient;
+			WsConnectingSettings oldSettings = cc == null ? null : cc.settings;
+			if (forceReconnect || !newSettings.equals(oldSettings)) {
+				clearOldClient();
+				log.info("Creating new WS client");
+				newClient = new ActWsClientInternal(newSettings);
+				this.currentClient = newClient;
+			}
+		}
+		if (newClient != null) {
+			newClient.connect();
+		}
+	}
+
+	private void sendImmediate(String value) {
+		ActWsClientInternal cc = currentClient;
+		if (cc != null) {
+			cc.send(value);
 		}
 	}
 
@@ -201,7 +299,7 @@ public class ActWsLogSource implements EventSource {
 	@HandleEvents
 	public void requestVersion(EventContext context, ActWsConnectedEvent event) {
 		try {
-			client.send(mapper.writeValueAsString(Map.of("call", "getVersion", "rseq", "getVersion")));
+			sendImmediate(mapper.writeValueAsString(Map.of("call", "getVersion", "rseq", "getVersion")));
 		}
 		catch (JacksonException e) {
 			throw new RuntimeException(e);
@@ -212,7 +310,7 @@ public class ActWsLogSource implements EventSource {
 	@HandleEvents
 	public void requestLanguage(EventContext context, ActWsConnectedEvent event) {
 		try {
-			client.send(mapper.writeValueAsString(Map.of("call", "getLanguage", "rseq", "getLanguage")));
+			sendImmediate(mapper.writeValueAsString(Map.of("call", "getLanguage", "rseq", "getLanguage")));
 		}
 		catch (JacksonException e) {
 			throw new RuntimeException(e);
@@ -223,7 +321,7 @@ public class ActWsLogSource implements EventSource {
 	@LiveOnly
 	@HandleEvents
 	public void getCombatants(EventContext context, RefreshCombatantsRequest event) {
-		client.send(allCbtRequest);
+		sendImmediate(allCbtRequest);
 	}
 
 	@LiveOnly
@@ -231,7 +329,7 @@ public class ActWsLogSource implements EventSource {
 	public void getCombatant(EventContext context, RefreshSpecificCombatantsRequest event) {
 		// Trying to do this to avoid some overhead, not sure if it's actually better
 		String myRequest = specificCbtRequestTemplate.replaceAll("123456", event.getCombatants().stream().map(Object::toString).collect(Collectors.joining(", ")));
-		client.send(myRequest);
+		sendImmediate(myRequest);
 	}
 
 	// TODO: this probably doesn't belong here
@@ -265,7 +363,7 @@ public class ActWsLogSource implements EventSource {
 	}
 
 	public void sendString(String string) {
-		client.send(string);
+		sendImmediate(string);
 	}
 
 	public void sendObject(Object object) {
@@ -281,9 +379,10 @@ public class ActWsLogSource implements EventSource {
 
 	@LiveOnly
 	@HandleEvents
+	@Deprecated
 	public void requestReconnect(EventContext context, ActWsReconnectRequest event) {
 		log.info("Forcing connection closed, should auto-reconnect");
-		doClose();
+		doReconnect();
 	}
 
 	@LiveOnly
@@ -293,85 +392,36 @@ public class ActWsLogSource implements EventSource {
 		doReconnect();
 	}
 
+	private final AtomicInteger reconnectRequestCounter = new AtomicInteger();
 
-	private void doClose() {
-		taskPool.submit(() -> {
-			synchronized (connectLock) {
-				if (!state.isConnected()) {
-					log.info("Ignoring request to close because we are already disconnected");
-					return;
-				}
-				log.info("Disconnecting");
-				try {
-					client.closeBlocking();
-					log.info("Disconnected");
-				}
-				catch (InterruptedException e) {
-					log.error("Interrupted", e);
-				}
-			}
-		});
-	}
-
-	private void doOpen() {
-		taskPool.submit(() -> {
-			synchronized (connectLock) {
-				if (state.isConnected()) {
-					log.info("Ignoring request to open because we are already connected");
-					return;
-				}
-				log.info("Connecting");
-				try {
-					boolean connected = client.connectBlocking();
-					if (connected) {
-						log.info("Connected");
-					}
-					else {
-						log.warn("Not Connected");
-					}
-				}
-				catch (InterruptedException e) {
-					log.error("Interrupted", e);
-				}
-			}
-		});
-	}
-
-	@SuppressWarnings("SleepWhileHoldingLock")
 	private void doReconnect() {
+		// Only want one such task running
+		int expected = reconnectRequestCounter.incrementAndGet();
 		taskPool.submit(() -> {
-			synchronized (connectLock) {
-				if (state.isConnected()) {
-					log.info("Ignoring request to open because we are already connected");
+			try {
+				log.info("doReconnect start");
+				if (expected != reconnectRequestCounter.get()) {
+					log.info("doReconnect early out 1");
 					return;
 				}
-				try {
-					Thread.sleep(2500);
-					if (state.isConnected()) {
-						log.info("Ignoring request to open because we are already connected");
-						return;
-					}
-					log.info("Reconnecting");
-					boolean connected = client.reconnectBlocking();
-					if (connected) {
-						log.info("Reconnected");
-					}
-					else {
-						log.warn("Not Reconnected");
-					}
+				clearOldClient();
+				Thread.sleep(2_500);
+				if (expected != reconnectRequestCounter.get()) {
+					log.info("doReconnect early out 2");
+					return;
 				}
-				catch (InterruptedException e) {
-					log.error("Interrupted", e);
-				}
+				makeConnected(false);
+				log.info("doReconnect end");
+			}
+			catch (InterruptedException e) {
+				throw new RuntimeException(e);
 			}
 		});
 	}
 
 	public void start() {
-		// TODO: auto retry and reconnection
-		log.info("Attempting connection");
-		doOpen();
 		pls.setLogSource(KnownLogSource.WEBSOCKET_LIVE);
+		makeConnected();
 	}
 
 	private static final String allCbtRequest;
@@ -451,4 +501,23 @@ public class ActWsLogSource implements EventSource {
 	public boolean isConnected() {
 		return state.isConnected();
 	}
+
+	// Debug commands
+	@LiveOnly
+	@HandleEvents
+	public void getCombatantsDbg(EventContext context, DebugCommand event) {
+		if (event.getCommand().equals("combatants")) {
+			context.accept(new RefreshCombatantsRequest());
+		}
+	}
+
+	@LiveOnly
+	@HandleEvents
+	public void forceReconnect(EventContext context, DebugCommand event) {
+		if (event.getCommand().equals("reconnect_ws")) {
+			log.info("Reconnect requested");
+			context.accept(new ActWsReconnectRequest());
+		}
+	}
+
 }
