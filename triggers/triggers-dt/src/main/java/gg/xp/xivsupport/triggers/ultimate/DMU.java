@@ -1706,6 +1706,65 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 
 			});
 
+	private static final int STOMP_A_MOLE = 0xBAEF;
+	private static final int STOMP_STACK_MARKER = 0xA1;
+
+	private final ModifiableCallout<AbilityCastStart> stompAMoleInitial =
+			ModifiableCallout.durationBasedCall(
+					"Stomp-a-Mole: Initial",
+					"Stomp-a-Mole" // Can ask TTS to say "Group up middle" or "Group up South" depending on the strat they want
+			);
+
+	private final ModifiableCallout<HeadMarkerEvent> stompAMoleDpsStack =
+			new ModifiableCallout<>(
+					"Stomp-a-Mole: DPS Stack, Supp Towers",
+					"DPS stack, Support towers"
+			);
+
+	private final ModifiableCallout<HeadMarkerEvent> stompAMoleDpsTowers =
+			new ModifiableCallout<>(
+					"Stomp-a-Mole: DPS Towers, Supp Stack",
+					"DPS towers, Support stack"
+			);
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> stompAMoleSq = SqtTemplates.sq(
+			30_000,
+			AbilityCastStart.class,
+			acs -> acs.abilityIdMatches(STOMP_A_MOLE),
+			(e1, s) -> {
+				s.updateCall(stompAMoleInitial, e1);
+
+				// There are two stack markers. The marked role stacks,
+				// while the opposite role handles towers.
+				for (int i = 0; i < 2; i++) {
+					var stackMarker = s.waitEvent(
+							HeadMarkerEvent.class,
+							hme -> hme.markerIdMatches(STOMP_STACK_MARKER)
+					);
+
+					if (!(stackMarker.getTarget() instanceof XivPlayerCharacter target)) {
+						log.error(
+								"Stomp-a-Mole stack marker target was not a player: {}",
+								stackMarker
+						);
+						continue;
+					}
+
+					boolean supportsStack = target.getJob().isSupport();
+
+					if (supportsStack) {
+						// Tank/healer has the stack marker.
+						s.updateCall(stompAMoleDpsTowers, stackMarker);
+					}
+					else {
+						// DPS has the stack marker.
+						s.updateCall(stompAMoleDpsStack, stackMarker);
+					}
+				}
+			}
+	);
+
 	// Exdeath Thunder III 6.7 BB12
 	// Exdeath Thunder III 4.7 BB09
 	// Longitudinal BAFD: Sides safe first
