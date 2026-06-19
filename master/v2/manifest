@@ -1,6 +1,6 @@
-48af45d1f5994e440e98097da5f85ddb  triggevent.exe
-712ec95e01711d0b3badeb56d8d3e5a6  triggevent-import.exe
-40031139b497e32a29e5791d510e737a  triggevent-upd.exe
+0bf723d5dba748bdc03dfce832b1ded8  triggevent.exe
+ce5c122b84e404580bf30c22c430c116  triggevent-import.exe
+901f877b51beb6ff0f83cf873403f68c  triggevent-upd.exe
 8c79eba0445fdc5f7afa1df3a8b40fa7  Triggevent_Stub.dll
 e6ce75e58a72477a8e0cf2a40d5f387c  deps/actimport-1.0-SNAPSHOT.jar
 38673abe87d12508cd05498eff0b9731  deps/annotations-24.1.0.jar
@@ -36,7 +36,7 @@ b901def3c20752817f27130e4b8d6640  deps/jackson-annotations-2.20.jar
 8bfd0695da1a334c6401fe3eac5b82f8  deps/jackson-databind-3.0.2.jar
 ef1cbb85c9762a4b606376bbc0b7387a  deps/jackson-module-blackbird-3.0.2.jar
 1a2dd8c76321cef26cc2669fe70a2557  deps/javassist-3.28.0-GA.jar
-54509aa777fdd6ed9f5b565771b82b79  deps/Java-WebSocket-1.5.4.jar
+2e6a31808c31c8f55483b3f21f8fd8a7  deps/Java-WebSocket-1.6.0.jar
 bd2e5bc6b4b020c2d9a6e17a8e9bcef1  deps/jna-5.13.0.jar
 7cc7af47ad1f151faa57ef0624b2f271  deps/jna-platform-5.13.0.jar
 60332a32cf7212a56506d6988de02ae2  deps/job-overlays-1.0-SNAPSHOT.jar
@@ -62,11 +62,11 @@ a4c67e79b55e951a3acb868b08e470ba  deps/skill-hit-overlay-1.0-SNAPSHOT.jar
 99ff7fc65b0d71b62346b0b3b81ffdb0  deps/telesto-right-clicks-1.0-SNAPSHOT.jar
 a0d1e0571dc10654f437457029a1af83  deps/timelines-1.0-SNAPSHOT.jar
 49bc13bdf0df07d97b9f0047aa2be613  deps/titan-jails-1.0-SNAPSHOT.jar
-4e001558e035e94c8564557d5aa4c388  deps/triggers-dt-1.0-SNAPSHOT.jar
+9b5d339264d4ba8101deda6af6a31841  deps/triggers-dt-1.0-SNAPSHOT.jar
 0a0317930a9ab645eb35a192c4c35b8f  deps/triggers-ew-1.0-SNAPSHOT.jar
 cf22cb2e5af0d031b4305ecb977ecfff  deps/triggers-general-1.0-SNAPSHOT.jar
 ea1c99f48fe57af11d933ac69b3606b0  deps/triggers-sb-1.0-SNAPSHOT.jar
 bcae996e95186ca2494b231334054331  deps/trigger-support-1.0-SNAPSHOT.jar
 fb91831333f5d348dd3b56a5bdeb396c  deps/xivapi-java-0.1.1.jar
 0c4b439e3e91a6ecf08abdec2c19b2d6  deps/xivdata-1.0-SNAPSHOT.jar
-f1b1446f8fb9ba9ac8f52769c85d730b  deps/xivsupport-1.0-SNAPSHOT.jar
+a280a579ffdfcac5b066849d369e71ab  deps/xivsupport-1.0-SNAPSHOT.jar
