@@ -8,6 +8,7 @@ import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
+import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.ActorControlExtraEvent;
@@ -15,6 +16,7 @@ import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
+import gg.xp.xivsupport.events.actlines.events.vfx.StatusLoopVfxApplied;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectCurrentStatus;
@@ -215,15 +217,15 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 				// stack is HM 128, spread is 127
 
 				{
-					List<HeadMarkerEvent> kafkaHM = s.waitEvents(2, HeadMarkerEvent.class, hme -> hme.getTarget().npcIdMatches(19504));
+					List<HeadMarkerEvent> kefkaHM = s.waitEvents(2, HeadMarkerEvent.class, hme -> hme.getTarget().npcIdMatches(19504));
 					var playerHm = s.waitEvent(HeadMarkerEvent.class, hme -> hme.markerIdMatches(127, 128));
-					boolean fakeFire = kafkaHM.stream().anyMatch(hme -> hme.markerIdMatches(673));
-					boolean fakeIce = kafkaHM.stream().anyMatch(hme -> hme.markerIdMatches(675));
+					boolean fakeFire = kefkaHM.stream().anyMatch(hme -> hme.markerIdMatches(673));
+					boolean fakeIce = kefkaHM.stream().anyMatch(hme -> hme.markerIdMatches(675));
 					boolean presentSpread = playerHm.markerIdMatches(127);
 					boolean actuallySpread = presentSpread != fakeFire;
 					s.setParam("fakeFire", fakeFire);
 					s.setParam("fakeIce", fakeIce);
-					var hm1 = kafkaHM.get(0);
+					var hm1 = kefkaHM.get(0);
 					if (actuallySpread) {
 						s.updateCall(fakeIce ? gravenFakeIceSpread : gravenRealIceSpread, hm1);
 					}
@@ -254,12 +256,12 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 						() -> s.updateCall(gravenNoConfetti, confettis.get(0)));
 
 				{
-					List<HeadMarkerEvent> kafkaHM = s.waitEvents(2, HeadMarkerEvent.class, hme -> hme.getTarget().npcIdMatches(19504));
-					boolean fakeThunder = kafkaHM.stream().anyMatch(hme -> hme.markerIdMatches(677));
-					boolean fakeIce = kafkaHM.stream().anyMatch(hme -> hme.markerIdMatches(675));
+					List<HeadMarkerEvent> kefkaHM = s.waitEvents(2, HeadMarkerEvent.class, hme -> hme.getTarget().npcIdMatches(19504));
+					boolean fakeThunder = kefkaHM.stream().anyMatch(hme -> hme.markerIdMatches(677));
+					boolean fakeIce = kefkaHM.stream().anyMatch(hme -> hme.markerIdMatches(675));
 					s.setParam("fakeThunder", fakeThunder);
 					s.setParam("fakeIce", fakeIce);
-					var hm1 = kafkaHM.get(0);
+					var hm1 = kefkaHM.get(0);
 					if (fakeThunder) {
 						s.updateCall(fakeIce ? gravenFakeIceFakeThunder : gravenRealIceFakeThunder, hm1);
 					}
@@ -498,10 +500,10 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 				var gazeCall = s.call(fakeGaze ? ttEarlyFakeGaze : ttEarlyRealGaze, lookMechanic);
 
 				{
-					List<HeadMarkerEvent> kafkaHM = s.waitEvents(2, HeadMarkerEvent.class, hme -> hme.getTarget().npcIdMatches(19504));
+					List<HeadMarkerEvent> kefkaHM = s.waitEvents(2, HeadMarkerEvent.class, hme -> hme.getTarget().npcIdMatches(19504));
 					var playerHm = s.waitEvent(HeadMarkerEvent.class, hme -> hme.markerIdMatches(FIRE_SPREAD, FIRE_STACK));
-					boolean fakeFire = kafkaHM.stream().anyMatch(hme -> hme.markerIdMatches(FAKE_FIRE));
-					boolean fakeThunder = kafkaHM.stream().anyMatch(hme -> hme.markerIdMatches(FAKE_THUNDER));
+					boolean fakeFire = kefkaHM.stream().anyMatch(hme -> hme.markerIdMatches(FAKE_FIRE));
+					boolean fakeThunder = kefkaHM.stream().anyMatch(hme -> hme.markerIdMatches(FAKE_THUNDER));
 					boolean presentSpread = playerHm.markerIdMatches(FIRE_SPREAD);
 					boolean actuallySpread = presentSpread != fakeFire;
 					s.setParam("fakeFire", fakeFire);
@@ -1601,8 +1603,8 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	 * For sets of three tethers, you can just look at the black hole NPCs and ignore tether events entirely,
 	 * since you can tell which ones will have the tethers.
 	 *
-	 * @param s
-	 * @return
+	 * @param s The sequential trigger controller
+	 * @return The list of arena sectors for the tethers
 	 */
 	private List<ArenaSector> getSimpleTetherSet(SequentialTriggerController<BaseEvent> s) {
 		log.info("getSimpleTetherSet: start");
@@ -1625,9 +1627,9 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	 * <p>
 	 * TODO: look into if there's some entity ID shenanigans that can be used
 	 *
-	 * @param s
-	 * @param firstSetExpected
-	 * @return
+	 * @param s The sequential trigger controlly
+	 * @param firstSetExpected How many tethers to wait for in the first set
+	 * @return The result
 	 */
 	private StaggeredTethersResult getStaggeredTetherSet(SequentialTriggerController<BaseEvent> s, int firstSetExpected) {
 		log.info("getStaggeredTetherSet: start");
@@ -1723,7 +1725,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 					e.g. `{event.target.job.support == state.player.job.support ? 'Stack' : 'Towers'}""");
 	// TODO: split this
 	private final ModifiableCallout<AbilityCastStart> stompAMoleMove2 = ModifiableCallout.durationBasedCall("Stomp-a-Mole: Move 2", "Move");
-	private final ModifiableCallout<AbilityCastStart> stompAMoleSwitch = ModifiableCallout.durationBasedCall("Stomp-a-Mole: Swap", "Swap");
+	private final ModifiableCallout<?> stompAMoleSwitch = new ModifiableCallout<>("Stomp-a-Mole: Swap", "Swap");
 	private final ModifiableCallout<AbilityCastStart> bigBangAndB3 = ModifiableCallout.durationBasedCall("Stomp-a-Mole: Blizzard + Big Bang", "Away from Stacks, Keep Moving");
 
 	private final ModifiableCallout<AbilityCastStart> p3normalEnrage = ModifiableCallout.durationBasedCall("P3 Enrage (Normal)", "Enrage");

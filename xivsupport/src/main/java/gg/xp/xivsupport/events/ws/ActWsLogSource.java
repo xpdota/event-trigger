@@ -59,7 +59,18 @@ New client subscribes to events
 
 Automatic reconnection:
 currentClient encounters error and/or close
-This
+currentClient calls onClientDisconnected
+currentClient nulled out
+this calls doReconnect
+doReconnect handles reconnection
+
+Manual reconnection/changing settings:
+null out and disconnect old client
+instantiate new client
+TODO: expand on this
+
+TODO: the client implements Runnable which seems to be a pretty self-contained "connect and do stuff"
+method - this might be significantly easier.
 
  */
 public class ActWsLogSource implements EventSource {
