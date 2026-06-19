@@ -50,6 +50,17 @@ Simplified way of making this work:
 
 The inner client is replaceable rather than final.
 When you disconnect or change settings, create a new client.
+
+Flows:
+Initial connection:
+currentClient transitions from null to populated
+New client connects
+New client subscribes to events
+
+Automatic reconnection:
+currentClient encounters error and/or close
+This
+
  */
 public class ActWsLogSource implements EventSource {
 
@@ -146,6 +157,7 @@ public class ActWsLogSource implements EventSource {
 		@Override
 		public void onClose(int i, String s, boolean b) {
 			log.info("Close: {};{};{}", i, s, b);
+			this.clientState = ClientState.DISCONNECTED;
 			onClientDisconnected(this);
 		}
 
@@ -157,6 +169,7 @@ public class ActWsLogSource implements EventSource {
 			else {
 				log.error("WS Error!", e);
 			}
+			this.clientState = ClientState.DISCONNECTED;
 			onClientDisconnected(this);
 		}
 
@@ -179,7 +192,7 @@ public class ActWsLogSource implements EventSource {
 			send("{\"call\":\"subscribe\",\"events\":[\"" + event + "\"]}");
 		}
 
-		private void submitEvent(Event event) {
+		private void submitEvent(ActWsRawMsg event) {
 			submitEventFrom(this, event);
 		}
 	}
@@ -188,12 +201,13 @@ public class ActWsLogSource implements EventSource {
 	private final PrimaryLogSource pls;
 	private final WsState state = new WsState();
 
-	private void submitEventFrom(ActWsClientInternal client, Event event) {
+	private void submitEventFrom(ActWsClientInternal client, ActWsRawMsg event) {
 		if (client == currentClient) {
 			eventConsumer.accept(event);
 		}
 		else {
-			log.warn("Event rejected due to stale WS client: {}", event);
+			log.warn("Event rejected due to stale WS client: {}", event.getRawMsgData());
+			taskPool.submit(() -> client.close());
 		}
 	}
 
@@ -202,23 +216,30 @@ public class ActWsLogSource implements EventSource {
 
 	private void recheckState() {
 		ActWsClientInternal cc = currentClient;
-		state.setConnected(cc != null && cc.clientState == ClientState.CONNECTED);
+		boolean connected = cc != null && cc.clientState == ClientState.CONNECTED;
+		boolean wasConnected = state.isConnected();
+		if (connected != wasConnected) {
+			state.setConnected(connected);
+			if (connected) {
+				eventConsumer.accept(new ActWsConnectedEvent());
+			}
+			else {
+				eventConsumer.accept(new ActWsDisconnectedEvent());
+			}
+		}
 	}
 
 	private void onClientConnected(ActWsClientInternal client) {
-		// Only care if this is the current client
-		if (client == currentClient) {
-			log.info("onClientConnected");
-			eventConsumer.accept(new ActWsConnectedEvent());
-		}
+		log.info("onClientConnected");
 		recheckState();
 	}
 
 	private void onClientDisconnected(ActWsClientInternal client) {
+		// Only care if this is the current client
+		log.info("onClientDisconnected");
 		if (client == currentClient) {
 			currentClient = null;
-			log.info("onClientDisconnected");
-			eventConsumer.accept(new ActWsDisconnectedEvent());
+			doReconnect();
 		}
 		recheckState();
 	}
@@ -256,7 +277,6 @@ public class ActWsLogSource implements EventSource {
 		}
 		if (oldClient != null) {
 			log.info("Clearing old client");
-			eventConsumer.accept(new ActWsDisconnectedEvent());
 			@Nullable ActWsClientInternal finalOldClient = oldClient;
 			taskPool.submit(() -> {
 				finalOldClient.close();
@@ -283,7 +303,7 @@ public class ActWsLogSource implements EventSource {
 			}
 		}
 		if (newClient != null) {
-			newClient.connect();
+			taskPool.submit(newClient::connect);
 		}
 	}
 
@@ -379,7 +399,6 @@ public class ActWsLogSource implements EventSource {
 
 	@LiveOnly
 	@HandleEvents
-	@Deprecated
 	public void requestReconnect(EventContext context, ActWsReconnectRequest event) {
 		log.info("Forcing connection closed, should auto-reconnect");
 		doReconnect();
@@ -387,9 +406,10 @@ public class ActWsLogSource implements EventSource {
 
 	@LiveOnly
 	@HandleEvents
+	@Deprecated
 	public void reconnectActWs(EventContext context, ActWsDisconnectedEvent event) {
-		log.info("Disconnected, reconnecting");
-		doReconnect();
+		log.info("Disconnected");
+//		doReconnect();
 	}
 
 	private final AtomicInteger reconnectRequestCounter = new AtomicInteger();
