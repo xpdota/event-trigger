@@ -342,8 +342,16 @@ public class StatusEffectRepository {
 		return findStatusOnTarget(entity, ba -> ba.buffIdMatches(buffId));
 	}
 
+	public @Nullable BuffApplied findStatusOnPlayer(long buffId) {
+		return findStatusOnTarget(state.getPlayer(), buffId);
+	}
+
 	public boolean isStatusOnTarget(XivEntity entity, long buffId) {
 		return findStatusOnTarget(entity, ba -> ba.buffIdMatches(buffId)) != null;
+	}
+
+	public boolean isStatusOnPlayer(long buffId) {
+		return findStatusOnPlayer(buffId) != null;
 	}
 
 	public @Nullable BuffApplied findStatusOnTarget(XivEntity entity, Predicate<BuffApplied> filter) {

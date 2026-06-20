@@ -902,7 +902,13 @@ public class GuiMain {
 			while (true) {
 				table.signalNewData();
 				try {
-					Thread.sleep(1000);
+					if (table.isShowing()) {
+						Thread.sleep(200);
+
+					}
+					else {
+						Thread.sleep(1000);
+					}
 				}
 				catch (InterruptedException e) {
 					throw new RuntimeException(e);

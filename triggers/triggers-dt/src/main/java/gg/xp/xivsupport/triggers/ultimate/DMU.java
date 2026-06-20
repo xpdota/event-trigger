@@ -30,6 +30,7 @@ import gg.xp.xivsupport.events.triggers.support.PlayerStatusCallout;
 import gg.xp.xivsupport.gui.util.HasFriendlyName;
 import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
+import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
@@ -1627,7 +1628,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	 * <p>
 	 * TODO: look into if there's some entity ID shenanigans that can be used
 	 *
-	 * @param s The sequential trigger controlly
+	 * @param s                The sequential trigger controlly
 	 * @param firstSetExpected How many tethers to wait for in the first set
 	 * @return The result
 	 */
@@ -1778,6 +1779,8 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 						}, () -> {
 							var anyEnrage = enrages.get(0);
 							s.updateCall(p3normalEnrage, anyEnrage);
+							s.waitCastFinished(casts, anyEnrage);
+							s.expireLastCall();
 						});
 
 
@@ -1834,12 +1837,599 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	Next part seems to be debuff vomit
 	 */
 
-	private static final int WHITE_WOUND = 0x15A5;
-	private static final int BLACK_WOUND = 0x15A6;
-	private static final int SHRIEK = 0x15A7;
-	private static final int FORK = 0x15A8;
-	private static final int WATER = 0x15A9;
-	private static final int ACCEL = 0x15AA;
+	@NpcCastCallout(0xBB14)
+	private final ModifiableCallout<AbilityCastStart> grandCross = ModifiableCallout.durationBasedCall("Grand Cross", "Raidwide");
+	@NpcCastCallout(0xBB20)
+	private final ModifiableCallout<AbilityCastStart> inferno = ModifiableCallout.durationBasedCall("Inferno", "Raidwide");
+	@NpcCastCallout(0xBB21)
+	private final ModifiableCallout<AbilityCastStart> tsunami = ModifiableCallout.durationBasedCall("Tsunami", "Raidwide");
+
+	private static final long SHRIEK = 0x15A7;
+	private static final long FORK = 0x15A8;
+	private static final long WATER = 0x15A9;
+	private static final long ACCEL = 0x15AA;
+	private static final long WHITE_WOUND = 0x15A5; // Also 1317?
+	private static final long WHITE_WOUND_FAKE = 0x1317; // Also 1317?
+	private static final long BLACK_WOUND = 0x15A6; // Also 1318?
+	private static final long BLACK_WOUND_FAKE = 0x1318; // Also 1318?
+	private static final long ALLAG_FIELD = 0x1C6;
+	private static final long BEYOND_DEATH = 0x566; // Also 1558?
+	private static final long BEYOND_DEATH_FAKE = 0x1558; // Also 1558?
+
+	private final ModifiableCallout<AbilityCastStart> kefkaSays = ModifiableCallout.durationBasedCall("Kefka Says", "Debuffs");
+
+	private final ModifiableCallout<HeadMarkerEvent> ksRealIceRealThunder = new ModifiableCallout<>("Kefka Says: Real Ice, Real Thunder", "Avoid Both");
+	private final ModifiableCallout<HeadMarkerEvent> ksRealIceFakeThunder = new ModifiableCallout<>("Kefka Says: Real Ice, Fake Thunder", "Out of Cones, In Lines");
+	private final ModifiableCallout<HeadMarkerEvent> ksFakeIceRealThunder = new ModifiableCallout<>("Kefka Says: Fake Ice, Real Thunder", "In Cones, Out of Lines");
+	private final ModifiableCallout<HeadMarkerEvent> ksFakeIceFakeThunder = new ModifiableCallout<>("Kefka Says: Fake Ice, Fake Thunder", "Stand in Both");
+
+	// First set
+	private final ModifiableCallout<BuffApplied> ksRealAccelShort = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Accel, Short (First Set)", "Real Short Accel").statusIcon(ACCEL);
+	private final ModifiableCallout<BuffApplied> ksRealAccelShortShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Accel, Short, with Shriek (First Set)", "Real Short + Shriek").statusIcons(SHRIEK, ACCEL);
+	private final ModifiableCallout<BuffApplied> ksRealAccelLong = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Accel, Long (First Set)", "Real Long Accel").statusIcon(ACCEL);
+	private final ModifiableCallout<BuffApplied> ksRealAccelLongShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Accel, Long, with Shriek (First Set)", "Real Long + Shriek").statusIcons(SHRIEK, ACCEL);
+	private final ModifiableCallout<BuffApplied> ksRealWater = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Water (First Set)", "Real Water").statusIcon(WATER);
+	private final ModifiableCallout<BuffApplied> ksRealLightning = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Lightning (First Set)", "Real Lightning").statusIcon(FORK);
+	private final ModifiableCallout<BuffApplied> ksFakeAccelShort = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Accel, Short (First Set)", "Fake Short Accel").statusIcon(ACCEL);
+	private final ModifiableCallout<BuffApplied> ksFakeAccelShortShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Accel, Short, with Shriek (First Set)", "Fake Short Accel").statusIcons(SHRIEK, ACCEL);
+	private final ModifiableCallout<BuffApplied> ksFakeAccelLong = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Accel, Long (First Set)", "Fake Long Accel").statusIcon(ACCEL);
+	private final ModifiableCallout<BuffApplied> ksFakeAccelLongShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Accel, Long, with Shriek (First Set)", "Fake Long + Shriek").statusIcons(SHRIEK, ACCEL);
+	private final ModifiableCallout<BuffApplied> ksFakeWater = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Water (First Set)", "Fake Water").statusIcon(WATER);
+	private final ModifiableCallout<BuffApplied> ksFakeLightning = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Lightning (First Set)", "Fake Lightning").statusIcon(FORK);
+
+	private final ModifiableCallout<BuffApplied> ksRealDyn = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Dynamic Fluid (First Set)", "Real Dynamic").statusIcon(DYNAMIC)
+			.extendedDescription("""
+					Note that the first/second set refer to the order in which they will RESOLVE, not apply.""");
+	private final ModifiableCallout<BuffApplied> ksRealEnt = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Entropy (First Set)", "Real Entropy").statusIcon(ENTROPY);
+	private final ModifiableCallout<BuffApplied> ksFakeDyn = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Dynamic Fluid (First Set)", "Fake Dynamic").statusIcon(DYNAMIC);
+	private final ModifiableCallout<BuffApplied> ksFakeEnt = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Entropy (First Set)", "Fake Entropy").statusIcon(ENTROPY);
+
+	private final ModifiableCallout<BuffApplied> ksRealDyn2 = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Dynamic Fluid (Second Set)", "Real Dynamic").statusIcon(DYNAMIC);
+	private final ModifiableCallout<BuffApplied> ksRealEnt2 = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Entropy (Second Set)", "Real Entropy").statusIcon(ENTROPY);
+	private final ModifiableCallout<BuffApplied> ksFakeDyn2 = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Dynamic Fluid (Second Set)", "Fake Dynamic").statusIcon(DYNAMIC);
+	private final ModifiableCallout<BuffApplied> ksFakeEnt2 = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Entropy (Second Set)", "Fake Entropy").statusIcon(ENTROPY);
+
+	private final ModifiableCallout<BuffApplied> ks2RealAccelShort = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Accel, Short (Second Set)", "Real Short Accel").statusIcon(ACCEL);
+	private final ModifiableCallout<BuffApplied> ks2RealAccelShortShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Accel, Short, with Shriek (Second Set)", "Real Short + Shriek").statusIcons(SHRIEK, ACCEL);
+	private final ModifiableCallout<BuffApplied> ks2RealAccelLong = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Accel, Long (Second Set)", "Real Long Accel").statusIcon(ACCEL);
+	private final ModifiableCallout<BuffApplied> ks2RealAccelLongShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Accel, Long, with Shriek (Second Set)", "Real Long + Shriek").statusIcons(SHRIEK, ACCEL);
+	private final ModifiableCallout<BuffApplied> ks2RealWater = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Water (Second Set)", "Real Water").statusIcon(WATER);
+	private final ModifiableCallout<BuffApplied> ks2RealLightning = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Lightning (Second Set)", "Real Lightning").statusIcon(FORK);
+	private final ModifiableCallout<BuffApplied> ks2FakeAccelShort = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Accel, Short (Second Set)", "Fake Short Accel").statusIcon(ACCEL);
+	private final ModifiableCallout<BuffApplied> ks2FakeAccelShortShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Accel, Short, with Shriek (Second Set)", "Fake Short Accel").statusIcons(SHRIEK, ACCEL);
+	private final ModifiableCallout<BuffApplied> ks2FakeAccelLong = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Accel, Long (Second Set)", "Fake Long Accel").statusIcon(ACCEL);
+	private final ModifiableCallout<BuffApplied> ks2FakeAccelLongShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Accel, Long, with Shriek (Second Set)", "Fake Long + Shriek").statusIcons(SHRIEK, ACCEL);
+	private final ModifiableCallout<BuffApplied> ks2FakeWater = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Water (Second Set)", "Fake Water").statusIcon(WATER);
+	private final ModifiableCallout<BuffApplied> ks2FakeLightning = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Lightning (Second Set)", "Fake Lightning").statusIcon(FORK);
+
+	private final ModifiableCallout<BuffApplied> ks3RealWWBD = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real WW + BD", "Real White + Death").statusIcons(WHITE_WOUND, BEYOND_DEATH);
+	private final ModifiableCallout<BuffApplied> ks3FakeWWBD = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake WW + BD", "Fake White + Death").statusIcons(WHITE_WOUND, BEYOND_DEATH);
+	private final ModifiableCallout<BuffApplied> ks3RealBWBD = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real BW + BD", "Real Black + Death").statusIcons(BLACK_WOUND, BEYOND_DEATH);
+	private final ModifiableCallout<BuffApplied> ks3FakeBWBD = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake BW + BD", "Fake Black + Death").statusIcons(BLACK_WOUND, BEYOND_DEATH);
+	private final ModifiableCallout<BuffApplied> ks3RealWWAF = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real WW + AF", "Real White + Allag").statusIcons(WHITE_WOUND, ALLAG_FIELD);
+	private final ModifiableCallout<BuffApplied> ks3FakeWWAF = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake WW + AF", "Fake White + Allag").statusIcons(WHITE_WOUND, ALLAG_FIELD);
+	private final ModifiableCallout<BuffApplied> ks3RealBWAF = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real BW + AF", "Real Black + Allag").statusIcons(BLACK_WOUND, ALLAG_FIELD);
+	private final ModifiableCallout<BuffApplied> ks3FakeBWAF = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake BW + AF", "Fake Black + Allag").statusIcons(BLACK_WOUND, ALLAG_FIELD);
+	private final ModifiableCallout<BuffApplied> ks3error = new ModifiableCallout<>("Kefka Says: Missing/Invalid Debuffs", "Error");
+
+	private final ModifiableCallout<AbilityCastStart> ks3standInWhite = ModifiableCallout.<AbilityCastStart>durationBasedCall("Kefka Says: Stand in White", "Stand in White ({whitePos})");
+	private final ModifiableCallout<AbilityCastStart> ks3standInBlack = ModifiableCallout.<AbilityCastStart>durationBasedCall("Kefka Says: Stand in Black", "Stand in Black ({blackPos})");
+
+	private final ModifiableCallout<BuffApplied> ksFirstBombSetStack = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: First Debuff Set: Stack", "Stack").autoIcon();
+	private final ModifiableCallout<BuffApplied> ksFirstBombSetSpread = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: First Debuff Set: Spread", "Spread").autoIcon();
+	private final ModifiableCallout<BuffApplied> ksFirstBombSetNothing = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: First Debuff Set: Nothing", "Stack with {stacks}").autoIcon();
+	private final ModifiableCallout<BuffApplied> ksFirstBombSetAccelStack = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: First Debuff Set: Accel + Stack", "{stillness ? 'Stillness' : 'Motion'} and Stack").autoIcon();
+	private final ModifiableCallout<BuffApplied> ksFirstBombSetAccelSpread = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: First Debuff Set: Accel + Spread", "{stillness ? 'Stillness' : 'Motion'} and Spread").autoIcon();
+	private final ModifiableCallout<BuffApplied> ksFirstBombSetAccelNothing = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: First Debuff Set: Accel + Nothing", "{stillness ? 'Stillness' : 'Motion'} and Stack with {stacks}").autoIcon();
+
+	private final ModifiableCallout<BuffApplied> ksThunderShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Thunder and Shrieks", "{fakeThunder ? 'Fake' : 'Real'} Thunder, {fakeShriek ? 'Fake' : 'Real'} Gaze").statusIcon(SHRIEK);
+	private final ModifiableCallout<BuffApplied> ksFirstEntropyDynamic = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: First Entropy/Dynamic", "{isDonut ? 'Donut' : 'Stack'}").autoIcon();
+	private final ModifiableCallout<BuffApplied> ksFirstEntropyDynamicMove = new ModifiableCallout<BuffApplied>("Kefka Says: First Entropy/Dynamic: Move", "Move").autoIcon();
+
+	private static final int NPC_CHAOS = 19507;
+	private static final int NPC_NEOXD = 19510;
+
+	private static final int REAL_NE = 1122;
+	private static final int FAKE_NE = 1121; // TODO untested
+	private static final int REAL_CH = 1120;
+	private static final int FAKE_CH = 1119;
+
+	private @Nullable BuffApplied findDurationBelow(int seconds, BuffApplied... buffs) {
+		return Arrays.stream(buffs).filter(Objects::nonNull).filter(ba -> ba.getEstimatedRemainingDuration().toSeconds() < seconds && !ba.wouldBeExpired()).findFirst().orElse(null);
+	}
+
+	private static @Nullable BuffApplied findById(List<BuffApplied> buffs, long... ids) {
+		return buffs.stream().filter(ba -> ba.buffIdMatches(ids)).findAny().orElse(null);
+	}
+
+	private ModifiableCallout<BuffApplied> getDynEntCall(boolean isDynamic, boolean isLong, boolean isReal) {
+		if (isDynamic) {
+			if (isLong) {
+				return isReal ? ksRealDyn2 : ksFakeDyn2;
+			}
+			else {
+				return isReal ? ksRealDyn : ksFakeDyn;
+			}
+		}
+		else {
+			if (isLong) {
+				return isReal ? ksRealEnt2 : ksFakeEnt2;
+			}
+			else {
+				return isReal ? ksRealEnt : ksFakeEnt;
+			}
+		}
+
+	}
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> kefkaSaysSq = SqtTemplates.multiInvocation(180_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xC2DC),
+			(e1, s) -> {
+				s.updateCall(kefkaSays, e1);
+
+				// Kefka's ID changes throughout the fight
+				final int NPC_KEFKA = 18475;
+				{
+					log.info("MM1 start");
+					List<HeadMarkerEvent> kefkaHM = s.waitEvents(2, HeadMarkerEvent.class, hme -> hme.getTarget().npcIdMatches(NPC_KEFKA));
+					boolean fakeThunder = kefkaHM.stream().anyMatch(hme -> hme.markerIdMatches(FAKE_THUNDER));
+					boolean fakeIce = kefkaHM.stream().anyMatch(hme -> hme.markerIdMatches(FAKE_ICE));
+					s.setParam("fakeThunder", fakeThunder);
+					s.setParam("fakeIce", fakeIce);
+					var hm1 = kefkaHM.get(0);
+					if (fakeThunder) {
+						s.updateCall(fakeIce ? ksFakeIceFakeThunder : ksRealIceFakeThunder, hm1);
+					}
+					else {
+						s.updateCall(fakeIce ? ksFakeIceRealThunder : ksRealIceRealThunder, hm1);
+					}
+					log.info("MM1 end");
+				}
+
+				// Mystery magic 2
+				{
+					log.info("MM2 start");
+					List<HeadMarkerEvent> kefkaHM = s.waitEvents(2, HeadMarkerEvent.class, hme -> hme.getTarget().npcIdMatches(NPC_KEFKA));
+					boolean fakeThunder = kefkaHM.stream().anyMatch(hme -> hme.markerIdMatches(FAKE_THUNDER));
+					boolean fakeIce = kefkaHM.stream().anyMatch(hme -> hme.markerIdMatches(FAKE_ICE));
+					s.setParam("fakeThunder", fakeThunder);
+					s.setParam("fakeIce", fakeIce);
+					var hm1 = kefkaHM.get(0);
+					if (fakeThunder) {
+						s.updateCall(fakeIce ? ksFakeIceFakeThunder : ksRealIceFakeThunder, hm1);
+					}
+					else {
+						s.updateCall(fakeIce ? ksFakeIceRealThunder : ksRealIceRealThunder, hm1);
+					}
+					log.info("MM2 end");
+				}
+
+				// Mystery magic 3
+				{
+					log.info("MM3 start");
+					List<HeadMarkerEvent> kefkaHM = s.waitEvents(2, HeadMarkerEvent.class, hme -> hme.getTarget().npcIdMatches(NPC_KEFKA));
+					boolean fakeThunder = kefkaHM.stream().anyMatch(hme -> hme.markerIdMatches(FAKE_THUNDER));
+					boolean fakeIce = kefkaHM.stream().anyMatch(hme -> hme.markerIdMatches(FAKE_ICE));
+					s.setParam("fakeThunder", fakeThunder);
+					s.setParam("fakeIce", fakeIce);
+					var hm1 = kefkaHM.get(0);
+					if (fakeThunder) {
+						s.updateCall(fakeIce ? ksFakeIceFakeThunder : ksRealIceFakeThunder, hm1);
+					}
+					else {
+						s.updateCall(fakeIce ? ksFakeIceRealThunder : ksRealIceRealThunder, hm1);
+					}
+					log.info("MM3 end");
+				}
+
+				// TODO: thunder charged and beyond, unrelated to debuffs, should probably be its own trigger
+
+				// Very slightly later, Kefka starts casting Mystery Magic BA94
+				// Neo Exdeath got StatusLoopVfx 1122 0x462 (real?)
+				// Thunder/blizzard goes off
+				// Chaos got SLV 1120 but it visually looked the same as 1122?
+				// Debuffs went out
+				// NExd does his thing
+				// Chaos does his thing
+				// Kefka gets two more HMs
+				// Chaos gets SLV 1199 - question marks
+				// Would probably guess NE's fake is 1121
+
+			});
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> kefkaSaysSqExdeath = SqtTemplates.multiInvocation(180_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xC2DC),
+			(e1, s) -> {
+
+				// Tracks which debuffs are fake
+				Set<BuffApplied> fakeDebuffs = new HashSet<>();
+
+				// Kefka's ID changes throughout the fight
+				final int NPC_KEFKA = 18475;
+				{
+					log.info("MM1 start");
+					List<HeadMarkerEvent> kefkaHM = s.waitEvents(2, HeadMarkerEvent.class, hme -> hme.getTarget().npcIdMatches(NPC_KEFKA));
+					log.info("MM1 end");
+				}
+				log.info("Waiting for neVfx1");
+				// TODO: make separate call for these
+				var neVfx1 = s.waitEvent(StatusLoopVfxApplied.class, v -> v.getTarget().npcIdMatches(NPC_NEOXD));
+				boolean neReal1 = neVfx1.vfxIdMatches(REAL_NE);
+				// Wait for grand cross hit
+//				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xBB14));
+				// Doing it like this so the trigger doesn't get messed up if player is dead and doesn't get a debuff
+				log.info("Waiting for debuff spam");
+				var myDebuffs1 = s.waitEventsQuickSuccession(10, BuffApplied.class, ba -> ba.buffIdMatches(FORK, WATER, SHRIEK, ACCEL))
+						.stream()
+						.peek(ba -> {
+							if (!neReal1) {
+								fakeDebuffs.add(ba);
+							}
+						})
+						.filter(ba -> ba.getTarget().isThePlayer())
+						.toList();
+				BuffApplied myAccel1 = findById(myDebuffs1, ACCEL);
+				BuffApplied myShriek1 = findById(myDebuffs1, SHRIEK);
+				BuffApplied myWater1 = findById(myDebuffs1, WATER);
+				BuffApplied myFork1 = findById(myDebuffs1, FORK);
+
+				s.waitMs(100);
+
+//				var fork = buffs.findBuffsById(FORK);
+//				var water = buffs.findBuffsById(WATER);
+//				var shriek = buffs.findBuffsById(SHRIEK);
+//				var accel = buffs.findBuffsById(ACCEL);
+//
+				if (myAccel1 != null) {
+					if (myAccel1.getInitialDuration().toSeconds() < 60) {
+						if (myShriek1 != null) {
+							s.updateCall(neReal1 ? ksRealAccelShortShriek : ksFakeAccelShortShriek, myAccel1);
+						}
+						else {
+							s.updateCall(neReal1 ? ksRealAccelShort : ksFakeAccelShort, myAccel1);
+						}
+					}
+					else {
+						if (myShriek1 != null) {
+							s.updateCall(neReal1 ? ksRealAccelLongShriek : ksFakeAccelLongShriek, myAccel1);
+						}
+						else {
+							s.updateCall(neReal1 ? ksRealAccelLong : ksFakeAccelLong, myAccel1);
+						}
+					}
+				}
+				else if (myWater1 != null) {
+					s.updateCall(neReal1 ? ksRealWater : ksFakeWater, myWater1);
+				}
+				else if (myFork1 != null) {
+					s.updateCall(neReal1 ? ksRealLightning : ksFakeLightning, myFork1);
+				}
+
+				// Mystery magic 2
+				{
+					log.info("MM2 start");
+					List<HeadMarkerEvent> kefkaHM = s.waitEvents(2, HeadMarkerEvent.class, hme -> hme.getTarget().npcIdMatches(NPC_KEFKA));
+					s.expireLastCall();
+					log.info("MM2 end");
+				}
+
+				log.info("Waiting for neVfx2");
+				var neVfx2 = s.waitEvent(StatusLoopVfxApplied.class, v -> v.getTarget().npcIdMatches(NPC_NEOXD));
+				boolean neReal2 = neVfx2.vfxIdMatches(REAL_NE);
+
+				log.info("Waiting for debuff spam 2");
+				var myDebuffs2 = s.waitEventsQuickSuccession(10, BuffApplied.class, ba -> ba.buffIdMatches(FORK, WATER, SHRIEK, ACCEL))
+						.stream()
+						.peek(ba -> {
+							if (!neReal2) {
+								fakeDebuffs.add(ba);
+							}
+						})
+						.filter(ba -> ba.getTarget().isThePlayer())
+						.toList();
+				BuffApplied myAccel2 = findById(myDebuffs2, ACCEL);
+				BuffApplied myShriek2 = findById(myDebuffs2, SHRIEK);
+				BuffApplied myWater2 = findById(myDebuffs2, WATER);
+				BuffApplied myFork2 = findById(myDebuffs2, FORK);
+				if (myAccel2 != null) {
+					// accels are 36 vs 61 at this point
+					if (myAccel2.getInitialDuration().toSeconds() < 45) {
+						if (myShriek2 != null) {
+							s.updateCall(neReal2 ? ks2RealAccelShortShriek : ks2FakeAccelShortShriek, myAccel2);
+						}
+						else {
+							s.updateCall(neReal2 ? ks2RealAccelShort : ks2FakeAccelShort, myAccel2);
+						}
+					}
+					else {
+						if (myShriek2 != null) {
+							s.updateCall(neReal2 ? ks2RealAccelLongShriek : ks2FakeAccelLongShriek, myAccel2);
+						}
+						else {
+							s.updateCall(neReal2 ? ks2RealAccelLong : ks2FakeAccelLong, myAccel2);
+						}
+					}
+				}
+				else if (myWater2 != null) {
+					s.updateCall(neReal2 ? ks2RealWater : ks2FakeWater, myWater2);
+				}
+				else if (myFork2 != null) {
+					s.updateCall(neReal2 ? ks2RealLightning : ks2FakeLightning, myFork2);
+				}
+
+
+				// Mystery magic 3
+				{
+					log.info("MM3 start");
+					List<HeadMarkerEvent> kefkaHM = s.waitEvents(2, HeadMarkerEvent.class, hme -> hme.getTarget().npcIdMatches(NPC_KEFKA));
+					s.expireLastCall();
+				}
+
+				log.info("Waiting for neVfx3");
+				var neVfx3 = s.waitEvent(StatusLoopVfxApplied.class, v -> v.getTarget().npcIdMatches(NPC_NEOXD));
+				boolean neReal3 = neVfx3.vfxIdMatches(REAL_NE);
+
+				log.info("Waiting for white/black debuffs");
+				var myDebuffs3 = s.waitEventsQuickSuccession(16, BuffApplied.class, ba -> ba.buffIdMatches(WHITE_WOUND, BLACK_WOUND, ALLAG_FIELD, BEYOND_DEATH, BEYOND_DEATH_FAKE, WHITE_WOUND_FAKE, BLACK_WOUND_FAKE))
+						.stream()
+						.filter(ba -> ba.getTarget().isThePlayer())
+						.toList();
+				log.info("myDebuffs3: {}", myDebuffs3);
+				// Get hit
+				BuffApplied myBD = findById(myDebuffs3, BEYOND_DEATH, BEYOND_DEATH_FAKE);
+				// Don't get hit
+				BuffApplied myAF = findById(myDebuffs3, ALLAG_FIELD);
+				// You will die if standing in black
+				BuffApplied myWW = findById(myDebuffs3, WHITE_WOUND, WHITE_WOUND_FAKE);
+				// You will die if standing in white
+				BuffApplied myBW = findById(myDebuffs3, BLACK_WOUND, BLACK_WOUND_FAKE);
+				log.info("Player debuffs: {} {} {} {}", myBD != null, myAF != null, myWW != null, myBW != null);
+				s.setParam("myBD", myBD);
+				s.setParam("myAF", myAF);
+				s.setParam("myWW", myWW);
+				s.setParam("myBW", myBW);
+
+				// BD3 = need to get hit, but fakeness will invert that
+				boolean playerShouldGetHit = myBD != null ^ !neReal3;
+				boolean playerWillDieToWhite = myWW != null ^ !neReal3;
+				boolean playerShouldStandInRealWhite = playerShouldGetHit == playerWillDieToWhite;
+				RawModifiedCallout<?> call = null;
+				if (myBD != null) {
+					if (myWW != null) {
+						call = s.updateCall(neReal3 ? ks3RealWWBD : ks3FakeWWBD, myBD);
+					}
+					else if (myBW != null) {
+						call = s.updateCall(neReal3 ? ks3RealBWBD : ks3FakeBWBD, myBD);
+					}
+				}
+				else if (myAF != null) {
+					if (myWW != null) {
+						call = s.updateCall(neReal3 ? ks3RealWWAF : ks3FakeWWAF, myAF);
+					}
+					else if (myBW != null) {
+						call = s.updateCall(neReal3 ? ks3RealBWAF : ks3FakeBWAF, myAF);
+					}
+				}
+				if (call == null) {
+					call = s.updateCall(ks3error);
+				}
+				// TODO: got a wrong call at 6:57 PM local time
+				// Got real white + allag call
+				// log: Logic: get hit: false; white is lethal: true; stand in real white: false; black/white is real: true; stand in white: false
+				// Actual values:
+				/*
+				NE had 1122 (real) (correct)
+				Had allag + white (correct)
+				Need to get hit by black
+
+				NE had 1122 again (real) (correct)
+				So it correctly called "Stand in Black"
+
+				However, it looks like we have black/white mixed up? Or maybe it's something to do with the fakery.
+				Going to try swapping the cast ID.
+				 */
+
+				log.info("Waiting for neVfx4");
+				var neVfx4 = s.waitEvent(StatusLoopVfxApplied.class, v -> v.getTarget().npcIdMatches(NPC_NEOXD));
+				boolean neReal4 = neVfx4.vfxIdMatches(REAL_NE);
+
+				// Final place for player to stand
+				boolean playerShouldStandInWhite = playerShouldStandInRealWhite == neReal4;
+				log.info("Logic: get hit: {}; white is lethal: {}; stand in real white: {}; black/white is real: {}; stand in white: {}", playerShouldGetHit, playerWillDieToWhite, playerShouldStandInRealWhite, neReal4, playerShouldStandInWhite);
+
+				// The white/black cast itself is also fake/real
+
+				log.info("Waiting for white/black cast");
+				AbilityCastStart blackCast = s.findOrWaitForCastWithLocation(casts, acs -> acs.abilityIdMatches(neReal4 ? 0xC395 : 0xC394));
+				Position blackPos = blackCast.getLocationInfo().getPos();
+				if (blackPos == null) {
+					log.error("no black position!");
+				}
+				else {
+					Position blackCleaving = blackPos.translateRelative(0, 20);
+					ArenaPos tightAp = new ArenaPos(100, 100, 5, 5);
+					ArenaSector blackCleavePos = tightAp.forPosition(blackCleaving);
+					ArenaSector whiteCleavePos = blackCleavePos.opposite();
+					s.setParam("whitePos", whiteCleavePos);
+					s.setParam("blackPos", blackCleavePos);
+				}
+				s.updateCall(playerShouldStandInWhite ? ks3standInWhite : ks3standInBlack, blackCast);
+
+				s.waitCastFinished(casts, blackCast);
+
+				log.info("Fake debuffs: {}", fakeDebuffs);
+
+				// First debuff set resolving at this point
+				// Five real options here:
+				// Real stack
+				// Real spread
+				// Fake stack (spread)
+				// Fake spread (stack)
+				// Nothing (go stack, call who to stack on)
+				// Stillness/motion will just be a parameter.
+				{
+					log.info("First debuff callouts");
+					BuffApplied myFork = findDurationBelow(20, myFork1, myFork2);
+					BuffApplied myAccel = findDurationBelow(20, myAccel1, myAccel2);
+					BuffApplied myWater = findDurationBelow(20, myWater1, myWater2);
+					log.info("myFork: {}", myFork);
+					log.info("myAccel: {}", myAccel);
+					log.info("myWater: {}", myWater);
+					// TODO: put icons on these
+					if (myFork != null) {
+						// Fork is naturally spread
+						boolean fake = fakeDebuffs.contains(myFork);
+						if (myAccel != null) {
+							// Accel is naturally stillness
+							s.setParam("stillness", !fakeDebuffs.contains(myAccel));
+							s.updateCall(fake ? ksFirstBombSetAccelStack : ksFirstBombSetAccelSpread, myFork);
+						}
+						else {
+							s.updateCall(fake ? ksFirstBombSetStack : ksFirstBombSetSpread, myFork);
+						}
+					}
+					else if (myWater != null) {
+						// Fork is naturally stack
+						boolean fake = fakeDebuffs.contains(myWater);
+						if (myAccel != null) {
+							// Accel is naturally stillness
+							s.setParam("stillness", !fakeDebuffs.contains(myAccel));
+							s.updateCall(fake ? ksFirstBombSetAccelSpread : ksFirstBombSetAccelStack, myWater);
+						}
+						else {
+							s.updateCall(fake ? ksFirstBombSetSpread : ksFirstBombSetStack, myWater);
+						}
+					}
+					else {
+						// Go stack on someone
+						// Find the players to stack on
+						List<BuffApplied> stacks = buffs.getBuffs().stream()
+								.filter(ba -> {
+									// Look for fake lightning or real water
+									if (fakeDebuffs.contains(ba)) {
+										return ba.buffIdMatches(FORK);
+									}
+									else {
+										return ba.buffIdMatches(WATER);
+									}
+								}).filter(ba -> ba.getEstimatedRemainingDuration().toSeconds() < 20)
+								.toList();
+						BuffApplied stackBuff = stacks.stream().findAny().orElse(null);
+						s.setParam("stacks", stacks.stream().map(BuffApplied::getTarget).toList());
+						if (myAccel != null) {
+							s.setParam("stillness", !fakeDebuffs.contains(myAccel));
+							s.updateCall(ksFirstBombSetAccelNothing, stackBuff);
+						}
+						else {
+							s.updateCall(ksFirstBombSetNothing, stackBuff);
+						}
+					}
+				}
+				var kefkaHm = s.waitEvent(HeadMarkerEvent.class, hme -> hme.eitherTargetMatches(cbt -> cbt.npcIdMatches(NPC_KEFKA)));
+				boolean fakeThunder = kefkaHm.markerIdMatches(FAKE_THUNDER);
+				BuffApplied shortShriek = buffs.findBuff(ba -> ba.buffIdMatches(SHRIEK) && ba.getEstimatedRemainingDuration().toSeconds() < 15);
+				boolean fakeShriek = fakeDebuffs.contains(shortShriek);
+				s.setParam("fakeThunder", fakeThunder);
+				s.setParam("fakeShriek", fakeShriek);
+				s.updateCall(ksThunderShriek, shortShriek);
+
+			});
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> kefkaSaysChaos = SqtTemplates.multiInvocation(180_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xC2DC),
+			(e1, s) -> {
+
+				// These also have different IDs for some reason
+				final int ENTROPY = 0x15AB;
+				final int DYNAMIC = 0x15AC;
+
+				// Tracks which debuffs are fake
+				Set<BuffApplied> fakeDebuffs = new HashSet<>();
+
+				log.info("Waiting for chVfx1");
+				var chVfx1 = s.waitEvent(StatusLoopVfxApplied.class, v -> v.getTarget().npcIdMatches(NPC_CHAOS));
+				boolean chReal1 = chVfx1.vfxIdMatches(REAL_CH);
+				// Wait for grand cross hit
+//				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xBB14));
+				// Doing it like this so the trigger doesn't get messed up if player is dead and doesn't get a debuff
+
+				log.info("Waiting for first entropy/dynamic");
+				// All players get these, so don't need to filter by player.
+				// It can apply the first set first, or the second set first. Look at duration.
+				// e.g. normal order is 60 -> 69
+				// reverse order is 84 -> 45
+				// Really annoying - order of application is not consistent. Sometimes it comes right before the above VFX, sometimes after?
+				// For some reason one of them takes longer to apply.
+				s.findOrWaitForBuff(buffs, ba -> ba.buffIdMatches(DYNAMIC, ENTROPY));
+				// Delay to not talk over MM call, plus we need to potentially delay to let all the buffs come anyway
+				s.waitMs(1_500);
+				// Capture everyone's debuffs as fake so that if we do a normal buff lookup later, it doesn't matter if we got the wrong one
+				var dynEntro1 = buffs.findBuffs(ba -> ba.buffIdMatches(DYNAMIC, ENTROPY))
+						.stream()
+						.peek(ba -> {
+							if (!chReal1) {
+								fakeDebuffs.add(ba);
+							}
+						})
+						.findFirst()
+						.orElseThrow();
+
+				s.updateCall(getDynEntCall(
+						dynEntro1.buffIdMatches(DYNAMIC),
+						dynEntro1.getInitialDuration().toSeconds() > 75,
+						chReal1), dynEntro1);
+
+				log.info("Waiting for chVfx2");
+				var chVfx2 = s.waitEvent(StatusLoopVfxApplied.class, v -> v.getTarget().npcIdMatches(NPC_CHAOS));
+				s.expireLastCall();
+				s.waitMs(5_000);
+
+				boolean chReal2 = chVfx2.vfxIdMatches(REAL_CH);
+				// It can apply the first set first, or the second set first. Look at duration.
+				// e.g. normal order is 60 -> 69
+				// reverse order is 84 -> 45
+				log.info("Waiting for entropy/dynamic 2");
+				s.findOrWaitForBuff(buffs, ba -> ba.buffIdMatches(DYNAMIC, ENTROPY) && ba.getEffectiveTimeSince().toMillis() < 5_000);
+				s.waitMs(200);
+				var dynEntro2 = buffs.findBuffs(ba -> ba.buffIdMatches(DYNAMIC, ENTROPY) && ba.getEffectiveTimeSince().toMillis() < 5_000)
+						.stream()
+						.peek(ba -> {
+							if (!chReal2) {
+								fakeDebuffs.add(ba);
+							}
+						})
+						.findFirst()
+						.orElseThrow();
+				s.updateCall(getDynEntCall(
+						dynEntro2.buffIdMatches(DYNAMIC),
+						dynEntro2.getInitialDuration().toSeconds() > 60,
+						chReal2), dynEntro2);
+
+				// Wait for thunder charged
+				s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(0x5CD));
+				s.waitMs(6_300);
+				var earlyDebuff = findDurationBelow(12, dynEntro1, dynEntro2);
+				if (earlyDebuff == null) {
+					log.error("no early debuff!");
+				}
+				else {
+					boolean fake = fakeDebuffs.contains(earlyDebuff);
+					boolean isDonut = earlyDebuff.buffIdMatches(DYNAMIC) ^ fake;
+					s.setParam("fake", fake);
+					s.setParam("isDonut", isDonut);
+					s.updateCall(ksFirstEntropyDynamic, earlyDebuff);
+					if (!isDonut) {
+						s.waitBuffRemoved(buffs, earlyDebuff);
+						s.updateCall(ksFirstEntropyDynamicMove, earlyDebuff);
+					}
+				}
+			});
+
+	@NpcCastCallout(0xC24A)
+	private final ModifiableCallout<AbilityCastStart> ultimaUpsurge = ModifiableCallout.durationBasedCall("Ultima Upsurge", "Raidwide");
 
 	EnumSetting<CleanseCallOption> getCleanseCallSetting() {
 		return cleanseCallSetting;

@@ -263,11 +263,14 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	 *
 	 * @param call The callout
 	 */
-	public void updateCall(ModifiableCallout<?> call) {
+	@Contract("null -> null; !null -> !null")
+	public @Nullable RawModifiedCallout<?> updateCall(ModifiableCallout<?> call) {
 		if (call == null) {
-			return;
+			return null;
 		}
-		updateCall(call.getModified(getParams()));
+		RawModifiedCallout<?> out = call.getModified(getParams());
+		updateCall(out);
+		return out;
 	}
 
 	/**
