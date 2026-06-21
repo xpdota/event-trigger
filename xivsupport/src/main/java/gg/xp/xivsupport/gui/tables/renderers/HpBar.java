@@ -9,6 +9,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 
+/**
+ * An HP Bar. Does NOT set tooltip by defrault.
+ */
 public class HpBar extends JComponent {
 
 	private static final Color predictedDead = new Color(108, 7, 7);
@@ -42,10 +45,15 @@ public class HpBar extends JComponent {
 	private int bgTransparency = 255;
 
 	private final FractionDisplayHelper textDelegate = new FractionDisplayHelper();
+	private final boolean tooltipEnabled;
 
-	public HpBar() {
+	public HpBar(boolean tooltipEnabled) {
+		this.tooltipEnabled = tooltipEnabled;
 		add(textDelegate);
 		setTextColor(defaultTextColor);
+	}
+	public HpBar() {
+		this(false);
 	}
 
 	public void setTextMode(BarFractionDisplayOption textMode) {
@@ -160,6 +168,16 @@ public class HpBar extends JComponent {
 
 			long displayAmount = actualPredicted < 0 ? 0 : actualPredicted;
 			textDelegate.setValue(new CurrentMaxPairImpl(displayAmount, actualMax));
+			if (tooltipEnabled) {
+				var tt = ("%s / %s (%.02f%%)".formatted(hp.current(), hp.max(), 100.0f * hp.getPercent()));
+				if (shield != 0) {
+					tt += "\n%s shield".formatted(shield);
+				}
+				if (diff != 0) {
+					tt += "\n%s pending".formatted(diff);
+				}
+				setToolTipText(tt);
+			}
 		}
 	}
 
@@ -205,7 +223,6 @@ public class HpBar extends JComponent {
 		// Skip painting, including children, if data is null
 		if (display) {
 			super.paint(g);
-			int foo = 1+2;
 		}
 	}
 

@@ -133,7 +133,7 @@ public final class StandardColumns {
 	public static CustomColumn<XivCombatant> hpColumnWithUnresolved(Function<XivCombatant, Long> pendingDamageFunc) {
 		return new CustomColumn<>("HP", combatant -> combatant, c ->
 		{
-			HpBar hpBar = new HpBar();
+			HpBar hpBar = new HpBar(true);
 			hpBar.setFgTransparency(230);
 			hpBar.setBgTransparency(128);
 			DefaultTableCellRenderer dflt = new DefaultTableCellRenderer();

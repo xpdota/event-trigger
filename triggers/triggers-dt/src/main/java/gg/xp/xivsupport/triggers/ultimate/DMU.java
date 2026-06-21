@@ -1935,7 +1935,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<BuffApplied> ksFirstBombSetAccelSpread = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: First Debuff Set Resolving: Accel + Spread", "{stillness ? 'Stillness' : 'Motion'} and Spread").autoIcon();
 	private final ModifiableCallout<BuffApplied> ksFirstBombSetAccelNothing = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: First Debuff Set Resolving: Accel + Nothing", "{stillness ? 'Stillness' : 'Motion'} and Stack with {stacks}").autoIcon();
 	private final ModifiableCallout<BuffApplied> ksThunderShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Thunder and First Shrieks Resolving", "{fakeThunder ? 'Fake' : 'Real'} Thunder, {fakeShriek ? 'Fake' : 'Real'} Gaze").statusIcon(SHRIEK);
-	private final ModifiableCallout<BuffApplied> ksFirstEntropyDynamic = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: First Entropy/Dynamic Resolving", "{isDonut ? 'Donut' : 'Stack'}").autoIcon();
+	private final ModifiableCallout<BuffApplied> ksFirstEntropyDynamic = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: First Entropy/Dynamic Resolving", "{isDonut ? 'Stack for Donut' : 'Stack then Move'}").autoIcon();
 	private final ModifiableCallout<AbilityCastStart> ksFirstEntropyDynamicMove = ModifiableCallout.<AbilityCastStart>durationBasedCall("Kefka Says: First Entropy/Dynamic: Move (Circle Aoe)", "Move").autoIcon();
 	private final ModifiableCallout<AbilityCastStart> ksFirstEntropyDynamicStay = ModifiableCallout.<AbilityCastStart>durationBasedCall("Kefka Says: First Entropy/Dynamic: Stay (Donut AoE)", "Stay").autoIcon();
 
@@ -1996,6 +1996,40 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 		}
 
 	}
+
+	// Just going to track these separately because they have very annoying timing inconsistency.
+	private @Nullable StatusLoopVfxApplied lastNeVfx;
+	private @Nullable StatusLoopVfxApplied lastChVfx;
+
+
+	private static class KefkaManaChargeDetailEvent extends BaseEvent {
+		final boolean thunderFake;
+		final boolean iceFake;
+
+		private KefkaManaChargeDetailEvent(boolean thunderFake, boolean iceFake) {
+			this.thunderFake = thunderFake;
+			this.iceFake = iceFake;
+		}
+	}
+	@HandleEvents
+	public void handleVfx(StatusLoopVfxApplied vfx) {
+		XivCombatant target = vfx.getTarget();
+		if (target.npcIdMatches(NPC_CHAOS)) {
+			lastChVfx = vfx;
+		}
+		else if (target.npcIdMatches(NPC_NEOXD)) {
+			lastNeVfx = vfx;
+		}
+	}
+
+	private boolean realNe() {
+		return lastNeVfx.vfxIdMatches(REAL_NE);
+	}
+
+	private boolean realCh() {
+		return lastChVfx.vfxIdMatches(REAL_CH);
+	}
+
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> kefkaSaysSq = SqtTemplates.multiInvocation(180_000,
@@ -2085,29 +2119,6 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 				// Would probably guess NE's fake is 1121
 
 			});
-
-	// Just going to track these separately because they have very annoying timing inconsistency.
-	private @Nullable StatusLoopVfxApplied lastNeVfx;
-	private @Nullable StatusLoopVfxApplied lastChVfx;
-
-	@HandleEvents
-	public void handleVfx(StatusLoopVfxApplied vfx) {
-		XivCombatant target = vfx.getTarget();
-		if (target.npcIdMatches(NPC_CHAOS)) {
-			lastChVfx = vfx;
-		}
-		else if (target.npcIdMatches(NPC_NEOXD)) {
-			lastNeVfx = vfx;
-		}
-	}
-
-	private boolean realNe() {
-		return lastNeVfx.vfxIdMatches(REAL_NE);
-	}
-
-	private boolean realCh() {
-		return lastChVfx.vfxIdMatches(REAL_CH);
-	}
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> kefkaSaysSqExdeath = SqtTemplates.multiInvocation(180_000,
@@ -2480,16 +2491,6 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 				}
 			});
 
-	private static class KefkaManaChargeDetailEvent extends BaseEvent {
-		final boolean thunderFake;
-		final boolean iceFake;
-
-		private KefkaManaChargeDetailEvent(boolean thunderFake, boolean iceFake) {
-			this.thunderFake = thunderFake;
-			this.iceFake = iceFake;
-		}
-	}
-
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> kefkaSaysChaos = SqtTemplates.multiInvocation(180_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xC2DC),
@@ -2546,7 +2547,8 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 				// reverse order is 84 -> 45
 				log.info("Waiting for entropy/dynamic 2");
 				s.findOrWaitForBuff(buffs, ba -> ba.buffIdMatches(DYNAMIC, ENTROPY) && ba.getEffectiveTimeSince().toMillis() < 5_000);
-				s.waitMs(200);
+				// Would talk over several other calls
+				s.waitMs(2_000);
 				var dynEntro2 = buffs.findBuffs(ba -> ba.buffIdMatches(DYNAMIC, ENTROPY) && ba.getEffectiveTimeSince().toMillis() < 5_000)
 						.stream()
 						.peek(ba -> {
