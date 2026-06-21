@@ -1869,93 +1869,94 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<AbilityCastStart> kefkaSays = ModifiableCallout.durationBasedCall("Kefka Says", "Debuffs");
 
-	private final ModifiableCallout<HeadMarkerEvent> ksRealIceRealThunder = new ModifiableCallout<>("Kefka Says: Real Ice, Real Thunder", "Avoid Both");
-	private final ModifiableCallout<HeadMarkerEvent> ksRealIceFakeThunder = new ModifiableCallout<>("Kefka Says: Real Ice, Fake Thunder", "Out of Cones, In Lines");
-	private final ModifiableCallout<HeadMarkerEvent> ksFakeIceRealThunder = new ModifiableCallout<>("Kefka Says: Fake Ice, Real Thunder", "In Cones, Out of Lines");
-	private final ModifiableCallout<HeadMarkerEvent> ksFakeIceFakeThunder = new ModifiableCallout<>("Kefka Says: Fake Ice, Fake Thunder", "Stand in Both");
+	private final ModifiableCallout<HeadMarkerEvent> ksRealIceRealThunder = new ModifiableCallout<>("Kefka Says: Real Ice, Real Thunder (All Sets)", "Avoid Both");
+	private final ModifiableCallout<HeadMarkerEvent> ksRealIceFakeThunder = new ModifiableCallout<>("Kefka Says: Real Ice, Fake Thunder (All Sets)", "Out of Cones, In Lines");
+	private final ModifiableCallout<HeadMarkerEvent> ksFakeIceRealThunder = new ModifiableCallout<>("Kefka Says: Fake Ice, Real Thunder (All Sets)", "In Cones, Out of Lines");
+	private final ModifiableCallout<HeadMarkerEvent> ksFakeIceFakeThunder = new ModifiableCallout<>("Kefka Says: Fake Ice, Fake Thunder (All Sets)", "Stand in Both");
 
 	// First set
-	private final ModifiableCallout<BuffApplied> ksRealAccelShort = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Accel, Short (First Set)", "Real Short Accel").statusIcon(ACCEL);
-	private final ModifiableCallout<BuffApplied> ksRealAccelShortShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Accel, Short, with Shriek (First Set)", "Real Short + Shriek").statusIcons(SHRIEK, ACCEL);
-	private final ModifiableCallout<BuffApplied> ksRealAccelLong = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Accel, Long (First Set)", "Real Long Accel").statusIcon(ACCEL);
-	private final ModifiableCallout<BuffApplied> ksRealAccelLongShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Accel, Long, with Shriek (First Set)", "Real Long + Shriek").statusIcons(SHRIEK, ACCEL);
-	private final ModifiableCallout<BuffApplied> ksRealWater = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Water (First Set)", "Real Water").statusIcon(WATER);
-	private final ModifiableCallout<BuffApplied> ksRealLightning = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Lightning (First Set)", "Real Lightning").statusIcon(FORK);
-	private final ModifiableCallout<BuffApplied> ksFakeAccelShort = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Accel, Short (First Set)", "Fake Short Accel").statusIcon(ACCEL);
-	private final ModifiableCallout<BuffApplied> ksFakeAccelShortShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Accel, Short, with Shriek (First Set)", "Fake Short Accel").statusIcons(SHRIEK, ACCEL);
-	private final ModifiableCallout<BuffApplied> ksFakeAccelLong = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Accel, Long (First Set)", "Fake Long Accel").statusIcon(ACCEL);
-	private final ModifiableCallout<BuffApplied> ksFakeAccelLongShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Accel, Long, with Shriek (First Set)", "Fake Long + Shriek").statusIcons(SHRIEK, ACCEL);
-	private final ModifiableCallout<BuffApplied> ksFakeWater = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Water (First Set)", "Fake Water").statusIcon(WATER);
-	private final ModifiableCallout<BuffApplied> ksFakeLightning = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Lightning (First Set)", "Fake Lightning").statusIcon(FORK);
+	private final ModifiableCallout<BuffApplied> ksRealAccelShort = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Accel, Short (First Set Applied)", "Real Short Accel").statusIcon(ACCEL);
+	private final ModifiableCallout<BuffApplied> ksRealAccelShortShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Accel, Short, with Shriek (First Set Applied)", "Real Short + Shriek").statusIcons(SHRIEK, ACCEL);
+	private final ModifiableCallout<BuffApplied> ksRealAccelLong = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Accel, Long (First Set Applied)", "Real Long Accel").statusIcon(ACCEL);
+	private final ModifiableCallout<BuffApplied> ksRealAccelLongShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Accel, Long, with Shriek (First Set Applied)", "Real Long + Shriek").statusIcons(SHRIEK, ACCEL);
+	private final ModifiableCallout<BuffApplied> ksRealWater = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Water (First Set Applied)", "Real Water").statusIcon(WATER);
+	private final ModifiableCallout<BuffApplied> ksRealLightning = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Lightning (First Set Applied)", "Real Lightning").statusIcon(FORK);
+	private final ModifiableCallout<BuffApplied> ksFakeAccelShort = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Accel, Short (First Set Applied)", "Fake Short Accel").statusIcon(ACCEL);
+	private final ModifiableCallout<BuffApplied> ksFakeAccelShortShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Accel, Short, with Shriek (First Set Applied)", "Fake Short Accel").statusIcons(SHRIEK, ACCEL);
+	private final ModifiableCallout<BuffApplied> ksFakeAccelLong = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Accel, Long (First Set Applied)", "Fake Long Accel").statusIcon(ACCEL);
+	private final ModifiableCallout<BuffApplied> ksFakeAccelLongShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Accel, Long, with Shriek (First Set Applied)", "Fake Long + Shriek").statusIcons(SHRIEK, ACCEL);
+	private final ModifiableCallout<BuffApplied> ksFakeWater = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Water (First Set Applied)", "Fake Water").statusIcon(WATER);
+	private final ModifiableCallout<BuffApplied> ksFakeLightning = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Lightning (First Set Applied)", "Fake Lightning").statusIcon(FORK);
 
-	private final ModifiableCallout<BuffApplied> ksRealDyn = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Dynamic Fluid (First Set)", "Real Dynamic").statusIcon(DYNAMIC)
+	private final ModifiableCallout<BuffApplied> ksRealDyn = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Dynamic Fluid (First Set Applied)", "Real Dynamic").statusIcon(DYNAMIC)
 			.extendedDescription("""
 					Note that the first/second set refer to the order in which they will RESOLVE, not apply.""");
-	private final ModifiableCallout<BuffApplied> ksRealEnt = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Entropy (First Set)", "Real Entropy").statusIcon(ENTROPY);
-	private final ModifiableCallout<BuffApplied> ksFakeDyn = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Dynamic Fluid (First Set)", "Fake Dynamic").statusIcon(DYNAMIC);
-	private final ModifiableCallout<BuffApplied> ksFakeEnt = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Entropy (First Set)", "Fake Entropy").statusIcon(ENTROPY);
+	private final ModifiableCallout<BuffApplied> ksRealEnt = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Entropy (First Set Applied)", "Real Entropy").statusIcon(ENTROPY);
+	private final ModifiableCallout<BuffApplied> ksFakeDyn = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Dynamic Fluid (First Set Applied)", "Fake Dynamic").statusIcon(DYNAMIC);
+	private final ModifiableCallout<BuffApplied> ksFakeEnt = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Entropy (First Set Applied)", "Fake Entropy").statusIcon(ENTROPY);
 
-	private final ModifiableCallout<BuffApplied> ksRealDyn2 = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Dynamic Fluid (Second Set)", "Real Dynamic").statusIcon(DYNAMIC);
-	private final ModifiableCallout<BuffApplied> ksRealEnt2 = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Entropy (Second Set)", "Real Entropy").statusIcon(ENTROPY);
-	private final ModifiableCallout<BuffApplied> ksFakeDyn2 = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Dynamic Fluid (Second Set)", "Fake Dynamic").statusIcon(DYNAMIC);
-	private final ModifiableCallout<BuffApplied> ksFakeEnt2 = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Entropy (Second Set)", "Fake Entropy").statusIcon(ENTROPY);
 
-	private final ModifiableCallout<BuffApplied> ks2RealAccelShort = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Accel, Short (Second Set)", "Real Short Accel").statusIcon(ACCEL);
-	private final ModifiableCallout<BuffApplied> ks2RealAccelShortShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Accel, Short, with Shriek (Second Set)", "Real Short + Shriek").statusIcons(SHRIEK, ACCEL);
-	private final ModifiableCallout<BuffApplied> ks2RealAccelLong = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Accel, Long (Second Set)", "Real Long Accel").statusIcon(ACCEL);
-	private final ModifiableCallout<BuffApplied> ks2RealAccelLongShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Accel, Long, with Shriek (Second Set)", "Real Long + Shriek").statusIcons(SHRIEK, ACCEL);
-	private final ModifiableCallout<BuffApplied> ks2RealWater = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Water (Second Set)", "Real Water").statusIcon(WATER);
-	private final ModifiableCallout<BuffApplied> ks2RealLightning = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Lightning (Second Set)", "Real Lightning").statusIcon(FORK);
-	private final ModifiableCallout<BuffApplied> ks2FakeAccelShort = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Accel, Short (Second Set)", "Fake Short Accel").statusIcon(ACCEL);
-	private final ModifiableCallout<BuffApplied> ks2FakeAccelShortShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Accel, Short, with Shriek (Second Set)", "Fake Short Accel").statusIcons(SHRIEK, ACCEL);
-	private final ModifiableCallout<BuffApplied> ks2FakeAccelLong = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Accel, Long (Second Set)", "Fake Long Accel").statusIcon(ACCEL);
-	private final ModifiableCallout<BuffApplied> ks2FakeAccelLongShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Accel, Long, with Shriek (Second Set)", "Fake Long + Shriek").statusIcons(SHRIEK, ACCEL);
-	private final ModifiableCallout<BuffApplied> ks2FakeWater = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Water (Second Set)", "Fake Water").statusIcon(WATER);
-	private final ModifiableCallout<BuffApplied> ks2FakeLightning = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Lightning (Second Set)", "Fake Lightning").statusIcon(FORK);
+	private final ModifiableCallout<BuffApplied> ks2RealAccelShort = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Accel, Short (Second Set Applied)", "Real Short Accel").statusIcon(ACCEL);
+	private final ModifiableCallout<BuffApplied> ks2RealAccelShortShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Accel, Short, with Shriek (Second Set Applied)", "Real Short + Shriek").statusIcons(SHRIEK, ACCEL);
+	private final ModifiableCallout<BuffApplied> ks2RealAccelLong = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Accel, Long (Second Set Applied)", "Real Long Accel").statusIcon(ACCEL);
+	private final ModifiableCallout<BuffApplied> ks2RealAccelLongShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Accel, Long, with Shriek (Second Set Applied)", "Real Long + Shriek").statusIcons(SHRIEK, ACCEL);
+	private final ModifiableCallout<BuffApplied> ks2RealWater = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Water (Second Set Applied)", "Real Water").statusIcon(WATER);
+	private final ModifiableCallout<BuffApplied> ks2RealLightning = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Lightning (Second Set Applied)", "Real Lightning").statusIcon(FORK);
+	private final ModifiableCallout<BuffApplied> ks2FakeAccelShort = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Accel, Short (Second Set Applied)", "Fake Short Accel").statusIcon(ACCEL);
+	private final ModifiableCallout<BuffApplied> ks2FakeAccelShortShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Accel, Short, with Shriek (Second Set Applied)", "Fake Short Accel").statusIcons(SHRIEK, ACCEL);
+	private final ModifiableCallout<BuffApplied> ks2FakeAccelLong = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Accel, Long (Second Set Applied)", "Fake Long Accel").statusIcon(ACCEL);
+	private final ModifiableCallout<BuffApplied> ks2FakeAccelLongShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Accel, Long, with Shriek (Second Set Applied)", "Fake Long + Shriek").statusIcons(SHRIEK, ACCEL);
+	private final ModifiableCallout<BuffApplied> ks2FakeWater = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Water (Second Set Applied)", "Fake Water").statusIcon(WATER);
+	private final ModifiableCallout<BuffApplied> ks2FakeLightning = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Lightning (Second Set Applied)", "Fake Lightning").statusIcon(FORK);
+	
+	private final ModifiableCallout<BuffApplied> ksRealDyn2 = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Dynamic Fluid (Second Set Applied)", "Real Dynamic").statusIcon(DYNAMIC);
+	private final ModifiableCallout<BuffApplied> ksRealEnt2 = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Entropy (Second Set Applied)", "Real Entropy").statusIcon(ENTROPY);
+	private final ModifiableCallout<BuffApplied> ksFakeDyn2 = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Dynamic Fluid (Second Set Applied)", "Fake Dynamic").statusIcon(DYNAMIC);
+	private final ModifiableCallout<BuffApplied> ksFakeEnt2 = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Entropy (Second Set Applied)", "Fake Entropy").statusIcon(ENTROPY);
 
-	private final ModifiableCallout<BuffApplied> ks3RealWWBD = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real WW + BD", "Real White + Death").statusIcons(WHITE_WOUND, BEYOND_DEATH);
-	private final ModifiableCallout<BuffApplied> ks3FakeWWBD = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake WW + BD", "Fake White + Death").statusIcons(WHITE_WOUND, BEYOND_DEATH);
-	private final ModifiableCallout<BuffApplied> ks3RealBWBD = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real BW + BD", "Real Black + Death").statusIcons(BLACK_WOUND, BEYOND_DEATH);
-	private final ModifiableCallout<BuffApplied> ks3FakeBWBD = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake BW + BD", "Fake Black + Death").statusIcons(BLACK_WOUND, BEYOND_DEATH);
-	private final ModifiableCallout<BuffApplied> ks3RealWWAF = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real WW + AF", "Real White + Allag").statusIcons(WHITE_WOUND, ALLAG_FIELD);
-	private final ModifiableCallout<BuffApplied> ks3FakeWWAF = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake WW + AF", "Fake White + Allag").statusIcons(WHITE_WOUND, ALLAG_FIELD);
-	private final ModifiableCallout<BuffApplied> ks3RealBWAF = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real BW + AF", "Real Black + Allag").statusIcons(BLACK_WOUND, ALLAG_FIELD);
-	private final ModifiableCallout<BuffApplied> ks3FakeBWAF = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake BW + AF", "Fake Black + Allag").statusIcons(BLACK_WOUND, ALLAG_FIELD);
+	private final ModifiableCallout<BuffApplied> ks3RealWWBD = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real WW + BD", "Real White + Death (Applied)").statusIcons(WHITE_WOUND, BEYOND_DEATH);
+	private final ModifiableCallout<BuffApplied> ks3FakeWWBD = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake WW + BD", "Fake White + Death (Applied)").statusIcons(WHITE_WOUND, BEYOND_DEATH);
+	private final ModifiableCallout<BuffApplied> ks3RealBWBD = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real BW + BD", "Real Black + Death (Applied)").statusIcons(BLACK_WOUND, BEYOND_DEATH);
+	private final ModifiableCallout<BuffApplied> ks3FakeBWBD = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake BW + BD", "Fake Black + Death (Applied)").statusIcons(BLACK_WOUND, BEYOND_DEATH);
+	private final ModifiableCallout<BuffApplied> ks3RealWWAF = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real WW + AF", "Real White + Allag (Applied)").statusIcons(WHITE_WOUND, ALLAG_FIELD);
+	private final ModifiableCallout<BuffApplied> ks3FakeWWAF = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake WW + AF", "Fake White + Allag (Applied)").statusIcons(WHITE_WOUND, ALLAG_FIELD);
+	private final ModifiableCallout<BuffApplied> ks3RealBWAF = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real BW + AF", "Real Black + Allag (Applied)").statusIcons(BLACK_WOUND, ALLAG_FIELD);
+	private final ModifiableCallout<BuffApplied> ks3FakeBWAF = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake BW + AF", "Fake Black + Allag (Applied)").statusIcons(BLACK_WOUND, ALLAG_FIELD);
 	private final ModifiableCallout<BuffApplied> ks3error = new ModifiableCallout<>("Kefka Says: Missing/Invalid Debuffs", "Error");
 
 	private final ModifiableCallout<AbilityCastStart> ks3standInWhite = ModifiableCallout.<AbilityCastStart>durationBasedCall("Kefka Says: Stand in White", "Stand in White ({whitePos})");
 	private final ModifiableCallout<AbilityCastStart> ks3standInBlack = ModifiableCallout.<AbilityCastStart>durationBasedCall("Kefka Says: Stand in Black", "Stand in Black ({blackPos})");
 
-	private final ModifiableCallout<BuffApplied> ksFirstBombSetStack = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: First Debuff Set: Stack", "Stack").autoIcon();
-	private final ModifiableCallout<BuffApplied> ksFirstBombSetSpread = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: First Debuff Set: Spread", "Spread").autoIcon();
-	private final ModifiableCallout<BuffApplied> ksFirstBombSetNothing = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: First Debuff Set: Nothing", "Stack with {stacks}").autoIcon();
-	private final ModifiableCallout<BuffApplied> ksFirstBombSetAccelStack = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: First Debuff Set: Accel + Stack", "{stillness ? 'Stillness' : 'Motion'} and Stack").autoIcon();
-	private final ModifiableCallout<BuffApplied> ksFirstBombSetAccelSpread = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: First Debuff Set: Accel + Spread", "{stillness ? 'Stillness' : 'Motion'} and Spread").autoIcon();
-	private final ModifiableCallout<BuffApplied> ksFirstBombSetAccelNothing = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: First Debuff Set: Accel + Nothing", "{stillness ? 'Stillness' : 'Motion'} and Stack with {stacks}").autoIcon();
-	private final ModifiableCallout<BuffApplied> ksThunderShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Thunder and Shrieks", "{fakeThunder ? 'Fake' : 'Real'} Thunder, {fakeShriek ? 'Fake' : 'Real'} Gaze").statusIcon(SHRIEK);
-	private final ModifiableCallout<BuffApplied> ksFirstEntropyDynamic = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: First Entropy/Dynamic", "{isDonut ? 'Donut' : 'Stack'}").autoIcon();
+	private final ModifiableCallout<BuffApplied> ksFirstBombSetStack = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: First Debuff Set Resolving: Stack", "Stack").autoIcon();
+	private final ModifiableCallout<BuffApplied> ksFirstBombSetSpread = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: First Debuff Set Resolving: Spread", "Spread").autoIcon();
+	private final ModifiableCallout<BuffApplied> ksFirstBombSetNothing = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: First Debuff Set Resolving: Nothing", "Stack with {stacks}").autoIcon();
+	private final ModifiableCallout<BuffApplied> ksFirstBombSetAccelStack = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: First Debuff Set Resolving: Accel + Stack", "{stillness ? 'Stillness' : 'Motion'} and Stack").autoIcon();
+	private final ModifiableCallout<BuffApplied> ksFirstBombSetAccelSpread = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: First Debuff Set Resolving: Accel + Spread", "{stillness ? 'Stillness' : 'Motion'} and Spread").autoIcon();
+	private final ModifiableCallout<BuffApplied> ksFirstBombSetAccelNothing = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: First Debuff Set Resolving: Accel + Nothing", "{stillness ? 'Stillness' : 'Motion'} and Stack with {stacks}").autoIcon();
+	private final ModifiableCallout<BuffApplied> ksThunderShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Thunder and First Shrieks Resolving", "{fakeThunder ? 'Fake' : 'Real'} Thunder, {fakeShriek ? 'Fake' : 'Real'} Gaze").statusIcon(SHRIEK);
+	private final ModifiableCallout<BuffApplied> ksFirstEntropyDynamic = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: First Entropy/Dynamic Resolving", "{isDonut ? 'Donut' : 'Stack'}").autoIcon();
 	private final ModifiableCallout<AbilityCastStart> ksFirstEntropyDynamicMove = ModifiableCallout.<AbilityCastStart>durationBasedCall("Kefka Says: First Entropy/Dynamic: Move (Circle Aoe)", "Move").autoIcon();
 	private final ModifiableCallout<AbilityCastStart> ksFirstEntropyDynamicStay = ModifiableCallout.<AbilityCastStart>durationBasedCall("Kefka Says: First Entropy/Dynamic: Stay (Donut AoE)", "Stay").autoIcon();
 
-	private final ModifiableCallout<BuffApplied> ksSecondBombSetStack = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Debuff Set: Stack", "Stack{fakeIce ? ' In Ice' : ', Avoid Ice'}").autoIcon();
-	private final ModifiableCallout<BuffApplied> ksSecondBombSetSpread = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Debuff Set: Spread", "Spread{fakeIce ? ' In Ice' : ', Avoid Ice'}").autoIcon();
-	private final ModifiableCallout<BuffApplied> ksSecondBombSetNothing = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Debuff Set: Nothing", "Stack with {stacks}{fakeIce ? ' In Ice' : ', Avoid Ice'}").autoIcon();
-	private final ModifiableCallout<BuffApplied> ksSecondBombSetAccelStack = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Debuff Set: Accel + Stack", "{stillness ? 'Stillness' : 'Motion'} and Stack{fakeIce ? ' In Ice' : ', Avoid Ice'}").autoIcon();
-	private final ModifiableCallout<BuffApplied> ksSecondBombSetAccelSpread = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Debuff Set: Accel + Spread", "{stillness ? 'Stillness' : 'Motion'} and Spread{fakeIce ? ' In Ice' : ', Avoid Ice'}").autoIcon();
-	private final ModifiableCallout<BuffApplied> ksSecondBombSetAccelNothing = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Debuff Set: Accel + Nothing", "{stillness ? 'Stillness' : 'Motion'} and Stack with {stacks}{fakeIce ? ' In Ice' : ', Avoid Ice'}").autoIcon();
+	private final ModifiableCallout<BuffApplied> ksSecondBombSetStack = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Debuff Set Resolving: Stack", "Stack{fakeIce ? ' In Ice' : ', Avoid Ice'}").autoIcon();
+	private final ModifiableCallout<BuffApplied> ksSecondBombSetSpread = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Debuff Set Resolving: Spread", "Spread{fakeIce ? ' In Ice' : ', Avoid Ice'}").autoIcon();
+	private final ModifiableCallout<BuffApplied> ksSecondBombSetNothing = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Debuff Set Resolving: Nothing", "Stack with {stacks}{fakeIce ? ' In Ice' : ', Avoid Ice'}").autoIcon();
+	private final ModifiableCallout<BuffApplied> ksSecondBombSetAccelStack = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Debuff Set Resolving: Accel + Stack", "{stillness ? 'Stillness' : 'Motion'} and Stack{fakeIce ? ' In Ice' : ', Avoid Ice'}").autoIcon();
+	private final ModifiableCallout<BuffApplied> ksSecondBombSetAccelSpread = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Debuff Set Resolving: Accel + Spread", "{stillness ? 'Stillness' : 'Motion'} and Spread{fakeIce ? ' In Ice' : ', Avoid Ice'}").autoIcon();
+	private final ModifiableCallout<BuffApplied> ksSecondBombSetAccelNothing = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Debuff Set Resolving: Accel + Nothing", "{stillness ? 'Stillness' : 'Motion'} and Stack with {stacks}{fakeIce ? ' In Ice' : ', Avoid Ice'}").autoIcon();
 
-	private final ModifiableCallout<BuffApplied> ksSecondShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Shrieks", "{fakeShriek ? 'Fake' : 'Real'} Gaze").statusIcon(SHRIEK);
+	private final ModifiableCallout<BuffApplied> ksSecondShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Shrieks Resolving", "{fakeShriek ? 'Fake' : 'Real'} Gaze").statusIcon(SHRIEK);
 
-	private final ModifiableCallout<BuffApplied> ksSecondEntropyDynamicBothReal = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Entropy/Dynamic, Both Thunder/Ice Real", "{isDonut ? 'Donut' : 'Stack'}, Avoid Both").autoIcon();
+	private final ModifiableCallout<BuffApplied> ksSecondEntropyDynamicBothReal = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Entropy/Dynamic Resolving, Both Thunder/Ice Real", "{isDonut ? 'Donut' : 'Stack'}, Avoid Both").autoIcon();
 	private final ModifiableCallout<AbilityCastStart> ksSecondEntropyDynamicMoveBothReal = ModifiableCallout.<AbilityCastStart>durationBasedCall("Kefka Says: Second Entropy/Dynamic: Move, Both Thunder/Ice Real", "Move, Avoid Both").autoIcon();
 	private final ModifiableCallout<AbilityCastStart> ksSecondEntropyDynamicStayBothReal = ModifiableCallout.<AbilityCastStart>durationBasedCall("Kefka Says: Second Entropy/Dynamic: Stay, Both Thunder/Ice Real", "Stay out of Both").autoIcon();
-	private final ModifiableCallout<BuffApplied> ksSecondEntropyDynamicBothFake = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Entropy/Dynamic, Both Thunder/Ice Fake", "{isDonut ? 'Donut' : 'Stack'}, Stand in Both").autoIcon();
+	private final ModifiableCallout<BuffApplied> ksSecondEntropyDynamicBothFake = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Entropy/Dynamic Resolving, Both Thunder/Ice Fake", "{isDonut ? 'Donut' : 'Stack'}, Stand in Both").autoIcon();
 	private final ModifiableCallout<AbilityCastStart> ksSecondEntropyDynamicMoveBothFake = ModifiableCallout.<AbilityCastStart>durationBasedCall("Kefka Says: Second Entropy/Dynamic: Move, Both Thunder/Ice Fake", "Move, Into Both").autoIcon();
 	private final ModifiableCallout<AbilityCastStart> ksSecondEntropyDynamicStayBothFake = ModifiableCallout.<AbilityCastStart>durationBasedCall("Kefka Says: Second Entropy/Dynamic: Stay, Both Thunder/Ice Fake", "Stay in Both").autoIcon();
-	private final ModifiableCallout<BuffApplied> ksSecondEntropyDynamicFakeIce = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Entropy/Dynamic, Real Thunder, Fake Ice", "{isDonut ? 'Donut' : 'Stack'}, Fake Ice, Real Thunder").autoIcon();
+	private final ModifiableCallout<BuffApplied> ksSecondEntropyDynamicFakeIce = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Entropy/Dynamic Resolving, Real Thunder, Fake Ice", "{isDonut ? 'Donut' : 'Stack'}, Fake Ice, Real Thunder").autoIcon();
 	private final ModifiableCallout<AbilityCastStart> ksSecondEntropyDynamicMoveFakeIce = ModifiableCallout.<AbilityCastStart>durationBasedCall("Kefka Says: Second Entropy/Dynamic: Move, Real Thunder, Fake Ice", "Move Into Ice").autoIcon();
 	private final ModifiableCallout<AbilityCastStart> ksSecondEntropyDynamicStayFakeIce = ModifiableCallout.<AbilityCastStart>durationBasedCall("Kefka Says: Second Entropy/Dynamic: Stay, Real Thunder, Fake Ice", "Stay In Ice").autoIcon();
-	private final ModifiableCallout<BuffApplied> ksSecondEntropyDynamicFakeThunder = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Entropy/Dynamic, Fake Thunder, Real Ice", "{isDonut ? 'Donut' : 'Stack'}, Real Ice, Fake Thunder").autoIcon();
+	private final ModifiableCallout<BuffApplied> ksSecondEntropyDynamicFakeThunder = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Entropy/Dynamic Resolving, Fake Thunder, Real Ice", "{isDonut ? 'Donut' : 'Stack'}, Real Ice, Fake Thunder").autoIcon();
 	private final ModifiableCallout<AbilityCastStart> ksSecondEntropyDynamicMoveFakeThunder = ModifiableCallout.<AbilityCastStart>durationBasedCall("Kefka Says: Second Entropy/Dynamic: Move, Fake Thunder, Real Ice", "Move Into Thunder").autoIcon();
 	private final ModifiableCallout<AbilityCastStart> ksSecondEntropyDynamicStayFakeThunder = ModifiableCallout.<AbilityCastStart>durationBasedCall("Kefka Says: Second Entropy/Dynamic: Stay, Fake Thunder, Real Ice", "Stay in Thunder").autoIcon();
 
@@ -1963,7 +1964,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	private static final int NPC_NEOXD = 19510;
 
 	private static final int REAL_NE = 1122;
-	private static final int FAKE_NE = 1121; // TODO untested
+	private static final int FAKE_NE = 1121;
 	private static final int REAL_CH = 1120;
 	private static final int FAKE_CH = 1119;
 
