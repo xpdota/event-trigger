@@ -22,6 +22,7 @@ import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectCurrentStatus;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
+import gg.xp.xivsupport.events.triggers.seq.EventCollector;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerConcurrencyMode;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerController;
@@ -2072,8 +2073,6 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 					s.accept(new KefkaManaChargeDetailEvent(fakeThunder, fakeIce));
 				}
 
-				// TODO: thunder charged and beyond, unrelated to debuffs, should probably be its own trigger
-
 				// Very slightly later, Kefka starts casting Mystery Magic BA94
 				// Neo Exdeath got StatusLoopVfx 1122 0x462 (real?)
 				// Thunder/blizzard goes off
@@ -2433,6 +2432,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 						else {
 							s.updateCall(fake ? ksSecondBombSetStack : ksSecondBombSetSpread, myFork);
 						}
+						s.waitBuffRemoved(buffs, myWater);
 					}
 					else if (myWater != null) {
 						// Fork is naturally stack
@@ -2445,6 +2445,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 						else {
 							s.updateCall(fake ? ksSecondBombSetSpread : ksSecondBombSetStack, myWater);
 						}
+						s.waitBuffRemoved(buffs, myWater);
 					}
 					else {
 						// Go stack on someone
@@ -2616,7 +2617,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 							}
 						}
 						s.updateCall(firstCall, debuff);
-						var cast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBB22, 0xBB25));
+						var cast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBB22, 0xBB23, 0xBB24, 0xBB25));
 						s.updateCall(secondCall, cast);
 					}
 				}

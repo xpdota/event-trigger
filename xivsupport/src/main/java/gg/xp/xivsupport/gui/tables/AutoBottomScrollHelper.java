@@ -5,10 +5,10 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
 import java.util.function.Consumer;
 
+// TODO: the new logic is pretty annoying because you can alter your filter to be more restrictive, while live
+// watching a log, and then it deactivates.
 public class AutoBottomScrollHelper extends JScrollPane {
 
 	private static final Logger log = LoggerFactory.getLogger(AutoBottomScrollHelper.class);
@@ -29,9 +29,6 @@ public class AutoBottomScrollHelper extends JScrollPane {
 	 * Whether we are currently (or *should* be) at the bottom of the scrollable area.
 	 */
 	private boolean atBottom;
-	private volatile int oldMax;
-	private volatile int oldValue;
-	private volatile int oldExtent;
 
 	// TODO: technically, this no longer needs a table
 	public AutoBottomScrollHelper(JTable table, Consumer<Boolean> stateCallback) {
@@ -98,17 +95,37 @@ public class AutoBottomScrollHelper extends JScrollPane {
 		headerLock = true;
 	}
 
+	private record ScrollPosition(int value, int extent, int min, int max) {
+	}
+
+	private ScrollPosition previous = new ScrollPosition(0, 0, 0, 0);
+	private ScrollPosition pending;
+
 	@Override
 	public JScrollBar createVerticalScrollBar() {
 		return new JScrollPane.ScrollBar(JScrollBar.VERTICAL) {
-			@Override
-			public void setValues(int newValue, int newExtent, int newMin, int newMax) {
+
+			private void processAsync() {
+				var newScroll = pending;
+				if (newScroll == null) {
+					return;
+				}
+				int newValue = newScroll.value;
+				int newExtent = newScroll.extent;
+				int newMin = newScroll.min;
+				int newMax = newScroll.max;
+				ScrollPosition oldScroll = previous;
+				int oldValue = oldScroll.value;
+				int oldMax = oldScroll.max;
+				int oldExtent = oldScroll.extent;
+//				log.info("Old: {}, New, {}", oldScroll, newScroll);
 //				log.info("Value: {} -> {} ; Max: {} -> {}", oldValue, newValue, oldMax, newMax);
 				// This branch means more data has been added to the table.
 				if (newMax != oldMax || newExtent != oldExtent) {
 					if (atBottom && autoScrollEnabled) {
 						// Do the auto scroll
 						newValue = newMax - newExtent;
+//						log.info("newValue modified to {}", newValue);
 					}
 				}
 				// Not an actual scroll - just quirks of how the scrolling works
@@ -124,15 +141,30 @@ public class AutoBottomScrollHelper extends JScrollPane {
 						}
 					}
 					// User scrolled up
+					// This branch seems to get hit if the filtering becomes more restrictive
+					// It seems the value updates before the max?
+					// Gets something like this:
+					/*
+					08:34:03.658 [AWT-EventQueue-0] INFO  g.x.x.g.t.AutoBottomScrollHelper:108 - Value: 20939 -> 2579 ; Max: 21600 -> 21600
+					08:34:03.658 [AWT-EventQueue-0] INFO  g.x.x.g.t.AutoBottomScrollHelper:108 - Value: 2579 -> 2579 ; Max: 21600 -> 3240
+					08:34:03.683 [AWT-EventQueue-0] INFO  g.x.x.g.t.AutoBottomScrollHelper:108 - Value: 2579 -> 2579 ; Max: 3240 -> 3240
+					 */
 					else if (newValue < oldValue) {
 						atBottom = false;
 						stateCallback.accept(false);
 					}
 				}
-				oldMax = newMax;
-				oldValue = newValue;
-				oldExtent = newExtent;
+				previous = new ScrollPosition(newValue, newExtent, newMin, newMax);
 				super.setValues(newValue, newExtent, newMin, newMax);
+
+			}
+
+			@Override
+			public void setValues(int newValue, int newExtent, int newMin, int newMax) {
+				// For some reason, if the table becomes shorter, we get the "scroll up" part before the "table shortened" part,
+				// so collapse multiple scroll requests.
+				pending = new ScrollPosition(newValue, newExtent, newMin, newMax);
+				SwingUtilities.invokeLater(this::processAsync);
 			}
 		};
 	}
