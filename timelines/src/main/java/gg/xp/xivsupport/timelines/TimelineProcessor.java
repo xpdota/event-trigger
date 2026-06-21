@@ -368,6 +368,8 @@ public final class TimelineProcessor {
 		double nextFjAt = 0;
 
 		int secondsPast = this.secondsPast.get();
+		// Only track whether we have seen the current sync once - if there is a loop, we don't want the current sync appearing multiple times
+		boolean seenFirstSync = false;
 		outer:
 		while (list.size() < maxDisplayed) {
 			for (TimelineEntry entry : entries) {
@@ -378,7 +380,11 @@ public final class TimelineProcessor {
 				// The "effective time" for this entry is its actual time, minus the next upcoming forceJump, plus the time we arrive at that FJ
 				double effectiveEntryTime = entry.time() - nextFjSyncTo + nextFjAt;
 				// If debug mode is enabled, always show the last sync
-				if (isLastSync(entry) && debug
+				boolean isLastSync = !seenFirstSync && isLastSync(entry);
+				if (isLastSync) {
+					seenFirstSync = true;
+				}
+				if (isLastSync && debug
 				    // Determine if an entry should still be shown.
 				    // secondsPast is the user-configurable value for how many seconds in the past to let an entry linger.
 				    // Account for duration entries as well - if you want to see 5 seconds in the past, and an entry has
@@ -391,8 +397,9 @@ public final class TimelineProcessor {
 				        // Filter out empty entries, unless debug is enabled
 				        && (entry.name() != null || debug))) {
 					double timeUntil = effectiveEntryTime - currentTime;
-					VisualTimelineEntry visualTimelineEntry = new VisualTimelineEntry(entry, isLastSync(entry), timeUntil, barTimeBasis);
+					VisualTimelineEntry visualTimelineEntry = new VisualTimelineEntry(entry, isLastSync, timeUntil, barTimeBasis);
 					list.add(visualTimelineEntry);
+					// If the entry WILL force a jump, then unroll the jump
 					if (entry.forceJump()) {
 						Double fj = entry.getSyncToTime(resolver);
 						if (fj != null) {
@@ -400,6 +407,8 @@ public final class TimelineProcessor {
 							nextFjSyncTo = fj;
 							// Once we're in loop mode, don't allow anything in the past
 							secondsPast = 0;
+							// extra safety against loop-induced duplicates, though I don't think there's a case where this can actually happen
+							seenFirstSync = true;
 							continue outer;
 						}
 					}
