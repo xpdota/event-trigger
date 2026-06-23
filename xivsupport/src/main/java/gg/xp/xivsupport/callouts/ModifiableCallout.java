@@ -396,6 +396,16 @@ public class ModifiableCallout<X> {
 		return durationBasedCall(descAndText, descAndText);
 	}
 
+	/**
+	 * Like {@link #durationBasedCall(String, String)} but with an additional time offset. A positive offset will make
+	 * the timer longer.
+	 *
+	 * @param desc Callout description
+	 * @param text Callout default text
+	 * @param offset Additional time offset
+	 * @return The callout
+	 * @param <Y> The data type
+	 */
 	public static <Y extends HasDuration> ModifiableCallout<Y> durationBasedCallWithOffset(String desc, String text, Duration offset) {
 		Duration combinedLingerTime = defaultLingerTime.plus(offset);
 		CombinedExpiryCondition<Y> expiry = combinedExpiry(combinedLingerTime);
@@ -403,6 +413,14 @@ public class ModifiableCallout<X> {
 		return new ModifiableCallout<>(desc, text, text + " ({event.remainingDurationPlus(java.time.Duration.ofMillis(" + millis + "))})", expiry);
 	}
 
+	/**
+	 * For actions which have extra cast time (see ExtraCastTime100ms on the Action sheet), this works like
+	 * {@link #durationBasedCallWithOffset(String, String, Duration)} with the extra cast time as the offset.
+	 *
+	 * @param desc Callout description
+	 * @param text Callout default text
+	 * @return The callout
+	 */
 	public static ModifiableCallout<AbilityCastStart> durationBasedCallWithExtraCastTime(String desc, String text) {
 		var alreadyWarned = new MutableBoolean();
 		CombinedExpiryCondition<AbilityCastStart> expiry = (call, hd) -> {

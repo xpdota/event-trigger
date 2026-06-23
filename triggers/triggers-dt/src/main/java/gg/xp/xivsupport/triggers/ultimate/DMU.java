@@ -22,7 +22,6 @@ import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectCurrentStatus;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
-import gg.xp.xivsupport.events.triggers.seq.EventCollector;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerConcurrencyMode;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerController;
@@ -375,7 +374,6 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 		LEFT,
 	}
 
-	// TODO: add double icons to these now that it is supported
 	private final ModifiableCallout<BuffApplied> ttNN = ModifiableCallout.<BuffApplied>durationBasedCall("TT: Double N", "Double North").statusIcons(0x130C, 0x130C);
 	private final ModifiableCallout<BuffApplied> ttSS = ModifiableCallout.<BuffApplied>durationBasedCall("TT: Double S", "Double South").statusIcons(0x130D, 0x130D);
 	private final ModifiableCallout<BuffApplied> ttEE = ModifiableCallout.<BuffApplied>durationBasedCall("TT: Double E", "Double East").statusIcons(0x130E, 0x130E);
@@ -479,7 +477,6 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 				s.waitBuffRemoved(buffs, longBuff);
 
 				// TODO: sort this with self first
-				// TODO: 8:37PM 6/20, confettis was empty
 				var confettis = buffs.findBuffsById(0x13D6);
 				s.setParam("confettis", confettis);
 				var confettiPlayers = confettis.stream().map(BuffApplied::getTarget).toList();
@@ -550,17 +547,13 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<?> forsakenFirstStack = new ModifiableCallout<>("Forsaken: Initial Stack", "Stack, {supportsCone ? 'Supports' : 'DPS'} have cone");
 	private final ModifiableCallout<?> forsakenFirstNothing = new ModifiableCallout<>("Forsaken: Initial Nothing", "Error, {supportsCone ? 'Supports' : 'DPS'} have cone");
 
-//	private final ModifiableCallout<?> forsakenFollowupCone = new ModifiableCallout<>("Forsaken: Followup Cone", "Cone");
-//	private final ModifiableCallout<?> forsakenFollowupCircle = new ModifiableCallout<>("Forsaken: Followup Circle", "Circle");
-//	private final ModifiableCallout<?> forsakenFollowupStack = new ModifiableCallout<>("Forsaken: Followup Stack", "Stack");
-//	private final ModifiableCallout<?> forsakenFollowupNothing = new ModifiableCallout<>("Forsaken: Followup Nothing", "Nothing");
-
-	// TODO These seem to fire too quickly after the previous call (forsakenTowerNpPfXyz)
 	private final ModifiableCallout<?> forsakenTowerCone = new ModifiableCallout<>("Forsaken: Followup Cone + Past/Future (Tower Call)", "Cone with {buddy}, Baits")
 			.extendedDescription("""
 					The 'Tower Call' variants of these call remind you of which tower pattern you will need to do. These indicate that the tower set will be accompanied with Past/Future cast bar, while the other four indicate that it will be accompanied with All Things Ending resolving.
 					
-					In addition, the `towerSet` variable will let you see which set of towers it is (starting at 1 then incrementing each time towers go off). You can use expressions like `{towerSet % 2 == 0 ? 'even' : 'odd'}` to have conditional logic based on whether it is even or odd towers, or for doing things like swap callouts.""");
+					In addition, the `towerSet` variable will let you see which set of towers it is (starting at 1 then incrementing each time towers go off). You can use expressions like `{towerSet % 2 == 0 ? 'even' : 'odd'}` to have conditional logic based on whether it is even or odd towers, or for doing things like swap callouts.
+					
+					You can also use the list `myMechs` (indexed from 0) to 'recall' previous mechanics you had. The entries in the list are 'CONE', 'CIRCLE', 'STACK', or 'NONE'. e.g. to see what you had on the third set, use `myMechs[2]`.""");
 	private final ModifiableCallout<?> forsakenTowerCircle = new ModifiableCallout<>("Forsaken: Followup Circle + Past/Future (Tower Call)", "Circle with {buddy}, Baits");
 	private final ModifiableCallout<?> forsakenTowerStack = new ModifiableCallout<>("Forsaken: Followup Stack + Past/Future (Tower Call)", "Stack, Baits");
 	private final ModifiableCallout<?> forsakenTowerNothing = new ModifiableCallout<>("Forsaken: Followup Nothing + Past/Future (Tower Call)", "Nothing, Baits");
@@ -613,6 +606,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 				long stack = 715L;
 				long circle = 716L;
 				long cone = 717L;
+				List<String> myMechs = new ArrayList<>();
 				// 715 stack?
 				// 716 circle?
 				// 717 pizza?
@@ -651,6 +645,8 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 					s.setParam("conePlayers", markerMap.get(cone).stream().map(HeadMarkerEvent::getTarget).toList());
 					s.setParam("circledPlayers", markerMap.get(circle).stream().map(HeadMarkerEvent::getTarget).toList());
 					s.setParam("towerSet", 1);
+					s.setParam("myMechs", myMechs);
+					myMechs.add(myMech.name());
 
 					s.updateCall(switch (myMech) {
 						case NONE -> forsakenFirstNothing;
@@ -676,6 +672,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 					var myMech = markers.stream().filter(hm -> hm.getTarget().isThePlayer()).findAny()
 							.map(DMU::mechForHm)
 							.orElse(ForsakenMech.NONE);
+					myMechs.add(myMech.name());
 
 					// Find other person with same mechanic
 					s.setParam("buddy", markers.stream().filter(hm -> !hm.getTarget().isThePlayer())
@@ -795,7 +792,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 				s.setParam("thirdTrineLocations", thirdTrineLocations.stream().toList());
 				// Try to figure out a reasonable starting location
 				ArenaSector bestStart;
-				// TODO: it's probably always center
+				// TODO: it's always center
 				if (thirdTrineLocations.contains(CENTER)) {
 					bestStart = CENTER;
 				}
@@ -1042,7 +1039,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 				Some strats use wind crystal as north?
 				Then markers come out.
 				For LC, Kefka will start at the same place, but in the opposite direction.
-				Then, Exdeath does two lightning III TBs which are proximity? TODO maybe I need to change the other lightning call.
+				Then, Exdeath does two lightning III TBs which are proximity?
 				 */
 
 			});
@@ -1060,15 +1057,6 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> thunderIII = ModifiableCallout.durationBasedCall("Thunder III (Exdeath AoE)", "Away from {event.source}");
 	@NpcCastCallout(0xBB09)
 	private final ModifiableCallout<AbilityCastStart> thunderIIItb = ModifiableCallout.durationBasedCall("Thunder III (Exdeath Proximity)", "Proximity Buster");
-
-	@AutoFeed
-	private final SequentialTrigger<BaseEvent> decisiveBattleSq = SqtTemplates.multiInvocation(30_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xC2E2),
-			(e1, s) -> {
-				// Nothing here that isn't already covered by other triggers
-			}, (e1, s) -> {
-				// The one after limit cut
-			});
 
 	private final ModifiableCallout<AbilityCastStart> earthquake = ModifiableCallout.durationBasedCall("Earthquake Initial", "Earthquake - 1 HP");
 
@@ -1445,7 +1433,6 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 					}
 					s.setParam("safeSpots", safe);
 					s.updateCall(earthquakeBodySlamDamningEdict, despairCast);
-					// TODO: got wrong call
 					/*
 					Damning edict was South-Southwest - likely interpreted as south
 					Cleave was NW-SE
@@ -1567,7 +1554,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 					XivPlayerCharacter target = (XivPlayerCharacter) br.getTarget();
 					AccretionRole targetRole = e1.combatantMap.get(target);
 					if (targetRole == null) {
-						// TODO
+						log.error("targetRole was null! Target: {}", target);
 						continue;
 					}
 					if (target.isThePlayer()) {
@@ -1599,8 +1586,6 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 						}
 					}
 				}
-				// TODO: tether calls
-				// Should really have a custom priority
 			});
 
 	// Tethers appear on four specific locations
@@ -1637,8 +1622,6 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 
 	/**
 	 * For staggered tether sets, you can identify where the tethers will come from, but not which ones will be the first vs second set.
-	 * <p>
-	 * TODO: look into if there's some entity ID shenanigans that can be used
 	 *
 	 * @param s                The sequential trigger controlly
 	 * @param firstSetExpected How many tethers to wait for in the first set
@@ -1736,7 +1719,6 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 			.extendedDescription("""
 					You can reference your own role to make this call directly tell you whether to stack or take towers,
 					e.g. `{event.target.job.support == state.player.job.support ? 'Stack' : 'Towers'}""");
-	// TODO: split this
 	private final ModifiableCallout<AbilityCastStart> stompAMoleMove2 = ModifiableCallout.durationBasedCall("Stomp-a-Mole: Move 2", "Move");
 	private final ModifiableCallout<?> stompAMoleSwitch = new ModifiableCallout<>("Stomp-a-Mole: Swap", "Swap");
 	private final ModifiableCallout<AbilityCastStart> bigBangAndB3 = ModifiableCallout.durationBasedCall("Stomp-a-Mole: Blizzard + Big Bang", "Away from Stacks, Keep Moving");
@@ -1773,15 +1755,9 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 				var b3 = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBB11));
 				s.updateCall(bigBangAndB3, b3);
 
-				// TODO enrage
-				// Confirmed:
 				// C258 = meteor fail
 				// C259 = bowels of agony fail
-
-				// From fflogs:
 				// C61E = meteor normal enrage
-
-				// Unconfirmed:
 				// C61F = bowels of agony normal enrage
 				var enrages = s.waitEventsQuickSuccession(2, AbilityCastStart.class, acs -> acs.abilityIdMatches(0xC61E, 0xC61F, 0xC258, 0xC259));
 				enrages.stream().filter(e -> e.abilityIdMatches(0xC258, 0xC259))
@@ -1909,7 +1885,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<BuffApplied> ks2FakeAccelLongShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Accel, Long, with Shriek (Second Set Applied)", "Fake Long + Shriek").statusIcons(SHRIEK, ACCEL);
 	private final ModifiableCallout<BuffApplied> ks2FakeWater = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Water (Second Set Applied)", "Fake Water").statusIcon(WATER);
 	private final ModifiableCallout<BuffApplied> ks2FakeLightning = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Lightning (Second Set Applied)", "Fake Lightning").statusIcon(FORK);
-	
+
 	private final ModifiableCallout<BuffApplied> ksRealDyn2 = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Dynamic Fluid (Second Set Applied)", "Real Dynamic").statusIcon(DYNAMIC);
 	private final ModifiableCallout<BuffApplied> ksRealEnt2 = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Entropy (Second Set Applied)", "Real Entropy").statusIcon(ENTROPY);
 	private final ModifiableCallout<BuffApplied> ksFakeDyn2 = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Dynamic Fluid (Second Set Applied)", "Fake Dynamic").statusIcon(DYNAMIC);
@@ -2011,6 +1987,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 			this.iceFake = iceFake;
 		}
 	}
+
 	@HandleEvents
 	public void handleVfx(StatusLoopVfxApplied vfx) {
 		XivCombatant target = vfx.getTarget();
@@ -2032,7 +2009,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> kefkaSaysSq = SqtTemplates.multiInvocation(180_000,
+	private final SequentialTrigger<BaseEvent> kefkaSaysSq = SqtTemplates.sq(180_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xC2DC),
 			(e1, s) -> {
 				s.updateCall(kefkaSays, e1);
@@ -2121,7 +2098,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 			});
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> kefkaSaysSqExdeath = SqtTemplates.multiInvocation(180_000,
+	private final SequentialTrigger<BaseEvent> kefkaSaysSqExdeath = SqtTemplates.sq(180_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xC2DC),
 			(e1, s) -> {
 
@@ -2297,21 +2274,6 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 				if (call == null) {
 					call = s.updateCall(ks3error);
 				}
-				// TODO: got a wrong call at 6:57 PM local time
-				// Got real white + allag call
-				// log: Logic: get hit: false; white is lethal: true; stand in real white: false; black/white is real: true; stand in white: false
-				// Actual values:
-				/*
-				NE had 1122 (real) (correct)
-				Had allag + white (correct)
-				Need to get hit by black
-
-				NE had 1122 again (real) (correct)
-				So it correctly called "Stand in Black"
-
-				However, it looks like we have black/white mixed up? Or maybe it's something to do with the fakery.
-				Going to try swapping the cast ID.
-				 */
 
 				log.info("Waiting for neVfx4");
 				var neVfx4 = s.waitEvent(StatusLoopVfxApplied.class, v -> v.getTarget().npcIdMatches(NPC_NEOXD));
@@ -2492,7 +2454,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 			});
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> kefkaSaysChaos = SqtTemplates.multiInvocation(180_000,
+	private final SequentialTrigger<BaseEvent> kefkaSaysChaos = SqtTemplates.sq(180_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xC2DC),
 			(e1, s) -> {
 
@@ -2630,6 +2592,140 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 
 	@NpcCastCallout(0xBABB)
 	private final ModifiableCallout<AbilityCastStart> p4enrageFail = ModifiableCallout.durationBasedCall("P4 Enrage (Failed)", "Failed");
+
+	/*
+	P5
+	 */
+	@NpcCastCallout(0xBB40)
+	private final ModifiableCallout<AbilityCastStart> ultimaRepeater = ModifiableCallout.durationBasedCallWithExtraCastTime("Ultima Repeater", "Raidwide, 4 Hits");
+
+	private final ModifiableCallout<AbilityCastStart> flood = ModifiableCallout.durationBasedCallWithExtraCastTime("Flood", "Flood");
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> floodSq = SqtTemplates.sq(180_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xC13F),
+			(e1, s) -> {
+				s.updateCall(flood, e1);
+				var firstSetRaw = s.waitEventsQuickSuccession(2, AbilityCastStart.class, acs -> acs.abilityIdMatches(0xC183));
+				var secondSetRaw = s.waitEventsQuickSuccession(2, AbilityCastStart.class, acs -> acs.abilityIdMatches(0xC183));
+				var firstLocations = firstSetRaw.stream().map(s::waitForCastLocation).toList();
+				var secondLocations = firstSetRaw.stream().map(s::waitForCastLocation).toList();
+			});
+
+	private final ModifiableCallout<AbilityCastStart> maddeningOrchestra = ModifiableCallout.durationBasedCallWithExtraCastTime("Maddening Orchestra", "Spread");
+	private final ModifiableCallout<BuffApplied> maddeningOrchestraFlare = ModifiableCallout.<BuffApplied>durationBasedCall("Maddening Orchestra: Tank Flare", "Surprise Flare").autoIcon();
+	private final ModifiableCallout<BuffApplied> maddeningOrchestraHoly = ModifiableCallout.<BuffApplied>durationBasedCall("Maddening Orchestra: Tank Holy", "Surprise Holy").autoIcon();
+	private final ModifiableCallout<?> maddeningHoly = new ModifiableCallout<>("Maddening Orchestra: Hit by Holy", "Out");
+	private final ModifiableCallout<?> maddeningNoHoly = new ModifiableCallout<>("Maddening Orchestra: Not Hit by Holy", "In");
+	private final ModifiableCallout<BuffApplied> maddeningFinalFlare = ModifiableCallout.<BuffApplied>durationBasedCall("Maddening Orchestra: Flare Tank Move Out", "Move Out").autoIcon();
+	private final ModifiableCallout<BuffApplied> maddeningFinal = ModifiableCallout.<BuffApplied>durationBasedCall("Maddening Orchestra: Avoid Flare Tank", "Away from {flareTank}");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> maddeningOrchestraSq = SqtTemplates.sq(180_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBB50),
+			(e1, s) -> {
+				s.updateCall(maddeningOrchestra, e1);
+				// Only collect first-target hits - ignore if someone got clipped
+				var holyHits = s.waitEventsQuickSuccession(3, AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xBB54) && aue.isFirstTarget());
+
+				var flare = s.findOrWaitForBuff(buffs, ba -> ba.buffIdMatches(0x14E6));
+				var holy = s.findOrWaitForBuff(buffs, ba -> ba.buffIdMatches(0x14E7));
+				s.setParam("flareTank", flare.getTarget());
+				s.setParam("holyTank", holy.getTarget());
+				if (flare.getTarget().isThePlayer()) {
+					s.updateCall(maddeningOrchestraFlare, flare);
+				}
+				else if (holy.getTarget().isThePlayer()) {
+					s.updateCall(maddeningOrchestraHoly, holy);
+				}
+				else {
+					if (holyHits.stream().anyMatch(hit -> hit.getTarget().isThePlayer())) {
+						s.updateCall(maddeningHoly);
+					}
+					else {
+						s.updateCall(maddeningNoHoly);
+					}
+				}
+				var holyHits2 = s.waitEventsQuickSuccession(3, AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xBB54) && aue.isFirstTarget());
+				if (flare.getTarget().isThePlayer()) {
+					s.updateCall(maddeningFinalFlare, flare);
+				}
+				else {
+					s.updateCall(maddeningFinal, flare);
+				}
+			});
+
+	private final ModifiableCallout<AbilityCastStart> celestriad = ModifiableCallout.durationBasedCall("Celestriad", "Elemental Towers");
+	private final ModifiableCallout<BuffApplied> celestriadFireResDown = ModifiableCallout.<BuffApplied>durationBasedCall("Celestriad: Fire Res Down", "Fire Last").autoIcon();
+	private final ModifiableCallout<BuffApplied> celestriadLightningResDown = ModifiableCallout.<BuffApplied>durationBasedCall("Celestriad: Lightning Res Down", "Lightning Last").autoIcon();
+	private final ModifiableCallout<BuffApplied> celestriadIceResDown = ModifiableCallout.<BuffApplied>durationBasedCall("Celestriad: Ice Res Down", "Ice Last").autoIcon();
+	private final ModifiableCallout<?> celestriadNoResDown = new ModifiableCallout<>("Celestriad: No Res Down", "No Debuff");
+	private final ModifiableCallout<AbilityCastStart> celestriadIn = ModifiableCallout.durationBasedCall("Celestriad: Catastrophic Choice (In)", "In");
+	private final ModifiableCallout<AbilityCastStart> celestriadOut = ModifiableCallout.durationBasedCall("Celestriad: Catastrophic Choice (Out)", "Out");
+
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> celestriadSq = SqtTemplates.sq(180_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBB42),
+			(e1, s) -> {
+				s.updateCall(celestriad, e1);
+				final int FIRE_DOWN = 0xB56;
+				final int LIGHT_DOWN = 0xBB6;
+				final int ICE_DOWN = 0xB57;
+				s.waitEventsQuickSuccession(6, BuffApplied.class, ba -> ba.buffIdMatches(0xB56, 0xBB6, 0xB57));
+				BuffApplied myFire = buffs.findStatusOnPlayer(FIRE_DOWN);
+				BuffApplied myLight = buffs.findStatusOnPlayer(LIGHT_DOWN);
+				BuffApplied myIce = buffs.findStatusOnPlayer(ICE_DOWN);
+				if (myFire != null) {
+					s.updateCall(celestriadFireResDown, myFire);
+				}
+				else if (myLight != null) {
+					s.updateCall(celestriadLightningResDown, myLight);
+				}
+				else if (myIce != null) {
+					s.updateCall(celestriadIceResDown, myLight);
+				}
+				else {
+					s.updateCall(celestriadNoResDown);
+				}
+				var cata1 = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xC24E, 0xC24F));
+				if (cata1.abilityIdMatches(0xC24E)) {
+					s.call(celestriadOut, cata1);
+				}
+				else {
+					s.call(celestriadIn, cata1);
+				}
+				var cata2 = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xC24E, 0xC24F));
+				if (cata2.abilityIdMatches(0xC24E)) {
+					s.call(celestriadOut, cata2);
+				}
+				else {
+					s.call(celestriadIn, cata2);
+				}
+				// TODO: what else is actually useful to call here?
+			});
+
+
+	@NpcCastCallout(0xBB3B)
+	private final ModifiableCallout<AbilityCastStart> exaflares = ModifiableCallout.durationBasedCall("Exaflares", "Exaflares");
+	@NpcCastCallout(0xBB3E)
+	private final ModifiableCallout<AbilityCastStart> strayEntropy = ModifiableCallout.durationBasedCall("Stray Entropy", "Spread");
+
+	private final ModifiableCallout<AbilityCastStart> p5forsaken = ModifiableCallout.durationBasedCall("P5 Forsaken", "Stack, Raidwide");
+	private final ModifiableCallout<AbilityCastStart> p5forsakenMove = ModifiableCallout.durationBasedCall("P5 Forsaken", "Stack, Raidwide");
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> p5forsakenSq = SqtTemplates.sq(180_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBB42),
+			(e1, s) -> {
+				s.updateCall(p5forsaken, e1);
+				for (int i = 0; i < 4; i++) {
+					s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBB38));
+					s.updateCall(p5forsakenMove);
+				}
+			});
+
+	@NpcCastCallout(value = 0xBB3A, cancellable = true)
+	private final ModifiableCallout<AbilityCastStart> p5enrage = ModifiableCallout.durationBasedCall("P5 Enrage", "Enrage");
+
 
 	EnumSetting<CleanseCallOption> getCleanseCallSetting() {
 		return cleanseCallSetting;
