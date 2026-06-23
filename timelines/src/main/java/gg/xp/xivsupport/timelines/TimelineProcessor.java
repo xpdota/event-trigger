@@ -27,6 +27,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -151,7 +152,7 @@ public final class TimelineProcessor {
 				int beginChunk = Math.max(0, (int) (entry.getMinTime() / CHUNK_SIZE));
 				int endChunk = Math.max(0, (int) (entry.getMaxTime() / CHUNK_SIZE));
 				IntStream.rangeClosed(beginChunk, endChunk)
-						.forEach(val -> syncChunks.computeIfAbsent(val, k -> new HashSet<>()).add(entry));
+						.forEach(val -> syncChunks.computeIfAbsent(val, k -> new LinkedHashSet<>()).add(entry));
 			});
 			this.subSyncChunks = new ArrayBackedMap<>(syncChunks.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> new ArrayList<>(e.getValue()))));
 			this.directlyChosenEvents = syncEntries.stream().map(TimelineEntry::eventSyncType)
