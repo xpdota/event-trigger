@@ -1894,7 +1894,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<BuffApplied> ks3RealWWBD = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real WW + BD", "Real White + Death (Applied)").statusIcons(WHITE_WOUND, BEYOND_DEATH);
 	private final ModifiableCallout<BuffApplied> ks3FakeWWBD = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake WW + BD", "Fake White + Death (Applied)").statusIcons(WHITE_WOUND, BEYOND_DEATH);
 	private final ModifiableCallout<BuffApplied> ks3RealBWBD = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real BW + BD", "Real Black + Death (Applied)").statusIcons(BLACK_WOUND, BEYOND_DEATH);
-	private final ModifiableCallout<BuffApplied> ks3FakeBWBD = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake BW + BD", "Fake Black + Death (Applied)").statusIcons(BLACK_WOUND, BEYOND_DEATH);
+	private final ModifiableCallout<BuffApplied> ks3FakeBWBD = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake BW + BD (Applied)", "Fake Black + Death (Applied)").statusIcons(BLACK_WOUND, BEYOND_DEATH);
 	private final ModifiableCallout<BuffApplied> ks3RealWWAF = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real WW + AF", "Real White + Allag (Applied)").statusIcons(WHITE_WOUND, ALLAG_FIELD);
 	private final ModifiableCallout<BuffApplied> ks3FakeWWAF = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake WW + AF", "Fake White + Allag (Applied)").statusIcons(WHITE_WOUND, ALLAG_FIELD);
 	private final ModifiableCallout<BuffApplied> ks3RealBWAF = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real BW + AF", "Real Black + Allag (Applied)").statusIcons(BLACK_WOUND, ALLAG_FIELD);
@@ -2540,7 +2540,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 						s.setParam("isDonut", isDonut);
 						s.updateCall(ksFirstEntropyDynamic, debuff);
 
-						var cast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBB22, 0xBB25));
+						var cast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBB22, 0xBB23, 0xBB24, 0xBB25));
 						s.updateCall(isDonut ? ksFirstEntropyDynamicStay : ksFirstEntropyDynamicMove, cast);
 					}
 				}
