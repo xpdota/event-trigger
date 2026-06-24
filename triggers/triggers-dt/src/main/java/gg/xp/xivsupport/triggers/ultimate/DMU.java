@@ -2682,7 +2682,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 					s.updateCall(celestriadLightningResDown, myLight);
 				}
 				else if (myIce != null) {
-					s.updateCall(celestriadIceResDown, myLight);
+					s.updateCall(celestriadIceResDown, myIce);
 				}
 				else {
 					s.updateCall(celestriadNoResDown);
