@@ -429,7 +429,7 @@ public class CdTracker {
 		String textOver = setting.getTextOverride().get();
 		String tts = ttsOver.isBlank() ? ability.getName() : ttsOver;
 		String text = enableFlyingText.get() ? (textOver.isBlank() ? ability.getName() : textOver) : null;
-		return new RawModifiedCallout<>("Cooldown", tts, text, null, event, Collections.emptyMap(), (ignored) -> null, ModifiableCallout.expiresIn(5000), null, null);
+		return new RawModifiedCallout<>("Cooldown", tts, text, null, event, Collections.emptyMap(), (ignored) -> null, ModifiableCallout.expiresIn(5000), null, null, 0);
 //		return new BasicCalloutEvent(ability.getName(), enableFlyingText.get() ? ability.getName() : null);
 	}
 

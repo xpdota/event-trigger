@@ -18,6 +18,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -138,6 +139,7 @@ public class CalloutProcessor {
 				raw.getSound());
 		out.setReplaces(raw.getReplaces());
 		out.setTrace(new ModifiableCalloutTraceInfo(raw));
+		out.setTtsDelayMs(raw.getTtsDelayMs());
 		log.info("Callout: TTS='{}' from '{}' caused by '{}'", tts, raw.getDescription(), raw.getParent());
 		return out;
 	}
@@ -176,7 +178,9 @@ public class CalloutProcessor {
 				}
 				catch (Throwable e) {
 					if (raw.shouldLogError()) {
-						log.error("Eval error for input '{}'", input, e);
+						var trace = new ModifiableCalloutTraceInfo(raw);
+						var desc = trace.getShortDescription();
+						log.error("Eval error for trigger '{}', input '{}'", desc, input, e);
 					}
 					return "Error";
 				}

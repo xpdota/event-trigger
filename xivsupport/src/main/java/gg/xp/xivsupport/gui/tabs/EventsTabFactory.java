@@ -30,6 +30,7 @@ import gg.xp.xivsupport.gui.tables.renderers.AbilityEffectAndIndexRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
 import gg.xp.xivsupport.gui.tables.timedisplay.TimeDisplayController;
+import gg.xp.xivsupport.gui.util.EasyAction;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.replay.ReplayController;
@@ -109,6 +110,7 @@ public class EventsTabFactory {
 				.addWidget(unused -> new BooleanSettingGui(displayIdsSetting, "Show IDs", true).getComponent())
 				.addWidget(replayNextPseudoFilter(Event.class))
 				.addWidget(tdc::configureWidget)
+				.addWidget(t -> new EasyAction("Show Selection", () -> t.getMainModel().scrollToSelectedValue()).asButton())
 				.addWidget(t -> {
 					JButton button = new JButton("New Window");
 					button.addActionListener(l -> newWindow(button));

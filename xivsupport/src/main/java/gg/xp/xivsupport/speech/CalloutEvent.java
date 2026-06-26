@@ -21,6 +21,10 @@ public interface CalloutEvent extends Event, HasPrimaryValue, HasCalloutTracking
 
 	@Nullable String getCallText();
 
+	default int getTtsDelayMs() {
+		return 0;
+	}
+
 	default @Nullable String getSound() {
 		return null;
 	};

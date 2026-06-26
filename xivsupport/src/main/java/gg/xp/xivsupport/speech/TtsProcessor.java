@@ -20,7 +20,15 @@ public class TtsProcessor {
 		String callText = callout.getCallText();
 		if (callText != null && !callText.isBlank()) {
 			log.info("TTS: '{}'", callText);
-			context.accept(new TtsRequest(callText));
+			int delayMs = callout.getTtsDelayMs();
+			TtsRequest out = new TtsRequest(callText);
+			if (delayMs == 0) {
+				context.accept(out);
+			}
+			else {
+				out.setDelayedEnqueueOffset(delayMs);
+				context.enqueue(out);
+			}
 		}
 	}
 

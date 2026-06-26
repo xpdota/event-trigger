@@ -16,6 +16,7 @@ public abstract class BaseCalloutEvent extends BaseEvent implements CalloutEvent
 	private @Nullable Color colorOverride;
 	private @Nullable HasCalloutTrackingKey replaces;
 	private @Nullable CalloutTraceInfo trace;
+	private int ttsDelayMs;
 	private boolean forceExpire;
 
 	private final CalloutTrackingKey key;
@@ -84,5 +85,14 @@ public abstract class BaseCalloutEvent extends BaseEvent implements CalloutEvent
 	@SuppressWarnings("unused") // used in scripts
 	public void forceExpire() {
 		this.forceExpire = true;
+	}
+
+	@Override
+	public int getTtsDelayMs() {
+		return ttsDelayMs;
+	}
+
+	public void setTtsDelayMs(int ttsDelayMs) {
+		this.ttsDelayMs = ttsDelayMs;
 	}
 }

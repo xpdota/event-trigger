@@ -33,11 +33,12 @@ public class RawModifiedCallout<X> extends BaseEvent implements HasCalloutTracki
 	private @Nullable Color colorOverride;
 	private final ModifiedCalloutHandle handle;
 	private final CalloutTrackingKey key = new CalloutTrackingKey();
+	private int ttsDelayMs;
 	private static final int maxErrors = 10;
 	private int errorCount;
 	private volatile boolean forceExpired;
 
-	public RawModifiedCallout(String description, @Nullable String tts, @Nullable String text, @Nullable String sound, @Nullable X event, Map<String, Object> arguments, Function<? super X, ? extends @Nullable Component> guiProvider, Predicate<RawModifiedCallout<X>> expiry, @Nullable Color colorOverride, @Nullable ModifiedCalloutHandle handle) {
+	public RawModifiedCallout(String description, @Nullable String tts, @Nullable String text, @Nullable String sound, @Nullable X event, Map<String, Object> arguments, Function<? super X, ? extends @Nullable Component> guiProvider, Predicate<RawModifiedCallout<X>> expiry, @Nullable Color colorOverride, @Nullable ModifiedCalloutHandle handle, int ttsDelayMs) {
 		this.description = description;
 		this.tts = tts;
 		this.text = text;
@@ -48,6 +49,7 @@ public class RawModifiedCallout<X> extends BaseEvent implements HasCalloutTracki
 		this.expiry = expiry;
 		this.colorOverride = colorOverride;
 		this.handle = handle;
+		this.ttsDelayMs = ttsDelayMs;
 	}
 
 	public @Nullable String getTts() {
@@ -141,6 +143,14 @@ public class RawModifiedCallout<X> extends BaseEvent implements HasCalloutTracki
 
 	public void forceExpire() {
 		this.forceExpired = true;
+	}
+
+	public int getTtsDelayMs() {
+		return ttsDelayMs;
+	}
+
+	public void setTtsDelayMs(int ttsDelayMs) {
+		this.ttsDelayMs = ttsDelayMs;
 	}
 
 	@Override

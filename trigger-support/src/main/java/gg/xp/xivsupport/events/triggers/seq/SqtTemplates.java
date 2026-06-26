@@ -119,6 +119,23 @@ public final class SqtTemplates {
 		};
 	}
 
+	/**
+	 * selfManagedMultiInvocation is like {@link #multiInvocation(int, Class, Predicate, BiConsumer[])}, but instead
+	 * of specifying multiple triggers, you just see the invocation number as a parameter passed to a single function.
+	 * The invocation number starts at zero, and resets to zero on a wipe.
+	 * <p>
+	 * This is mostly useful for when you want behavior like multiInvocation, but your trigger functions would be so
+	 * similar to one another that it would be more readable to use a single function with some logic to perform
+	 * different things based on the invocation count.
+	 *
+	 * @param timeoutMs      Timeout. This is the same for each individual trigger, so you should
+	 *                       use the highest value that any individual invocation needs.
+	 * @param startType      Start event type.
+	 * @param startCondition Start event condition.
+	 * @param trigger        A trigger.
+	 * @param <X>            Start event type.
+	 * @return The constructed trigger.
+	 */
 	public static <X> SequentialTrigger<BaseEvent> selfManagedMultiInvocation(
 			int timeoutMs,
 			Class<X> startType,

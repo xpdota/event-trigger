@@ -15,6 +15,7 @@ import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.ActorControlExtraEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
+import gg.xp.xivsupport.events.actlines.events.DescribesCastLocation;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.actlines.events.vfx.StatusLoopVfxApplied;
@@ -35,6 +36,7 @@ import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.EnumSetting;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -65,15 +67,8 @@ import static gg.xp.xivsupport.models.ArenaSector.SOUTH;
 import static gg.xp.xivsupport.models.ArenaSector.SOUTHEAST;
 import static gg.xp.xivsupport.models.ArenaSector.SOUTHWEST;
 import static gg.xp.xivsupport.models.ArenaSector.WEST;
+import static gg.xp.xivsupport.models.ArenaSector.tryCombineTwoQuadrants;
 
-/*
-TODO: timeline issue
-Gets stuck on "Blizzard III Blowout?", but not really?
-Seems like it just never picks up another sync.
-But oddly, in debug mode, the timeline overlay is full of that same entry, but in newer -> older order?
-There's definitely a timeline processing and/or display bug because that should never happen.
-There *could* also be an issue with the timeline itself but idk.
- */
 @CalloutRepo(name = "DMU Triggers", duty = KnownDuty.DMU)
 public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 
@@ -84,6 +79,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	private StatusEffectRepository buffs;
 
 	private EnumSetting<CleanseCallOption> cleanseCallSetting;
+	private BooleanSetting doubleTowerOnlyWithNoDebuff;
 
 	public DMU(XivState state, ActiveCastRepository casts, StatusEffectRepository buffs, PersistenceProvider pers) {
 		this.state = state;
@@ -91,6 +87,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 		this.buffs = buffs;
 		String settingsBase = "triggers.dmu.";
 		cleanseCallSetting = new EnumSetting<>(pers, settingsBase + "cleanse-call-setting", CleanseCallOption.class, CleanseCallOption.PRIOR_SET);
+		doubleTowerOnlyWithNoDebuff = new BooleanSetting(pers, settingsBase + "double-tower-no-debuff", false);
 	}
 
 	@Override
@@ -1825,12 +1822,54 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	Next part seems to be debuff vomit
 	 */
 
-	@NpcCastCallout(0xBB14)
-	private final ModifiableCallout<AbilityCastStart> grandCross = ModifiableCallout.durationBasedCall("Grand Cross", "Raidwide");
-	@NpcCastCallout(0xBB20)
-	private final ModifiableCallout<AbilityCastStart> inferno = ModifiableCallout.durationBasedCall("Inferno", "Raidwide");
-	@NpcCastCallout(0xBB21)
-	private final ModifiableCallout<AbilityCastStart> tsunami = ModifiableCallout.durationBasedCall("Tsunami", "Raidwide");
+//	@NpcCastCallout(0xBB14)
+//	private final ModifiableCallout<AbilityCastStart> grandCross = ModifiableCallout.durationBasedCall("Grand Cross", "Raidwide");
+//	@NpcCastCallout(0xBB20)
+//	private final ModifiableCallout<AbilityCastStart> inferno = ModifiableCallout.durationBasedCall("Inferno", "Raidwide");
+//	@NpcCastCallout(0xBB21)
+//	private final ModifiableCallout<AbilityCastStart> tsunami = ModifiableCallout.durationBasedCall("Tsunami", "Raidwide");
+
+	private final ModifiableCallout<AbilityCastStart> grandCross1 = ModifiableCallout.<AbilityCastStart>durationBasedCall("Grand Cross 1", "{real ? 'Real' : 'Fake'} Cross").defaultTtsDelay(2_000)
+			.extendedDescription("""
+					These callouts use an experimental new feature to delay the TTS without delaying the visual text, so that it doesn't talk over other calls happening at the same time.
+					In the future, it will be possible to customize the delay.""");
+	private final ModifiableCallout<AbilityCastStart> grandCross2 = ModifiableCallout.<AbilityCastStart>durationBasedCall("Grand Cross 2", "{real ? 'Real' : 'Fake'} Cross").defaultTtsDelay(2_000);
+	private final ModifiableCallout<AbilityCastStart> grandCross3 = ModifiableCallout.<AbilityCastStart>durationBasedCall("Grand Cross 3", "{real ? 'Real' : 'Fake'} Cross").defaultTtsDelay(4_000);
+
+	private final ModifiableCallout<AbilityCastStart> inferno1 = ModifiableCallout.durationBasedCall("Inferno 1", "{real ? 'Real' : 'Fake'} Inferno");
+	private final ModifiableCallout<AbilityCastStart> inferno2 = ModifiableCallout.durationBasedCall("Inferno 2", "{real ? 'Real' : 'Fake'} Inferno");
+
+	private final ModifiableCallout<AbilityCastStart> tsunami1 = ModifiableCallout.durationBasedCall("Tsunami 1", "{real ? 'Real' : 'Fake'} Tsunami");
+	private final ModifiableCallout<AbilityCastStart> tsunami2 = ModifiableCallout.durationBasedCall("Tsunami 2", "{real ? 'Real' : 'Fake'} Tsunami");
+
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> grandCrossSq = SqtTemplates.selfManagedMultiInvocation(10_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBB14),
+			(e1, s, i) -> {
+				s.setParam("real", realNe());
+				var call = switch (i) {
+					case 0 -> grandCross1;
+					case 1 -> grandCross2;
+					case 2 -> grandCross3;
+					default -> throw new RuntimeException("Invalid invocation index: " + i);
+				};
+				s.updateCall(call, e1);
+			});
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> infernoTsunamiSq = SqtTemplates.selfManagedMultiInvocation(10_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBB20, 0xBB21),
+			(e1, s, i) -> {
+				s.setParam("real", realCh());
+				boolean isInferno = e1.abilityIdMatches(0xBB20);
+				var call = switch (i) {
+					case 0 -> isInferno ? inferno1 : tsunami1;
+					case 1 -> isInferno ? inferno2 : tsunami2;
+					default -> throw new RuntimeException("Invalid invocation index: " + i);
+				};
+				s.updateCall(call, e1);
+			});
 
 	private static final long SHRIEK = 0x15A7;
 	private static final long FORK = 0x15A8;
@@ -1844,7 +1883,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	private static final long BEYOND_DEATH = 0x566; // Also 1558?
 	private static final long BEYOND_DEATH_FAKE = 0x1558; // Also 1558?
 
-	private final ModifiableCallout<AbilityCastStart> kefkaSays = ModifiableCallout.durationBasedCall("Kefka Says", "Debuffs");
+	private final ModifiableCallout<AbilityCastStart> kefkaSays = ModifiableCallout.durationBasedCall("Kefka Says", "Kefka Says");
 
 	private final ModifiableCallout<HeadMarkerEvent> ksRealIceRealThunder = new ModifiableCallout<>("Kefka Says: Real Ice, Real Thunder (All Sets)", "Avoid Both");
 	private final ModifiableCallout<HeadMarkerEvent> ksRealIceFakeThunder = new ModifiableCallout<>("Kefka Says: Real Ice, Fake Thunder (All Sets)", "Out of Cones, In Lines");
@@ -1865,12 +1904,19 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<BuffApplied> ksFakeWater = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Water (First Set Applied)", "Fake Water").statusIcon(WATER);
 	private final ModifiableCallout<BuffApplied> ksFakeLightning = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Lightning (First Set Applied)", "Fake Lightning").statusIcon(FORK);
 
-	private final ModifiableCallout<BuffApplied> ksRealDyn = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Dynamic Fluid (First Set Applied)", "Real Dynamic").statusIcon(DYNAMIC)
+	private final ModifiableCallout<BuffApplied> ksRealDyn = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Dynamic Fluid (First Set Applied)", "Real Dynamic").statusIcon(DYNAMIC).disabledByDefault()
 			.extendedDescription("""
-					Note that the first/second set refer to the order in which they will RESOLVE, not apply.""");
-	private final ModifiableCallout<BuffApplied> ksRealEnt = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Entropy (First Set Applied)", "Real Entropy").statusIcon(ENTROPY);
-	private final ModifiableCallout<BuffApplied> ksFakeDyn = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Dynamic Fluid (First Set Applied)", "Fake Dynamic").statusIcon(DYNAMIC);
-	private final ModifiableCallout<BuffApplied> ksFakeEnt = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Entropy (First Set Applied)", "Fake Entropy").statusIcon(ENTROPY);
+					Note that the first/second set refer to the order in which they will RESOLVE, not apply.
+					
+					These calls are disabled by default. I would recommend keeping it this way as there is a lot going on at that point, and there is another call later to remind you of what to do with your debuff anyway.""");
+	private final ModifiableCallout<BuffApplied> ksRealEnt = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Entropy (First Set Applied)", "Real Entropy").statusIcon(ENTROPY).disabledByDefault();
+	private final ModifiableCallout<BuffApplied> ksFakeDyn = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Dynamic Fluid (First Set Applied)", "Fake Dynamic").statusIcon(DYNAMIC).disabledByDefault();
+	private final ModifiableCallout<BuffApplied> ksFakeEnt = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Entropy (First Set Applied)", "Fake Entropy").statusIcon(ENTROPY).disabledByDefault();
+
+	private final ModifiableCallout<BuffApplied> ksRealDyn2 = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Dynamic Fluid (Second Set Applied)", "Real Dynamic").statusIcon(DYNAMIC).disabledByDefault();
+	private final ModifiableCallout<BuffApplied> ksRealEnt2 = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Entropy (Second Set Applied)", "Real Entropy").statusIcon(ENTROPY).disabledByDefault();
+	private final ModifiableCallout<BuffApplied> ksFakeDyn2 = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Dynamic Fluid (Second Set Applied)", "Fake Dynamic").statusIcon(DYNAMIC).disabledByDefault();
+	private final ModifiableCallout<BuffApplied> ksFakeEnt2 = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Entropy (Second Set Applied)", "Fake Entropy").statusIcon(ENTROPY).disabledByDefault();
 
 
 	private final ModifiableCallout<BuffApplied> ks2RealAccelShort = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Accel, Short (Second Set Applied)", "Real Short Accel").statusIcon(ACCEL);
@@ -1886,19 +1932,14 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<BuffApplied> ks2FakeWater = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Water (Second Set Applied)", "Fake Water").statusIcon(WATER);
 	private final ModifiableCallout<BuffApplied> ks2FakeLightning = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Lightning (Second Set Applied)", "Fake Lightning").statusIcon(FORK);
 
-	private final ModifiableCallout<BuffApplied> ksRealDyn2 = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Dynamic Fluid (Second Set Applied)", "Real Dynamic").statusIcon(DYNAMIC);
-	private final ModifiableCallout<BuffApplied> ksRealEnt2 = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real Entropy (Second Set Applied)", "Real Entropy").statusIcon(ENTROPY);
-	private final ModifiableCallout<BuffApplied> ksFakeDyn2 = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Dynamic Fluid (Second Set Applied)", "Fake Dynamic").statusIcon(DYNAMIC);
-	private final ModifiableCallout<BuffApplied> ksFakeEnt2 = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake Entropy (Second Set Applied)", "Fake Entropy").statusIcon(ENTROPY);
-
-	private final ModifiableCallout<BuffApplied> ks3RealWWBD = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real WW + BD", "Real White + Death (Applied)").statusIcons(WHITE_WOUND, BEYOND_DEATH);
-	private final ModifiableCallout<BuffApplied> ks3FakeWWBD = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake WW + BD", "Fake White + Death (Applied)").statusIcons(WHITE_WOUND, BEYOND_DEATH);
-	private final ModifiableCallout<BuffApplied> ks3RealBWBD = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real BW + BD", "Real Black + Death (Applied)").statusIcons(BLACK_WOUND, BEYOND_DEATH);
-	private final ModifiableCallout<BuffApplied> ks3FakeBWBD = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake BW + BD (Applied)", "Fake Black + Death (Applied)").statusIcons(BLACK_WOUND, BEYOND_DEATH);
-	private final ModifiableCallout<BuffApplied> ks3RealWWAF = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real WW + AF", "Real White + Allag (Applied)").statusIcons(WHITE_WOUND, ALLAG_FIELD);
-	private final ModifiableCallout<BuffApplied> ks3FakeWWAF = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake WW + AF", "Fake White + Allag (Applied)").statusIcons(WHITE_WOUND, ALLAG_FIELD);
-	private final ModifiableCallout<BuffApplied> ks3RealBWAF = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real BW + AF", "Real Black + Allag (Applied)").statusIcons(BLACK_WOUND, ALLAG_FIELD);
-	private final ModifiableCallout<BuffApplied> ks3FakeBWAF = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake BW + AF", "Fake Black + Allag (Applied)").statusIcons(BLACK_WOUND, ALLAG_FIELD);
+	private final ModifiableCallout<BuffApplied> ks3RealWWBD = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real WW + BD", "Real White + Death").statusIcons(WHITE_WOUND, BEYOND_DEATH);
+	private final ModifiableCallout<BuffApplied> ks3FakeWWBD = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake WW + BD", "Fake White + Death").statusIcons(WHITE_WOUND, BEYOND_DEATH);
+	private final ModifiableCallout<BuffApplied> ks3RealBWBD = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real BW + BD", "Real Black + Death").statusIcons(BLACK_WOUND, BEYOND_DEATH);
+	private final ModifiableCallout<BuffApplied> ks3FakeBWBD = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake BW + BD (Applied)", "Fake Black + Death").statusIcons(BLACK_WOUND, BEYOND_DEATH);
+	private final ModifiableCallout<BuffApplied> ks3RealWWAF = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real WW + AF", "Real White + Allag").statusIcons(WHITE_WOUND, ALLAG_FIELD);
+	private final ModifiableCallout<BuffApplied> ks3FakeWWAF = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake WW + AF", "Fake White + Allag").statusIcons(WHITE_WOUND, ALLAG_FIELD);
+	private final ModifiableCallout<BuffApplied> ks3RealBWAF = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Real BW + AF", "Real Black + Allag").statusIcons(BLACK_WOUND, ALLAG_FIELD);
+	private final ModifiableCallout<BuffApplied> ks3FakeBWAF = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Fake BW + AF", "Fake Black + Allag").statusIcons(BLACK_WOUND, ALLAG_FIELD);
 	private final ModifiableCallout<BuffApplied> ks3error = new ModifiableCallout<>("Kefka Says: Missing/Invalid Debuffs", "Error");
 
 	private final ModifiableCallout<AbilityCastStart> ks3standInWhite = ModifiableCallout.<AbilityCastStart>durationBasedCall("Kefka Says: Stand in White", "Stand in White ({whitePos})");
@@ -1910,19 +1951,25 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<BuffApplied> ksFirstBombSetAccelStack = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: First Debuff Set Resolving: Accel + Stack", "{stillness ? 'Stillness' : 'Motion'} and Stack").autoIcon();
 	private final ModifiableCallout<BuffApplied> ksFirstBombSetAccelSpread = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: First Debuff Set Resolving: Accel + Spread", "{stillness ? 'Stillness' : 'Motion'} and Spread").autoIcon();
 	private final ModifiableCallout<BuffApplied> ksFirstBombSetAccelNothing = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: First Debuff Set Resolving: Accel + Nothing", "{stillness ? 'Stillness' : 'Motion'} and Stack with {stacks}").autoIcon();
+
 	private final ModifiableCallout<BuffApplied> ksThunderShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Thunder and First Shrieks Resolving", "{fakeThunder ? 'Fake' : 'Real'} Thunder, {fakeShriek ? 'Fake' : 'Real'} Gaze").statusIcon(SHRIEK);
+	private final ModifiableCallout<BuffApplied> ksThunderShriekOnYou = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Thunder and First Shrieks Resolving (Shriek on You)", "{fakeThunder ? 'Fake' : 'Real'} Thunder, {fakeShriek ? 'Fake' : 'Real'} Gaze on YOU").statusIcon(SHRIEK);
+
 	private final ModifiableCallout<BuffApplied> ksFirstEntropyDynamic = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: First Entropy/Dynamic Resolving", "{isDonut ? 'Stack for Donut' : 'Stack then Move'}").autoIcon();
+
+	// TODO: at this point, we should ideally call the second sest of debuffs so you know where to move to, though you do have ~3.7s
 	private final ModifiableCallout<AbilityCastStart> ksFirstEntropyDynamicMove = ModifiableCallout.<AbilityCastStart>durationBasedCall("Kefka Says: First Entropy/Dynamic: Move (Circle Aoe)", "Move").autoIcon();
 	private final ModifiableCallout<AbilityCastStart> ksFirstEntropyDynamicStay = ModifiableCallout.<AbilityCastStart>durationBasedCall("Kefka Says: First Entropy/Dynamic: Stay (Donut AoE)", "Stay").autoIcon();
 
-	private final ModifiableCallout<BuffApplied> ksSecondBombSetStack = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Debuff Set Resolving: Stack", "Stack{fakeIce ? ' In Ice' : ', Avoid Ice'}").autoIcon();
-	private final ModifiableCallout<BuffApplied> ksSecondBombSetSpread = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Debuff Set Resolving: Spread", "Spread{fakeIce ? ' In Ice' : ', Avoid Ice'}").autoIcon();
-	private final ModifiableCallout<BuffApplied> ksSecondBombSetNothing = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Debuff Set Resolving: Nothing", "Stack with {stacks}{fakeIce ? ' In Ice' : ', Avoid Ice'}").autoIcon();
-	private final ModifiableCallout<BuffApplied> ksSecondBombSetAccelStack = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Debuff Set Resolving: Accel + Stack", "{stillness ? 'Stillness' : 'Motion'} and Stack{fakeIce ? ' In Ice' : ', Avoid Ice'}").autoIcon();
-	private final ModifiableCallout<BuffApplied> ksSecondBombSetAccelSpread = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Debuff Set Resolving: Accel + Spread", "{stillness ? 'Stillness' : 'Motion'} and Spread{fakeIce ? ' In Ice' : ', Avoid Ice'}").autoIcon();
-	private final ModifiableCallout<BuffApplied> ksSecondBombSetAccelNothing = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Debuff Set Resolving: Accel + Nothing", "{stillness ? 'Stillness' : 'Motion'} and Stack with {stacks}{fakeIce ? ' In Ice' : ', Avoid Ice'}").autoIcon();
+	private final ModifiableCallout<BuffApplied> ksSecondBombSetStack = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Debuff Set Resolving: Stack", "Stack {fakeIce ? 'In Ice' : 'Out of Ice'}").autoIcon();
+	private final ModifiableCallout<BuffApplied> ksSecondBombSetSpread = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Debuff Set Resolving: Spread", "Spread {fakeIce ? 'In Ice' : 'Out of Ice'}").autoIcon();
+	private final ModifiableCallout<BuffApplied> ksSecondBombSetNothing = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Debuff Set Resolving: Nothing", "Stack {fakeIce ? 'In Ice' : 'Out of Ice'} (with {stacks})").autoIcon();
+	private final ModifiableCallout<BuffApplied> ksSecondBombSetAccelStack = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Debuff Set Resolving: Accel + Stack", "{stillness ? 'Stillness' : 'Motion'} and Stack {fakeIce ? 'In Ice' : 'Out of Ice'}").autoIcon();
+	private final ModifiableCallout<BuffApplied> ksSecondBombSetAccelSpread = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Debuff Set Resolving: Accel + Spread", "{stillness ? 'Stillness' : 'Motion'} and Spread {fakeIce ? 'In Ice' : 'Out of Ice'}").autoIcon();
+	private final ModifiableCallout<BuffApplied> ksSecondBombSetAccelNothing = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Debuff Set Resolving: Accel + Nothing", "{stillness ? 'Stillness' : 'Motion'} and Stack {fakeIce ? 'In Ice' : 'Out of Ice'} (with {stacks})").autoIcon();
 
 	private final ModifiableCallout<BuffApplied> ksSecondShriek = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Shrieks Resolving", "{fakeShriek ? 'Fake' : 'Real'} Gaze").statusIcon(SHRIEK);
+	private final ModifiableCallout<BuffApplied> ksSecondShriekOnYou = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Shrieks Resolving (On You)", "{fakeShriek ? 'Fake' : 'Real'} Gaze on YOU").statusIcon(SHRIEK);
 
 	private final ModifiableCallout<BuffApplied> ksSecondEntropyDynamicBothReal = ModifiableCallout.<BuffApplied>durationBasedCall("Kefka Says: Second Entropy/Dynamic Resolving, Both Thunder/Ice Real", "{isDonut ? 'Donut' : 'Stack'}, Avoid Both").autoIcon();
 	private final ModifiableCallout<AbilityCastStart> ksSecondEntropyDynamicMoveBothReal = ModifiableCallout.<AbilityCastStart>durationBasedCall("Kefka Says: Second Entropy/Dynamic: Move, Both Thunder/Ice Real", "Move, Avoid Both").autoIcon();
@@ -2375,10 +2422,11 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 				boolean fakeThunder = kefkaHm1.markerIdMatches(FAKE_THUNDER);
 				{
 					BuffApplied shortShriek = buffs.findBuff(ba -> ba.buffIdMatches(SHRIEK) && ba.getEstimatedRemainingDuration().toSeconds() < 15);
+					BuffApplied shortShriekYou = buffs.findBuff(ba -> ba.buffIdMatches(SHRIEK) && ba.getEstimatedRemainingDuration().toSeconds() < 15 && ba.getTarget().isThePlayer());
 					boolean fakeShriek = fakeDebuffs.contains(shortShriek);
 					s.setParam("fakeThunder", fakeThunder);
 					s.setParam("fakeShriek", fakeShriek);
-					s.updateCall(ksThunderShriek, shortShriek);
+					s.updateCall(shortShriekYou == null ? ksThunderShriek : ksThunderShriekOnYou, shortShriek);
 				}
 				var kefkaHm2 = s.waitEvent(HeadMarkerEvent.class, hme -> hme.eitherTargetMatches(cbt -> cbt.npcIdMatches(NPC_KEFKA)));
 				boolean fakeIce = kefkaHm2.markerIdMatches(FAKE_ICE);
@@ -2447,9 +2495,10 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 					}
 
 					BuffApplied longShriek = buffs.findBuff(ba -> ba.buffIdMatches(SHRIEK) && ba.getEstimatedRemainingDuration().toSeconds() < 15);
+					BuffApplied longShriekOnYou = buffs.findBuff(ba -> ba.buffIdMatches(SHRIEK) && ba.getEstimatedRemainingDuration().toSeconds() < 15 && ba.getTarget().isThePlayer());
 					boolean fakeShriek = fakeDebuffs.contains(longShriek);
 					s.setParam("fakeShriek", fakeShriek);
-					s.updateCall(ksSecondShriek, longShriek);
+					s.updateCall(longShriekOnYou == null ? ksSecondShriek : ksSecondShriekOnYou, longShriek);
 				}
 			});
 
@@ -2493,10 +2542,12 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 						.findFirst()
 						.orElseThrow();
 
-				s.updateCall(getDynEntCall(
+				RawModifiedCallout<BuffApplied> call = s.updateCall(getDynEntCall(
 						dynEntro1.buffIdMatches(DYNAMIC),
 						dynEntro1.getInitialDuration().toSeconds() > 75,
 						chReal1), dynEntro1);
+				// TODO: test if this actually works (setting the delay immediately after submitting)
+				call.setTtsDelayMs(2_000);
 
 				log.info("Waiting for chVfx2");
 				var chVfx2 = s.waitEvent(StatusLoopVfxApplied.class, v -> v.getTarget().npcIdMatches(NPC_CHAOS));
@@ -2600,6 +2651,27 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> ultimaRepeater = ModifiableCallout.durationBasedCallWithExtraCastTime("Ultima Repeater", "Raidwide, 4 Hits");
 
 	private final ModifiableCallout<AbilityCastStart> flood = ModifiableCallout.durationBasedCallWithExtraCastTime("Flood", "Flood");
+	private final ModifiableCallout<?> floodCall = new ModifiableCallout<>("Flood: Location and Rotation", "Start {cardinalStart}, {clockwise ? 'Clockwise' : 'CCW'}")
+			.extendedDescription("""
+					You can use the variables 'start' and 'secondStart' for the direction opposite the first and second hit (intercard),\
+					along with {cardinalStart} for the cardinal between those two.
+					'final' is opposite the final hit, and cardinalFinal is the safe spot for the 3rd and 4th hits.""");
+	private final ModifiableCallout<?> floodMove1 = new ModifiableCallout<>("Flood: Move 1", "Move").disabledByDefault();
+	private final ModifiableCallout<?> floodMove2 = new ModifiableCallout<>("Flood: Move 2", "Move").disabledByDefault();
+
+	private final ArenaPos floodAp = new ArenaPos(100, 100, 2, 2);
+
+	private ArenaSector getFloodPos(List<AbilityCastStart> casts, SequentialTriggerController<?> s) {
+		return casts.stream()
+				.map(s::waitForCastLocation)
+				.map(DescribesCastLocation::getPos)
+				.map(pos -> pos.translateRelative(0, 20.6))
+				.filter(pos -> pos.distanceFrom2D(Position.of2d(100, 100)) < 6)
+				.map(floodAp::forPosition)
+				.findFirst()
+				.orElseThrow();
+	}
+
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> floodSq = SqtTemplates.sq(180_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xC13F),
@@ -2607,8 +2679,25 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 				s.updateCall(flood, e1);
 				var firstSetRaw = s.waitEventsQuickSuccession(2, AbilityCastStart.class, acs -> acs.abilityIdMatches(0xC183));
 				var secondSetRaw = s.waitEventsQuickSuccession(2, AbilityCastStart.class, acs -> acs.abilityIdMatches(0xC183));
-				var firstLocations = firstSetRaw.stream().map(s::waitForCastLocation).toList();
-				var secondLocations = firstSetRaw.stream().map(s::waitForCastLocation).toList();
+				var firstLocation = getFloodPos(firstSetRaw, s);
+				var secondLocation = getFloodPos(secondSetRaw, s);
+				ArenaSector start = firstLocation.opposite();
+				ArenaSector second = secondLocation.opposite();
+				ArenaSector cardinalStart = tryCombineTwoQuadrants(List.of(start, second));
+				s.setParam("start", start);
+				s.setParam("second", second);
+				s.setParam("cardinalStart", cardinalStart);
+				boolean clockwise = firstLocation.eighthsTo(secondLocation) > 0;
+				s.setParam("clockwise", clockwise);
+				// 270 degrees
+				s.setParam("final", start.plusQuads(clockwise ? -1 : 1));
+				s.setParam("cardinalFinal", cardinalStart == null ? ArenaSector.UNKNOWN : cardinalStart.opposite());
+				s.updateCall(floodCall);
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xC269));
+				s.updateCall(floodMove1);
+				s.waitMs(100);
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xC269));
+				s.updateCall(floodMove2);
 			});
 
 	private final ModifiableCallout<AbilityCastStart> maddeningOrchestra = ModifiableCallout.durationBasedCallWithExtraCastTime("Maddening Orchestra", "Spread");
@@ -2662,6 +2751,11 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> celestriadIn = ModifiableCallout.durationBasedCall("Celestriad: Catastrophic Choice (In)", "In");
 	private final ModifiableCallout<AbilityCastStart> celestriadOut = ModifiableCallout.durationBasedCall("Celestriad: Catastrophic Choice (Out)", "Out");
 
+	private final ModifiableCallout<?> doubleFire = new ModifiableCallout<>("Celestriad: Double Fire Tower", "Double Fire")
+			.extendedDescription("""
+					You can use the setting 'Double Tower Call only when no debuff' to make this (and the ice/lightning equivalents) only call when you have no initial debuff.""");
+	private final ModifiableCallout<?> doubleIce = new ModifiableCallout<>("Celestriad: Double Ice Tower", "Double Ice");
+	private final ModifiableCallout<?> doubleLightning = new ModifiableCallout<>("Celestriad: Double Lightning Tower", "Double Lightning");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> celestriadSq = SqtTemplates.sq(180_000,
@@ -2675,6 +2769,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 				BuffApplied myFire = buffs.findStatusOnPlayer(FIRE_DOWN);
 				BuffApplied myLight = buffs.findStatusOnPlayer(LIGHT_DOWN);
 				BuffApplied myIce = buffs.findStatusOnPlayer(ICE_DOWN);
+				boolean noDebuff = false;
 				if (myFire != null) {
 					s.updateCall(celestriadFireResDown, myFire);
 				}
@@ -2686,7 +2781,65 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 				}
 				else {
 					s.updateCall(celestriadNoResDown);
+					noDebuff = true;
 				}
+				s.setParam("noDebuff", noDebuff);
+				// The way towers seem to work is each color has a unique bNpcId - 2015294, 295, 296
+				// Then you get groups of four ACEE 19D 10:20:0:0
+				// Next set comes. The same four as before get ACEE 19D 1:40:0:0 (probably the "clear" command)
+				// A new four get 10:20
+				// Repeat one more time
+				// I think:
+				// 296 == thunder
+				// 295 == ice
+				// 294 == fire
+
+				// Call the double tower if you have o debuff, or you did NOT enable the setting to only call if you have no debuff.
+				boolean shouldCallDoubleTower = noDebuff || !doubleTowerOnlyWithNoDebuff.get();
+				// Collect events even if disabled for debugging purposes
+				for (int i = 1; i <= 3; i++) {
+					// TODO: account for delayed combatant data?
+					var towers = s.waitEventsQuickSuccession(4, ActorControlExtraEvent.class, acee -> acee.allFieldsMatch(0x19D, 0x10, 0x20, 0, 0));
+					var color = getDoubleTowerColor(towers);
+					if (color != null && shouldCallDoubleTower) {
+						s.updateCall(switch (color) {
+							case FIRE -> doubleFire;
+							case ICE -> doubleIce;
+							case THUNDER -> doubleLightning;
+						});
+					}
+				}
+			});
+
+	private enum TowerColor {
+		FIRE(2015294),
+		ICE(2015295),
+		THUNDER(2015296);
+
+		final long npcId;
+
+		TowerColor(long npcId) {
+			this.npcId = npcId;
+		}
+	}
+
+	private TowerColor getDoubleTowerColor(List<ActorControlExtraEvent> events) {
+		Map<Long, List<XivCombatant>> towers = events.stream().map(ActorControlExtraEvent::getTarget).collect(Collectors.groupingBy(t -> t.getbNpcId()));
+		for (TowerColor color : TowerColor.values()) {
+			List<XivCombatant> combatants = towers.get(color.npcId);
+			if (combatants != null && combatants.size() == 2) {
+				return color;
+			}
+		}
+		log.error("Error determining tower colors: {}", events);
+		return null;
+	}
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> celestriadCataSq = SqtTemplates.sq(180_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBB42),
+			(e1, s) -> {
+				// TODO: why does this need to be an sqt?
 				var cata1 = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xC24E, 0xC24F));
 				if (cata1.abilityIdMatches(0xC24E)) {
 					s.call(celestriadOut, cata1);
@@ -2701,9 +2854,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 				else {
 					s.call(celestriadIn, cata2);
 				}
-				// TODO: what else is actually useful to call here?
 			});
-
 
 	@NpcCastCallout(0xBB3B)
 	private final ModifiableCallout<AbilityCastStart> exaflares = ModifiableCallout.durationBasedCall("Exaflares", "Exaflares");
@@ -2729,5 +2880,9 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 
 	EnumSetting<CleanseCallOption> getCleanseCallSetting() {
 		return cleanseCallSetting;
+	}
+
+	BooleanSetting getDoubleTowerOnlyWithNoDebuffSetting() {
+		return doubleTowerOnlyWithNoDebuff;
 	}
 }

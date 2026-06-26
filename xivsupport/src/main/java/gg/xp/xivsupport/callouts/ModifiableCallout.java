@@ -7,12 +7,9 @@ import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
 import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
-import gg.xp.xivsupport.gui.tables.renderers.ComponentListRenderer;
-import gg.xp.xivsupport.gui.tables.renderers.ComponentListStretchyRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.HorizontalStretchIconList;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
-import gg.xp.xivsupport.gui.tables.renderers.StatusEffectListRenderer;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -27,8 +24,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 // TODO: refactor all of this into a builder pattern
 
@@ -59,6 +54,8 @@ public class ModifiableCallout<X> {
 	private static final Duration defaultHangDuration = Duration.of(5, ChronoUnit.SECONDS);
 
 	private volatile ModifiedCalloutHandle handle;
+
+	private int ttsDelayMs;
 
 	/**
 	 * The most basic type of callout. Uses the same text for TTS and on-screen.
@@ -236,6 +233,17 @@ public class ModifiableCallout<X> {
 	}
 
 	/**
+	 * Adds a default delay to the TTS, but allows the visual text to still appear immediately.
+	 *
+	 * @param defaultTtsDelayMs The default delay, in ms
+	 * @return this (builder pattern)
+	 */
+	public ModifiableCallout<X> defaultTtsDelay(int defaultTtsDelayMs) {
+		this.ttsDelayMs = defaultTtsDelayMs;
+		return this;
+	}
+
+	/**
 	 * Like {@link #expiresIn(Duration)} but takes a number of seconds rather than a Duration
 	 *
 	 * @param seconds Duration in seconds
@@ -323,7 +331,7 @@ public class ModifiableCallout<X> {
 			sound = handle.getSoundFileIdentifier();
 			colorOverride = handle.getTextColorOverride().get();
 		}
-		return new RawModifiedCallout<>(description, callText, visualText, sound, event, rawArguments, guiProvider, expiry, colorOverride, handle);
+		return new RawModifiedCallout<>(description, callText, visualText, sound, event, rawArguments, guiProvider, expiry, colorOverride, handle, ttsDelayMs);
 	}
 
 	/**
@@ -351,7 +359,7 @@ public class ModifiableCallout<X> {
 			sound = handle.getSoundFileIdentifier();
 			colorOverride = handle.getTextColorOverride().get();
 		}
-		return new RawModifiedCallout<>(description, callText, visualText, sound, null, rawArguments, guiProvider, expiry, colorOverride, handle);
+		return new RawModifiedCallout<>(description, callText, visualText, sound, null, rawArguments, guiProvider, expiry, colorOverride, handle, ttsDelayMs);
 	}
 
 

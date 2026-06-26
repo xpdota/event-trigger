@@ -15,9 +15,11 @@ import java.awt.*;
 public class DummyTestGui implements DutyPluginTab {
 
 	private final EventMaster master;
+	private final DummyTestFight fight;
 
-	public DummyTestGui(EventMaster master) {
+	public DummyTestGui(EventMaster master, DummyTestFight fight) {
 		this.master = master;
+		this.fight = fight;
 	}
 
 	@Override
@@ -36,11 +38,13 @@ public class DummyTestGui implements DutyPluginTab {
 		outer.setLayout(new BorderLayout());
 		JPanel panel = new JPanel();
 		panel.add(new EasyAction("Test With Event", () -> master.pushEvent(new DebugCommand("testcall"))).asButton());
-		panel.add(new EasyAction("Test Without Event", () -> master.pushEvent(new DebugCommand("testcall2"))).asButton());
-		panel.add(new EasyAction("Test With Holds (Start)", () -> master.pushEvent(new DebugCommand("testcall_on"))).asButton());
-		panel.add(new EasyAction("Test With Holds (Stop)", () -> master.pushEvent(new DebugCommand("testcall_off"))).asButton());
-		panel.add(new EasyAction("Test With Vars", () -> master.pushEvent(new DebugCommand("testcall3"))).asButton());
-		panel.add(new EasyAction("Test With Icons", () -> master.pushEvent(new DebugCommand("testcall4"))).asButton());
+		panel.add(new EasyAction("Test Without Event", fight::callDummyNoEvent).asButton());
+		panel.add(new EasyAction("Test With Holds (Start)", fight::callDummy2on).asButton());
+		panel.add(new EasyAction("Test With Holds (Stop)", fight::callDummy2off).asButton());
+		panel.add(new EasyAction("Test With Vars", fight::callDummy3).asButton());
+		panel.add(new EasyAction("Test With Icons", fight::callDummy4).asButton());
+		panel.add(new EasyAction("Test With Delay", fight::callDummy5).asButton());
+		panel.add(new EasyAction("Test With Overridden Delay", fight::callDummy5moreDelay).asButton());
 		outer.add(panel, BorderLayout.NORTH);
 		return outer;
 	}

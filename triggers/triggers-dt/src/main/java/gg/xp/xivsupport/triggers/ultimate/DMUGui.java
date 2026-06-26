@@ -5,10 +5,11 @@ import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.extra.DutyPluginTab;
 import gg.xp.xivsupport.gui.util.GuiUtil;
+import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.EnumSettingGui;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.EnumSetting;
 
-import javax.swing.*;
 import java.awt.*;
 
 @ScanMe
@@ -35,8 +36,11 @@ public class DMUGui implements DutyPluginTab {
 		EnumSetting<DMU.CleanseCallOption> cleanseCallSetting = backend.getCleanseCallSetting();
 		EnumSettingGui<DMU.CleanseCallOption> cleanseSettingGui = new EnumSettingGui<>(cleanseCallSetting, "Earthquake Cleanse Calls: ", () -> true);
 
+		BooleanSetting doubleTowerOnlyWithNoDebuffSetting = backend.getDoubleTowerOnlyWithNoDebuffSetting();
+		BooleanSettingGui doubleTowerSettingGui = new BooleanSettingGui(doubleTowerOnlyWithNoDebuffSetting, "Double Tower Call only when no debuff");
+
 		var outer = new TitleBorderFullsizePanel("DMU Settings");
-		GuiUtil.simpleTopDownLayout(outer, cleanseSettingGui.getComponent());
+		GuiUtil.simpleTopDownLayout(outer, cleanseSettingGui.getComponent(), doubleTowerSettingGui.getComponent());
 		return outer;
 	}
 }

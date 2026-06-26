@@ -48,7 +48,15 @@ public class ModifiableCalloutTraceInfo implements CalloutTraceInfo {
 			}
 			return String.join(multiline ? "\n" : ": ", items);
 		}
+	}
 
+	public String getShortDescription() {
+		if (calloutField == null) {
+			return "?";
+		}
+		else {
+			return "%s.%s".formatted(calloutField.getDeclaringClass().getSimpleName(), calloutField.getName());
+		}
 	}
 
 	@Override
