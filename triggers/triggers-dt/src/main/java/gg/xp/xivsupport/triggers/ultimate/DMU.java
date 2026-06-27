@@ -2753,7 +2753,7 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<?> doubleFire = new ModifiableCallout<>("Celestriad: Double Fire Tower", "Double Fire")
 			.extendedDescription("""
-					You can use the setting 'Double Tower Call only when no debuff' to make this (and the ice/lightning equivalents) only call when you have no initial debuff.""");
+					You can use the setting 'Double Tower Call only when no debuff' to make this (and the ice/lightning equivalents) only call when you have no initial debuff (on the Settings tab above).""");
 	private final ModifiableCallout<?> doubleIce = new ModifiableCallout<>("Celestriad: Double Ice Tower", "Double Ice");
 	private final ModifiableCallout<?> doubleLightning = new ModifiableCallout<>("Celestriad: Double Lightning Tower", "Double Lightning");
 
