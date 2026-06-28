@@ -2862,15 +2862,15 @@ public class DMU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> strayEntropy = ModifiableCallout.durationBasedCall("Stray Entropy", "Spread");
 
 	private final ModifiableCallout<AbilityCastStart> p5forsaken = ModifiableCallout.durationBasedCall("P5 Forsaken", "Stack, Raidwide");
-	private final ModifiableCallout<AbilityCastStart> p5forsakenMove = ModifiableCallout.durationBasedCall("P5 Forsaken", "Stack, Raidwide");
+	private final ModifiableCallout<AbilityCastStart> p5forsakenMove = ModifiableCallout.durationBasedCall("P5 Forsaken Move", "Move");
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> p5forsakenSq = SqtTemplates.sq(180_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBB35),
 			(e1, s) -> {
 				s.updateCall(p5forsaken, e1);
 				for (int i = 0; i < 4; i++) {
-					s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBB38));
-					s.updateCall(p5forsakenMove);
+					var cast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xBB38));
+					s.updateCall(p5forsakenMove, cast);
 				}
 			});
 
