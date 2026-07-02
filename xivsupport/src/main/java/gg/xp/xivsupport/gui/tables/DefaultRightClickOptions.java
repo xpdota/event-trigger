@@ -5,12 +5,17 @@ import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.fflogs.FflogsRawEvent;
 import gg.xp.xivsupport.events.ws.ActWsRawMsg;
+import gg.xp.xivsupport.gui.tables.groovy.GroovyObjectInspector;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.slf4j.LogEvent;
 
 @ScanMe
 public class DefaultRightClickOptions {
 	public DefaultRightClickOptions(RightClickOptionRepo repo) {
+		repo.addOption(CustomRightClickOption.forRow(
+				"Inspect Values",
+				Object.class,
+				GroovyObjectInspector::openInspector));
 		repo.addOption(CustomRightClickOption.forRowWithConverter(
 				"Copy Net Line",
 				Event.class,
