@@ -593,6 +593,20 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		return tt.toString();
 	}
 
+	/**
+	 * Center the map panel on a combatant. Does nothing if the combatant is not currently shown on the map.
+	 *
+	 * @param cbt The combatant to center the map on.
+	 */
+	public void centerOn(XivCombatant cbt) {
+		EntityDoohickey ed = things.get(cbt.getId());
+		if (ed != null) {
+			curXpan = (int) -(translateXmap(ed.x) * zoomFactor);
+			curYpan = (int) -(translateYmap(ed.y) * zoomFactor);
+			triggerRefresh();
+		}
+	}
+
 
 	/**
 	 * Component that displays a floor marker
