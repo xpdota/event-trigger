@@ -92,4 +92,8 @@ public class RightClickOptionRepo {
 	public void configureTable(JTable table, CustomTableModel<?> model) {
 		CustomRightClickOption.configureTable(table, model, this::getOptions);
 	}
+
+	public void configureTree(JTree tree, java.util.function.Supplier<Object> selectionSupplier) {
+		CustomRightClickOption.configureTree(tree, selectionSupplier, this::getOptions);
+	}
 }
