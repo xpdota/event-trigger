@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
+import javax.swing.tree.TreePath;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
@@ -83,12 +84,49 @@ public final class CustomRightClickOption {
 	}
 
 	public static void configureTable(JTable table, CustomTableModel<?> model, Supplier<List<CustomRightClickOption>> optionsProvier) {
+		JPopupMenu popupMenu = makePopupMenu(model, optionsProvier);
+		table.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent e) {
+				if (e.getButton() == MouseEvent.BUTTON3) {
+					JTable source = (JTable) e.getSource();
+					int row = source.rowAtPoint(e.getPoint());
+					int column = source.columnAtPoint(e.getPoint());
+
+					if (!source.isRowSelected(row)) {
+						source.changeSelection(row, column, false, false);
+					}
+				}
+			}
+		});
+		table.setComponentPopupMenu(popupMenu);
+
+	}
+
+	public static void configureTree(JTree tree, Supplier<Object> selectionSupplier, Supplier<List<CustomRightClickOption>> optionsProvider) {
+		CustomTableModel<Object> model = CustomTableModel.selectionOnlyModel(selectionSupplier);
+		JPopupMenu popupMenu = makePopupMenu(model, optionsProvider);
+		tree.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent e) {
+				if (e.getButton() == MouseEvent.BUTTON3) {
+					TreePath path = tree.getPathForLocation(e.getX(), e.getY());
+					if (path != null) {
+						tree.setSelectionPath(path);
+					}
+				}
+			}
+		});
+		tree.setComponentPopupMenu(popupMenu);
+	}
+
+	private static JPopupMenu makePopupMenu(CustomTableModel<?> model, Supplier<List<CustomRightClickOption>> optionsProvider) {
 		JPopupMenu popupMenu = new JPopupMenu();
 		popupMenu.addPopupMenuListener(new PopupMenuListener() {
 			@Override
 			public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
 				popupMenu.removeAll();
-				for (CustomRightClickOption rightClickOption : optionsProvier.get()) {
+				for (CustomRightClickOption rightClickOption : optionsProvider.get()) {
 					if (rightClickOption.shouldAppear(model)) {
 						JMenuItem menuItem = new JMenuItem(rightClickOption.getLabel());
 						menuItem.addActionListener(l -> {
@@ -111,21 +149,6 @@ public final class CustomRightClickOption {
 
 			}
 		});
-		table.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mousePressed(MouseEvent e) {
-				if (e.getButton() == MouseEvent.BUTTON3) {
-					JTable source = (JTable) e.getSource();
-					int row = source.rowAtPoint(e.getPoint());
-					int column = source.columnAtPoint(e.getPoint());
-
-					if (!source.isRowSelected(row)) {
-						source.changeSelection(row, column, false, false);
-					}
-				}
-			}
-		});
-		table.setComponentPopupMenu(popupMenu);
-
+		return popupMenu;
 	}
 }

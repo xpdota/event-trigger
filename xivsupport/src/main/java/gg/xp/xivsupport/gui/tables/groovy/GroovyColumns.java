@@ -4,6 +4,7 @@ import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import groovy.lang.GroovyRuntimeException;
+import groovy.lang.MetaProperty;
 import groovy.lang.PropertyValue;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.slf4j.Logger;
@@ -16,7 +17,9 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public final class GroovyColumns {
@@ -47,20 +50,45 @@ public final class GroovyColumns {
 		if (obj == null) {
 			return Collections.emptyList();
 		}
-		else {
-			return DefaultGroovyMethods.getMetaPropertyValues(obj)
-					.stream()
-					.filter(pv1 -> {
-						try {
-							return isReadable(pv1);
-						}
-						catch (Throwable t) {
-							return false;
-						}
-					})
-					.filter(pv -> !"serialVersionUID".equals(pv.getName()))
-					.toList();
+		List<PropertyValue> props = new ArrayList<>(DefaultGroovyMethods.getMetaPropertyValues(obj)
+				.stream()
+				.filter(pv1 -> {
+					try {
+						return isReadable(pv1);
+					}
+					catch (Throwable t) {
+						return false;
+					}
+				})
+				.filter(pv -> !"serialVersionUID".equals(pv.getName()))
+				.toList());
+
+		if (obj instanceof Map<?, ?> map) {
+			for (Map.Entry<?, ?> entry : map.entrySet()) {
+				Object key = entry.getKey();
+				Object convertedKey = singleValueConversion(key);
+				String keyStr = key instanceof String ? "\"" + convertedKey + "\"" : String.valueOf(convertedKey);
+				props.add(new VirtualPropertyValue("[" + keyStr + "]", entry, Map.Entry.class));
+			}
 		}
+		else if (obj instanceof List<?> list) {
+			for (int i = 0; i < list.size(); i++) {
+				props.add(new VirtualPropertyValue("[" + i + "]", list.get(i), Object.class));
+			}
+		}
+		else if (obj instanceof Set<?> set) {
+			int i = 0;
+			for (Object o : set) {
+				props.add(new VirtualPropertyValue("[" + i++ + "]", o, Object.class));
+			}
+		}
+		else if (obj.getClass().isArray()) {
+			int length = Array.getLength(obj);
+			for (int i = 0; i < length; i++) {
+				props.add(new VirtualPropertyValue("[" + i + "]", Array.get(obj, i), Object.class));
+			}
+		}
+		return props;
 	}
 
 	public static boolean isReadable(PropertyValue pv) {
@@ -101,6 +129,9 @@ public final class GroovyColumns {
 		if (obj == null) {
 			return "(null)";
 		}
+		if (obj instanceof Map.Entry<?, ?> entry) {
+			return singleValueConversion(entry.getValue());
+		}
 		if (obj instanceof Byte || obj instanceof Integer || obj instanceof Long || obj instanceof Short) {
 			return String.format("%d (0x%x)", obj, obj);
 		}
@@ -116,7 +147,49 @@ public final class GroovyColumns {
 					.collect(Collectors.joining(", ", "[", "]"));
 		}
 		return obj;
+	}
 
+	private static class VirtualPropertyValue extends PropertyValue {
+		private final String name;
+		private final Object value;
+		private final Class<?> type;
+
+		public VirtualPropertyValue(String name, Object value, Class<?> type) {
+			super(null, new VirtualMetaProperty(name, type));
+			this.name = name;
+			this.value = value;
+			this.type = type;
+		}
+
+		@Override
+		public String getName() {
+			return name;
+		}
+
+		@Override
+		public Object getValue() {
+			return value;
+		}
+
+		@Override
+		public Class getType() {
+			return type;
+		}
+	}
+
+	private static class VirtualMetaProperty extends MetaProperty {
+		public VirtualMetaProperty(String name, Class<?> type) {
+			super(name, type);
+		}
+
+		@Override
+		public Object getProperty(Object object) {
+			return null;
+		}
+
+		@Override
+		public void setProperty(Object object, Object newValue) {
+		}
 	}
 }
 

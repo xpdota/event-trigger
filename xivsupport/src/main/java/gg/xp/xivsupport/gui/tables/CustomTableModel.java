@@ -75,11 +75,20 @@ public class CustomTableModel<X> extends AbstractTableModel {
 	private final BiPredicate<? super X, ? super X> selectionEquivalence;
 
 
-	private CustomTableModel(Supplier<List<? extends X>> dataGetter, List<CustomColumn<? super X>> columns, BiPredicate<? super X, ? super X> selectionEquivalence) {
+	protected CustomTableModel(Supplier<List<? extends X>> dataGetter, List<CustomColumn<? super X>> columns, BiPredicate<? super X, ? super X> selectionEquivalence) {
 		this.dataGetter = dataGetter;
 		this.columns = columns;
 		this.selectionEquivalence = selectionEquivalence;
 		fullRefresh();
+	}
+
+	public static <B> CustomTableModel<B> selectionOnlyModel(Supplier<B> selectionSupplier) {
+		return new CustomTableModel<B>(Collections::emptyList, Collections.emptyList(), Objects::equals) {
+			@Override
+			public B getSelectedValue() {
+				return selectionSupplier.get();
+			}
+		};
 	}
 
 	public void appendOnlyRefresh() {
