@@ -137,7 +137,7 @@ public class GroovyObjectInspector extends JPanel {
 				return true;
 			}
 			Class<?> clazz = val.getClass();
-			if (clazz.isPrimitive() || isBoxedPrimitive(val) || val instanceof String || clazz.isEnum()) {
+			if (clazz.isPrimitive() || isBoxedPrimitive(val) || val instanceof String) {
 				return true;
 			}
 			return false;
