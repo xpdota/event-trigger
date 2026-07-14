@@ -31,13 +31,14 @@ public class ExampleOverlayWithLotsOfButtons extends XivOverlay {
 		panel.add(reset);
 		JButton nothing = new JButton("Nothing");
 		panel.add(nothing);
-		panel.setBackground(new Color(200, 100, 0, 255));
+		panel.setBackground(new Color(200, 100, 0, 128));
 		getPanel().add(panel);
 		JPanel topPanel = new JPanel();
 		topPanel.setBackground(new Color(0, 255, 0, 100));
 		getFrame().setGlassPane(topPanel);
 		topPanel.setOpaque(false);
 		topPanel.setVisible(true);
+		new RefreshLoop<>("ExampleOverlayRefresh", this, item -> item.getPanel().repaint(), item -> 40L).start();
 	}
 
 	private void dummyMethodForBreakpoint() {

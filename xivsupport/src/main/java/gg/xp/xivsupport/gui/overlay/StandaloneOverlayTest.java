@@ -20,6 +20,7 @@ public final class StandaloneOverlayTest {
 		pico.addComponent(OverlayMain.class);
 		pico.addComponent(OverlayConfig.class);
 		OverlayConfig oc = pico.getComponent(OverlayConfig.class);
+		oc.getBufferSetting().set(3);
 		PersistenceProvider pers = pico.getComponent(PersistenceProvider.class);
 		{
 			XivOverlay overlay = new ExampleOverlayWithLotsOfButtons(new InMemoryMapPersistenceProvider(), oc);
@@ -27,7 +28,7 @@ public final class StandaloneOverlayTest {
 			overlay.setVisible(true);
 			overlay.setEditMode(true);
 			overlay.getEnabled().set(true);
-			double scaleFactor = 1.8;
+			double scaleFactor = 3.9;
 			overlay.setScale(scaleFactor);
 		}
 		{
