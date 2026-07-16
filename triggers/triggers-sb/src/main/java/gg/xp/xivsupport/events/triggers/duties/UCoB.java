@@ -66,7 +66,7 @@ public class UCoB extends AutoChildEventHandler implements FilteredEventHandler 
 	// Todo: add triggers for Akh morn and Morn Afah
 	@Override
 	public boolean enabled(EventContext context) {
-		return context.getStateInfo().get(XivStateImpl.class).zoneIs(0x2DD);
+		return state.dutyIs(KnownDuty.UCoB);
 	}
 
 //	@HandleEvents
