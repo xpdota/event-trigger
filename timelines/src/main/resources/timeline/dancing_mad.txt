@@ -130,7 +130,7 @@ hideall "--sync--"
 367.2 "Trine 2" #Ability { id: "BAE0", source: "Kefka" }
 369.2 "Trine 3" #Ability { id: "BAE0", source: "Kefka" }
 369.5 "Wings of Destruction" Ability { id: "C487", source: "Kefka" }
-371.8 "--sync--" HeadMarker { id: '0103' } window 20,5
+371.8 "--sync--" HeadMarker { id: '0103' } window 216,5
 376.7 "Ultimate Embrace" Ability { id: "C24C", source: "Kefka" }
 380.1 "--untargetable?--"
 380.1 "--sync--" StartsUsing { id: "BAE1", source: "Kefka" } jump "p2-enrage"
@@ -277,7 +277,7 @@ hideall "--sync--"
 # 1. Bait 2 Puddles
 # 2. Role 1 4-Stack
 # 3. Role 2 2-NW Towers
-# 4. Role 2 2-NE Towers 
+# 4. Role 2 2-NE Towers
 # 5. Role 1 2-NW Towers
 # 6. Role 1 2-NE Towers
 # 7. Role 2 4-Stack
