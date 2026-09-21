@@ -8,8 +8,11 @@ public class LockAdapter implements AutoCloseable {
 	private final Lock lock;
 
 	public LockAdapter(Lock lock) {
-		lock.lock();
 		this.lock = lock;
+	}
+
+	void lock() {
+		lock.lock();
 	}
 
 	@Override
